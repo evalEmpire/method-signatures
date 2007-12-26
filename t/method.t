@@ -6,15 +6,15 @@ use Test::More tests => 4;
     package Foo;
     use Method::Signatures;
 
-    method new(%args) {
+    method new (%args) {
         return bless {%args}, $self;
     };
 
-    method set($key, $val) {
+    method set ($key, $val) {
         return $self->{$key} = $val;
     };
 
-    method get($key) {
+    method get ($key) {
         return $self->{$key};
     };
 }
