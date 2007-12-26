@@ -7,7 +7,7 @@ our $VERSION = '0.01';
 
 =head1 NAME
 
-Method::Signatures - a "method" keyword with proper signatures
+Method::Signatures - method declarations with prototypes and without using a source filter
 
 =head1 SYNOPSIS
 
