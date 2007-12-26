@@ -107,6 +107,10 @@ I would like to add some sort of types in the future or simply make the prototyp
 
 Currently there is no support for types or declaring the type of the return value.
 
+=head2 What about anonymous methods?
+
+Working on it.
+
 =head2 Debugging
 
 The inserted prototype code cannot be seen in the debugger.  This is good and bad, but makes it feel more like a language feature.
