@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+use 5.006;
+
 use Module::Build;
 
 my $build = Module::Build->new(
