@@ -33,6 +33,17 @@ Provides a proper method keyword, like "sub" but specificly for making methods. 
 
 And it does all this with B<no source filters>.
 
+
+=head2 Prototype syntax
+
+At the moment the prototypes are very simple.  They simply shift $self and assign @_ to the prototypes like so:
+
+    my(...prototype...) = @_;
+
+No checks are made that the arguments being passed in match the prototype.
+
+Future releases will add extensively to the prototype syntax probably along the lines of Perl 6.
+
 =cut
 
 sub import {
@@ -68,6 +79,12 @@ sub import {
 
 =head1 BUGS, CAVEATS and NOTES
 
+Please report bugs and leave feedback at E<lt>bug-Method-SignaturesE<gt> at E<lt>rt.cpan.orgE<gt>.  Or use the web interface at L<http://rt.cpan.org>.  Report early, report often.
+
+=head2 No source filter
+
+While this module does rely on the hairy black magic of L<Devel::Declare> it does not depend on a source filter.  As such, it doesn't try to parse and rewrite your source code and there should be no weird side effects.
+
 =head2 Trailing semicolon
 
 Due to the implementation of L<Devel::Declare>, which really does all the work, a trailing semicolon is required.  If/when this gets fixed in Devel::Declare it will be fixed here.
@@ -76,19 +93,40 @@ Due to the implementation of L<Devel::Declare>, which really does all the work, 
 
 L<Devel::Declare> cannot yet change the way C<sub> behaves.  It's being worked on and when it works I'll release another module unifying method and sub.
 
-=head2 Prototype Syntax
+=head2 What about class methods?
 
-At the moment the prototypes are very simple.  They simply shift $self and assign @_ to the prototypes like so:
+Right now there's no way to declare method as being a class method, or change the invocant, so the invocant is always $self.  This is just a matter of coming up with the appropriate prototype syntax.  I may simply use the Perl 6 C<($invocant: $arg)> syntax though this doesn't provde type safety.
 
-    my(...prototype...) = @_;
+=head2 What about types?
 
-No checks are made that the arguments being passed in match the prototype.
+I would like to add some sort of types in the future or simply make the prototype handler pluggable.
 
-Future releases will add extensively to the prototype syntax probably along the lines of Perl 6.
+=head2 What about the return value?
+
+Currently there is no support for types or declaring the type of the return value.
 
 =head2 Debugging
 
 The inserted prototype code cannot be seen in the debugger.  This is good and bad, but makes it feel more like a language feature.
+
+
+=head1 LICENSE
+
+The original code was taken from Matt Trout's tests for L<Devel::Declare>.
+
+Copyright 2007 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+See F<http://www.perl.com/perl/misc/Artistic.html>
+
+
+=head1 SEE ALSO
+
+L<Sub::Signatures>, L<Perl6::Subs>
+
+Perl 6 subroutine parameters and arguments -  L<http://perlcabal.org/syn/S06.html#Parameters_and_arguments>
 
 =cut
 
