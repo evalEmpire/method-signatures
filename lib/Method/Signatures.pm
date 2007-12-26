@@ -2,7 +2,7 @@ package Method::Signatures;
 
 use Devel::Declare;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 NAME
@@ -12,6 +12,8 @@ Method::Signatures - method declarations with prototypes and without using a sou
 =head1 SYNOPSIS
 
     package Foo;
+    
+    use Method::Signatures;
     
     method new (%args) {
         return bless {%args}, $self;

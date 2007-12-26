@@ -1,2 +1,6 @@
+0.02  Wed Dec 26 02:07:26 PST 2007
+    Doc Fix
+    * Forgot the "use Method::Signatures" in the SYNOPSIS
+
 0.01  Wed Dec 26 01:55:33 PST 2007
     It works!
