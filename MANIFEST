@@ -4,5 +4,6 @@ lib/Method/Signatures.pm
 MANIFEST			This list of files
 META.yml
 t/caller.t
+t/debugger.t
 t/method.t
 t/one_line.t
