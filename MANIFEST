@@ -1,6 +1,8 @@
 Build.PL
 Changes
 lib/Method/Signatures.pm
-MANIFEST
-t/method.t
+MANIFEST			This list of files
 META.yml
+t/caller.t
+t/method.t
+t/one_line.t
