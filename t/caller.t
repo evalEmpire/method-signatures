@@ -45,16 +45,16 @@
     $expected[3]  = 'Foo::method_caller';
     $expected2[3] = 'Foo::method_caller2';
 
-    ::is_deeply([@have[0..2]], [@expected[0..2]]);
-    ::is_deeply([@have[4..9]], [@expected[4..9]]);
+    is_deeply([@have[0..2]], [@expected[0..2]]);
+    is_deeply([@have[4..9]], [@expected[4..9]]);
 
-    ::is_deeply([@have2[0..2]], [@expected2[0..2]]);
-    ::is_deeply([@have2[4..9]], [@expected2[4..9]]);
+    is_deeply([@have2[0..2]], [@expected2[0..2]]);
+    is_deeply([@have2[4..9]], [@expected2[4..9]]);
 
     TODO: {
         local $TODO = 'caller() does not get method names';
 
-        ::is $have[3],  $expected[3];
-        ::is $have2[3], $expected2[3];
+        is $have[3],  $expected[3];
+        is $have2[3], $expected2[3];
     }
 }
