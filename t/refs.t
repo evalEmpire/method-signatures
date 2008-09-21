@@ -56,3 +56,24 @@ use Test::More 'no_plan';
         biff => 7, rest => [8,9] }
     );
 }
+
+
+# What about closures?
+{
+    package Stuff;
+
+    use Method::Signatures;
+
+    method make_closure(\@nums) {
+        return sub {
+            return @nums;
+        };
+    }
+
+    my $closure1 = Stuff->make_closure([1,2,3]);
+    my $closure2 = Stuff->make_closure([4,5,6]);
+
+    ::is_deeply [$closure1->()], [1,2,3];
+    ::is_deeply [$closure2->()], [4,5,6];
+}
+

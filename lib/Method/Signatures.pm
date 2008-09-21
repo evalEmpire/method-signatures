@@ -4,9 +4,11 @@ use strict;
 use warnings;
 
 use Devel::Declare ();
+use Data::Alias ();
 use Scope::Guard;
+use Sub::Name;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 NAME
@@ -80,9 +82,6 @@ be used as C<@foo> inside the method.
     }
 
     Stuff->foo([1,2,3], [4,5,6]);
-
-Currently, this incurs about a 20% performance penalty vs an empty
-subroutine call.  But there is no penalty on using the variables.
 
 
 =head3 The C<@_> prototype
@@ -163,10 +162,9 @@ sub import {
                 my $proto = $protos[$idx];
 
                 $inject .= $proto =~ s{^\\}{}x ? do {
-                                                     my $glob;  ($glob = $proto) =~ s{^.}{*};
-                                                     "our($proto);  local($proto);  ".
-                                                     "$glob = \$_[$idx]; "
-                                                 }
+                                                     $proto =~ s{^ (.) }{}x;
+                                                     my $sigil = $1;
+                                                     "Data::Alias::alias(my $sigil$proto = ${sigil}{\$_[$idx]}); "; }
                          : $proto =~ m{^[@%]}  ? "my($proto) = \@_[$idx..\$#_]; "
                          :                       "my($proto) = \$_[$idx]; ";
             }
@@ -203,7 +201,11 @@ sub import {
         if (defined $name) {
             $name = join('::', Devel::Declare::get_curstash_name(), $name)
               unless ($name =~ /::/);
-            shadow(sub (&) { no strict 'refs'; *{$name} = shift; });
+            shadow(sub (&) {
+                no strict 'refs';
+                # So caller() gets the subroutine name
+                *{$name} = subname $name => shift;
+            });
         } else {
             shadow(sub (&) { shift });
         }
@@ -221,6 +223,10 @@ sub import {
 }
 
 
+=head1 PERFORMANCE
+
+There is no performance penalty for using this module.
+
 
 =head1 BUGS, CAVEATS and NOTES
 
@@ -232,13 +238,12 @@ web interface at L<http://rt.cpan.org>.  Report early, report often.
 
 This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
 
-
 =head2 No source filter
 
 While this module does rely on the hairy black magic of
-L<Devel::Declare> it does not depend on a source filter.  As such, it
-doesn't try to parse and rewrite your source code and there should be
-no weird side effects.
+L<Devel::Declare> and L<Data::Alias> it does not depend on a source
+filter.  As such, it doesn't try to parse and rewrite your source code
+and there should be no weird side effects.
 
 Devel::Declare only effects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
@@ -275,7 +280,11 @@ return value.
 
 =head1 THANKS
 
-This is really just sugar on top of Matt Trout's work.
+This is really just sugar on top of Matt Trout's L<Devel::Declare> work.
+
+Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
+makes the C<\@foo> prototype work perfectly and L<Sub::Name> which
+makes the subroutine names come out right in caller().
 
 
 =head1 LICENSE

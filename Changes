@@ -1,3 +1,16 @@
+0.05  Sun Sep 21 15:17:16 PDT 2008
+    Bug Fixes
+    * methods now get the right name in caller(), not "Class::__ANON__".
+    * The \@foo prototype no longer has a performance hit
+    * Closures now work with \@foo
+      (All the above thanks to Matthijs van Duin and his Sub::Name and
+       Data::Alias)
+
+    Test Fixes
+    * Not rigorously checking the bitmask and hints flags from caller() as
+      their behavior is undefined.  This fixes the 5.10 test failures.
+
+
 0.04  Sun Sep 21 13:52:29 PDT 2008
     New Features
     * A \@foo protototype allows you to use a reference as a regular var

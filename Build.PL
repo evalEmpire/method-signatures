@@ -10,6 +10,8 @@ my $build = Module::Build->new(
     requires        => {
         'Devel::Declare'    => '0.002000',
         'Test::More'        => '0.62',
+        'Data::Alias'       => '1.07',
+        'Sub::Name'         => '0.04',
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
