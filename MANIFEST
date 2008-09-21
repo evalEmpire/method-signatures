@@ -3,7 +3,10 @@ Changes
 lib/Method/Signatures.pm
 MANIFEST			This list of files
 META.yml
+t/begin.t
 t/caller.t
 t/debugger.t
+t/lib/Dev/Null.pm
 t/method.t
 t/one_line.t
+t/refs.t

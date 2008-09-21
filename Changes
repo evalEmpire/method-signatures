@@ -1,6 +1,26 @@
+0.04  Sun Sep 21 13:52:29 PDT 2008
+    New Features
+    * A \@foo protototype allows you to use a reference as a regular var
+
+    New Docs
+    * Documented the @_ prototype
+
+
+0.03  Sun Sep 21 00:57:32 PDT 2008
+    New Features
+    * Eliminate the need of the trailing semicolon
+
+    New Bugs
+    * The debugger and one-liners are broken
+
+    New Docs
+    * Better prototype docs
+
+
 0.02  Wed Dec 26 02:07:26 PST 2007
     Doc Fix
     * Forgot the "use Method::Signatures" in the SYNOPSIS
+
 
 0.01  Wed Dec 26 01:55:33 PST 2007
     It works!

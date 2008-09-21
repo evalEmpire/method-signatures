@@ -6,7 +6,7 @@ use warnings;
 use Devel::Declare ();
 use Scope::Guard;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 NAME
@@ -45,8 +45,7 @@ And it does all this with B<no source filters>.
 
 =head2 Prototype syntax
 
-At the moment the prototypes are very simple.  They simply shift $self
-and assign @_ to the prototype.
+At the moment the prototypes are very simple.
 
     method foo($bar, $baz) {
         $self->wibble($bar, $baz);
@@ -67,6 +66,30 @@ prototype.
 
 Future releases will add extensively to the prototype syntax probably
 along the lines of Perl 6.
+
+
+=head3 Aliased references
+
+A prototype of C<\@foo> will take an array reference but allow it to
+be used as C<@foo> inside the method.
+
+    package Stuff;
+    method foo(\@foo, \@bar) {
+        print "Foo:  @foo\n";
+        print "Bar:  @bar\n";
+    }
+
+    Stuff->foo([1,2,3], [4,5,6]);
+
+Currently, this incurs about a 20% performance penalty vs an empty
+subroutine call.  But there is no penalty on using the variables.
+
+
+=head3 The C<@_> prototype
+
+The @_ prototype is a special case which only shifts C<$self>.  It
+leaves the rest of C<@_> alone.  This way you can get $self but do the
+rest of the argument handling manually.
 
 =cut
 
@@ -131,16 +154,25 @@ sub import {
         Devel::Declare::shadow_sub("${pack}::${Declarator}", $_[0]);
     }
 
-    # undef  -> my ($self) = shift;
-    # ''     -> my ($self) = @_;
-    # '$foo' -> my ($self, $foo) = @_;
-
     sub make_proto_unwrap {
         my ($proto) = @_;
         my $inject = 'my $self = shift; ';
         if (defined $proto and length $proto and $proto ne '@_') {
-            $inject .= "my($proto) = \@_; ";
+            my @protos = split /\s*,\s*/, $proto;
+            for my $idx (0..$#protos) {
+                my $proto = $protos[$idx];
+
+                $inject .= $proto =~ s{^\\}{}x ? do {
+                                                     my $glob;  ($glob = $proto) =~ s{^.}{*};
+                                                     "our($proto);  local($proto);  ".
+                                                     "$glob = \$_[$idx]; "
+                                                 }
+                         : $proto =~ m{^[@%]}  ? "my($proto) = \@_[$idx..\$#_]; "
+                         :                       "my($proto) = \$_[$idx]; ";
+            }
         }
+
+#        print STDERR "inject: $inject\n";
         return $inject;
     }
 
@@ -239,6 +271,11 @@ return value.
 =head2 What about anonymous methods?
 
 ...what would an anonymous method do?
+
+
+=head1 THANKS
+
+This is really just sugar on top of Matt Trout's work.
 
 
 =head1 LICENSE
