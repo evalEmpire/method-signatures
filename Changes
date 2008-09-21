@@ -1,3 +1,9 @@
+0.06
+    Doc Fixes
+    - Change "prototype" to "signature" to avoid confusion with Perl's
+      built in prototypes.
+
+
 0.05  Sun Sep 21 15:17:16 PDT 2008
     Bug Fixes
     * methods now get the right name in caller(), not "Class::__ANON__".

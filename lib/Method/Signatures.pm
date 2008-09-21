@@ -13,7 +13,7 @@ our $VERSION = '0.05';
 
 =head1 NAME
 
-Method::Signatures - method declarations with prototypes and no source filter
+Method::Signatures - method declarations with signatures and no source filter
 
 =head1 SYNOPSIS
 
@@ -39,15 +39,15 @@ This is B<ALPHA SOFTWARE> which relies on B<YET MORE ALPHA SOFTWARE>.
 Use at your own risk.  Features may change.
 
 Provides a proper method keyword, like "sub" but specificly for making
-methods.  Also a prototype declaration.  Finally it will automatically
+methods.  Also allows signatures.  Finally it will automatically
 provide the invocant as $self.  No more C<my $self = shift>.
 
 And it does all this with B<no source filters>.
 
 
-=head2 Prototype syntax
+=head2 Signature syntax
 
-At the moment the prototypes are very simple.
+At the moment the signatures are very simple.
 
     method foo($bar, $baz) {
         $self->wibble($bar, $baz);
@@ -64,15 +64,15 @@ is equivalent to:
 except the original line numbering is preserved.
 
 No checks are made that the arguments being passed in match the
-prototype.
+signature.
 
-Future releases will add extensively to the prototype syntax probably
+Future releases will add extensively to the signature syntax probably
 along the lines of Perl 6.
 
 
 =head3 Aliased references
 
-A prototype of C<\@foo> will take an array reference but allow it to
+A signature of C<\@foo> will take an array reference but allow it to
 be used as C<@foo> inside the method.
 
     package Stuff;
@@ -84,9 +84,9 @@ be used as C<@foo> inside the method.
     Stuff->foo([1,2,3], [4,5,6]);
 
 
-=head3 The C<@_> prototype
+=head3 The C<@_> signature
 
-The @_ prototype is a special case which only shifts C<$self>.  It
+The @_ signature is a special case which only shifts C<$self>.  It
 leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
 
@@ -259,14 +259,14 @@ method and sub.
 
 Right now there's no way to declare method as being a class method, or
 change the invocant, so the invocant is always $self.  This is just a
-matter of coming up with the appropriate prototype syntax.  I may
+matter of coming up with the appropriate signature syntax.  I may
 simply use the Perl 6 C<($invocant: $arg)> syntax though this doesn't
 provde type safety.
 
 =head2 What about types?
 
 I would like to add some sort of types in the future or simply make
-the prototype handler pluggable.
+the signature handler pluggable.
 
 =head2 What about the return value?
 
@@ -283,7 +283,7 @@ return value.
 This is really just sugar on top of Matt Trout's L<Devel::Declare> work.
 
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
-makes the C<\@foo> prototype work perfectly and L<Sub::Name> which
+makes the C<\@foo> signature work perfectly and L<Sub::Name> which
 makes the subroutine names come out right in caller().
 
 
