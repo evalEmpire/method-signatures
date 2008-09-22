@@ -1,4 +1,8 @@
 0.06
+    New Features
+    * Added the ability to change the invocant a la Perl 6.
+    * Expose a way to play with the prototype handler.
+
     Doc Fixes
     - Change "prototype" to "signature" to avoid confusion with Perl's
       built in prototypes.

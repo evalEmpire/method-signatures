@@ -8,7 +8,7 @@ use Data::Alias ();
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 NAME
@@ -83,6 +83,18 @@ be used as C<@foo> inside the method.
 
     Stuff->foo([1,2,3], [4,5,6]);
 
+=head3 Invocant parameter
+
+The method invocant (ie. C<$self>) can be changed as the first
+parameter.  Put a colon after it instead of a comma.
+
+    method foo($class:) {
+        $class->bar;
+    }
+
+    method stuff($class: $arg, $another) {
+        $class->things($arg, $another);
+    }
 
 =head3 The C<@_> signature
 
@@ -155,23 +167,34 @@ sub import {
 
     sub make_proto_unwrap {
         my ($proto) = @_;
-        my $inject = 'my $self = shift; ';
-        if (defined $proto and length $proto and $proto ne '@_') {
-            my @protos = split /\s*,\s*/, $proto;
-            for my $idx (0..$#protos) {
-                my $proto = $protos[$idx];
+        $proto ||= '';
+        my $inject = '';
 
-                $inject .= $proto =~ s{^\\}{}x ? do {
-                                                     $proto =~ s{^ (.) }{}x;
-                                                     my $sigil = $1;
-                                                     "Data::Alias::alias(my $sigil$proto = ${sigil}{\$_[$idx]}); "; }
-                         : $proto =~ m{^[@%]}  ? "my($proto) = \@_[$idx..\$#_]; "
-                         :                       "my($proto) = \$_[$idx]; ";
-            }
+        my $invocant = '$self';
+        $invocant = $1 if $proto =~ s{^(.*):\s*}{};
+        $inject = "my $invocant = shift; ";
+
+        my @protos = split /\s*,\s*/, $proto;
+        for my $idx (0..$#protos) {
+            my $proto = $protos[$idx];
+
+            next if $proto eq '@_';
+
+            $inject .= $proto =~ s{^\\}{}x ? alias_proto($proto, $idx)
+                     : $proto =~ m{^[@%]}  ? "my($proto) = \@_[$idx..\$#_]; "
+                     :                       "my($proto) = \$_[$idx]; ";
         }
 
 #        print STDERR "inject: $inject\n";
         return $inject;
+    }
+
+    sub alias_proto {
+        my($proto, $idx) = @_;
+
+        $proto =~ s{^ (.) }{}x;
+        my $sigil = $1;
+        return "Data::Alias::alias(my $sigil$proto = ${sigil}{\$_[$idx]}); ";
     }
 
     sub inject_if_block {
@@ -228,6 +251,17 @@ sub import {
 There is no performance penalty for using this module.
 
 
+=head1 EXPERIMENTING
+
+If you want to experiment with the prototype syntax, replace
+C<Method::Signatures::make_proto_unwrap>.  It takes a method prototype
+and returns a string of Perl 5 code which will be placed at the
+beginning of that method.
+
+This interface is experimental, unstable and will change between
+versions.
+
+
 =head1 BUGS, CAVEATS and NOTES
 
 Please report bugs and leave feedback at
@@ -237,6 +271,12 @@ web interface at L<http://rt.cpan.org>.  Report early, report often.
 =head2 Debugging
 
 This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
+
+=head2 One liners
+
+If you want to write "use Method::Signatures" in a one-liner, do a
+C<-MMethod::Signatures> first.  This is due to a bug in
+Devel::Declare.
 
 =head2 No source filter
 
@@ -257,11 +297,11 @@ method and sub.
 
 =head2 What about class methods?
 
-Right now there's no way to declare method as being a class method, or
-change the invocant, so the invocant is always $self.  This is just a
-matter of coming up with the appropriate signature syntax.  I may
-simply use the Perl 6 C<($invocant: $arg)> syntax though this doesn't
-provde type safety.
+Right now there's nothing special about class methods.  Just use
+C<$class> as your invocant like the normal Perl 5 convention.
+
+There may be special syntax to separate class from object methods in
+the future.
 
 =head2 What about types?
 
@@ -276,6 +316,11 @@ return value.
 =head2 What about anonymous methods?
 
 ...what would an anonymous method do?
+
+=head2 How does this relate to Perl's built-in prototypes?
+
+It doesn't.  Perl prototypes are a rather different beastie from
+subroutine signatures.
 
 
 =head1 THANKS
