@@ -1,6 +1,9 @@
-0.06
+0.10
     New Features
-    * Added the ability to change the invocant a la Perl 6.
+    * Added "$class:" change the invocant a la Perl 6.
+    * Added "$arg = EXPR" to set defaults.
+    * Added "$arg?" optional param syntax (currently does nothing)
+    * Added "$arg is foo" param traits (currently does nothing)
     * Expose a way to play with the prototype handler.
 
     Doc Fixes

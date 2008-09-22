@@ -8,7 +8,7 @@ use Data::Alias ();
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = '0.06';
+our $VERSION = '0.10';
 
 
 =head1 NAME
@@ -96,6 +96,45 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
+=head3 Defaults
+
+Each parameter can be given a default with the C<$arg = EXPR> syntax.
+For example,
+
+    method add($this = 23, $that = 42) {
+        return $this + $that;
+    }
+
+Defaults will only be used if the argument is not passed in at all.
+Passing in C<undef> will override the default.  That means...
+
+    Class->add();            # $this = 23, $that = 42
+    Class->add(99);          # $this = 99, $that = 42
+    Class->add(99, undef);   # $this = 99, $that = undef
+
+All variables with defaults are considered optional.
+
+
+=head3 Parameter traits
+
+Each parameter can be assigned a trait with the C<$arg is TRAIT> syntax.
+
+    method stuff($this is ro) {
+        ...
+    }
+
+Any unknown trait is ignored.
+
+Currently there are no traits.  It's for forward compatibility.
+
+
+=head3 Optional parameters
+
+To declare a parameter optional, use the C<$arg?> syntax.
+
+Currently nothing is done with this.  It's for forward compatibility.
+
+
 =head3 The C<@_> signature
 
 The @_ signature is a special case which only shifts C<$self>.  It
@@ -168,33 +207,77 @@ sub import {
     sub make_proto_unwrap {
         my ($proto) = @_;
         $proto ||= '';
-        my $inject = '';
 
-        my $invocant = '$self';
-        $invocant = $1 if $proto =~ s{^(.*):\s*}{};
-        $inject = "my $invocant = shift; ";
+        # Do all the signature parsing here
+        my %signature;
+        $signature{invocant} = '$self';
+        $signature{invocant} = $1 if $proto =~ s{^(.*):\s*}{};
 
         my @protos = split /\s*,\s*/, $proto;
         for my $idx (0..$#protos) {
+            my $sig = $signature{$idx} = {};
             my $proto = $protos[$idx];
 
-            next if $proto eq '@_';
+#            print STDERR "proto: $proto\n";
 
-            $inject .= $proto =~ s{^\\}{}x ? alias_proto($proto, $idx)
-                     : $proto =~ m{^[@%]}  ? "my($proto) = \@_[$idx..\$#_]; "
-                     :                       "my($proto) = \$_[$idx]; ";
+            $sig->{proto}               = $proto;
+            $sig->{idx}                 = $idx;
+            $sig->{is_at_underscore}    = $proto eq '@_';
+            $sig->{is_ref_alias}        = $proto =~ s{^\\}{}x;
+
+            $sig->{trait}   = $1 if $proto =~ s{ \s+ is \s+ (\S+) \s* }{}x;
+            $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
+
+            my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
+            $sig->{is_optional} = ($name =~ s{\?$}{} or $sig->{default});
+            $sig->{sigil}       = $sigil;
+            $sig->{name}        = $name;
         }
 
+        # XXX At this point we could do sanity checks
+
+        # Then turn it into Perl code
+        my $inject = inject_from_signature(\%signature);
 #        print STDERR "inject: $inject\n";
+
         return $inject;
     }
 
-    sub alias_proto {
-        my($proto, $idx) = @_;
+    # Turn the parsed signature into Perl code
+    sub inject_from_signature {
+        my $signature = shift;
 
-        $proto =~ s{^ (.) }{}x;
-        my $sigil = $1;
-        return "Data::Alias::alias(my $sigil$proto = ${sigil}{\$_[$idx]}); ";
+        my @code;
+        push @code, "my $signature->{invocant} = shift;";
+        
+        for( my $idx = 0; my $sig = $signature->{$idx}; $idx++ ) {
+            next if $sig->{is_at_underscore};
+
+            my $sigil = $sig->{sigil};
+            my $name  = $sig->{name};
+
+            # These are the defaults.
+            my $lhs = "my ${sigil}${name}";
+            my $rhs = (!$sig->{is_ref_alias} and $sig->{sigil} =~ /^[@%]$/) ? "\@_[$idx..\$#_]" : "\$_[$idx]";
+
+            # Handle a default value
+            $rhs = "\@_ > $idx ? $rhs : $sig->{default}" if defined $sig->{default};
+
+            # XXX We don't do anything with traits right now
+
+            # XXX is_optional is ignored
+
+            # Handle \@foo
+            if( $sig->{is_ref_alias} ) {
+                push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $sigil."{$rhs}";
+            }
+            else {
+                push @code, "$lhs = $rhs;";
+            }
+        }
+
+        # All on one line.
+        return join ' ', @code;
     }
 
     sub inject_if_block {
@@ -325,13 +408,6 @@ subroutine signatures.
 =head2 What about...
 
 Named parameters are in the pondering stage.
-
-Default values will probably be C<$arg = 42> like in Perl 6.
-
-Optional parameters?  Because there is no checking right now
-everything is optional.  This may change so that everything is
-required by default.  Optional parameters will probably use the Perl 6
-syntax of C<$arg?> rather than the Perl 5 prototype C<;> separator.
 
 Read-only parameters and aliasing will probably be supported with
 C<$arg is ro> and C<$arg is alias> respectively, mirroring Perl 6.
