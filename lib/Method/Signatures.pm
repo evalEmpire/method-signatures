@@ -128,6 +128,18 @@ Any unknown trait is ignored.
 Currently there are no traits.  It's for forward compatibility.
 
 
+=head3 Traits and defaults
+
+To have a parameter which has both a trait and a default, set the
+trait first and the default second.
+
+    method echo($message is ro = "what?") {
+        return $message
+    }
+
+Think of it as C<$message is ro> being the left-hand side of the assignment.
+
+
 =head3 Optional parameters
 
 To declare a parameter optional, use the C<$arg?> syntax.
