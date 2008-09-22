@@ -6,6 +6,7 @@ META.yml
 t/begin.t
 t/caller.t
 t/debugger.t
+t/invocant.t
 t/lib/Dev/Null.pm
 t/method.t
 t/one_line.t
