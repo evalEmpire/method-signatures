@@ -40,7 +40,7 @@ Use at your own risk.  Features may change.
 
 Provides a proper method keyword, like "sub" but specificly for making
 methods.  Also allows signatures.  Finally it will automatically
-provide the invocant as $self.  No more C<my $self = shift>.
+provide the invocant as C<$self>.  No more C<my $self = shift>.
 
 And it does all this with B<no source filters>.
 
@@ -322,6 +322,21 @@ return value.
 It doesn't.  Perl prototypes are a rather different beastie from
 subroutine signatures.
 
+=head2 What about...
+
+Named parameters are in the pondering stage.
+
+Default values will probably be C<$arg = 42> like in Perl 6.
+
+Optional parameters?  Because there is no checking right now
+everything is optional.  This may change so that everything is
+required by default.  Optional parameters will probably use the Perl 6
+syntax of C<$arg?> rather than the Perl 5 prototype C<;> separator.
+
+Read-only parameters and aliasing will probably be supported with
+C<$arg is ro> and C<$arg is alias> respectively, mirroring Perl 6.
+
+Method traits are in the pondering stage.
 
 =head1 THANKS
 
