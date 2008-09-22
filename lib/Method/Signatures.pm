@@ -351,6 +351,11 @@ Please report bugs and leave feedback at
 E<lt>bug-Method-SignaturesE<gt> at E<lt>rt.cpan.orgE<gt>.  Or use the
 web interface at L<http://rt.cpan.org>.  Report early, report often.
 
+=head2 C<method> is not declared at compile time.
+
+Unlike declaring a C<sub>, C<method> currently does not happen at
+compile time.  This usually isn't a problem.  We're looking to fix it.
+
 =head2 Debugging
 
 This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.

@@ -1,4 +1,4 @@
-0.10
+0.10  Sun Sep 21 20:04:41 PDT 2008
     New Features
     * Added "$class:" change the invocant a la Perl 6.
     * Added "$arg = EXPR" to set defaults.
