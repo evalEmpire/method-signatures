@@ -69,19 +69,27 @@ signature.
 Future releases will add extensively to the signature syntax probably
 along the lines of Perl 6.
 
+=head3 C<@_>
+
+Other than removing C<$self>, C<@_> is left intact.  You are free to
+use C<@_> alongside the arguments provided by Method::Signatures.
+
 
 =head3 Aliased references
 
-A signature of C<\@foo> will take an array reference but allow it to
-be used as C<@foo> inside the method.
+A signature of C<\@arg> will take an array reference but allow it to
+be used as C<@arg> inside the method.  C<@arg> is an alias to the
+original reference.  Any changes to C<@arg> will effect the original
+reference.
 
     package Stuff;
-    method foo(\@foo, \@bar) {
-        print "Foo:  @foo\n";
-        print "Bar:  @bar\n";
+    method add_one(\@foo) {
+        $_++ for @foo;
     }
 
-    Stuff->foo([1,2,3], [4,5,6]);
+    my @bar = (1,2,3);
+    Stuff->add_one(\@bar);  # @bar is now (2,3,4)
+
 
 =head3 Invocant parameter
 
@@ -95,6 +103,9 @@ parameter.  Put a colon after it instead of a comma.
     method stuff($class: $arg, $another) {
         $class->things($arg, $another);
     }
+
+Signatures have an implied default of C<$self:>.
+
 
 =head3 Defaults
 
@@ -111,6 +122,12 @@ Passing in C<undef> will override the default.  That means...
     Class->add();            # $this = 23, $that = 42
     Class->add(99);          # $this = 99, $that = 42
     Class->add(99, undef);   # $this = 99, $that = undef
+
+Earlier parameters may be used in later defaults.
+
+    method copy_cat($this, $that = $this) {
+        return $that;
+    }
 
 All variables with defaults are considered optional.
 
@@ -147,11 +164,30 @@ To declare a parameter optional, use the C<$arg?> syntax.
 Currently nothing is done with this.  It's for forward compatibility.
 
 
+=head3 Required parameters
+
+To declare a parameter as required, use the C<$arg!> syntax.
+
+All parameters without defaults are required by default.
+
+
 =head3 The C<@_> signature
 
 The @_ signature is a special case which only shifts C<$self>.  It
 leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
+
+
+=head2 Anonymous Methods
+
+An anonymous method can be declared just like an anonymous sub.
+
+    my $method = method ($arg) {
+        return $self->foo($arg);
+    };
+
+    $obj->$method(42);
+
 
 =cut
 
@@ -242,6 +278,7 @@ sub import {
 
             my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
             $sig->{is_optional} = ($name =~ s{\?$}{} or $sig->{default});
+            $sig->{is_required} = ($name =~ s{\!$}{} or !$sig->{is_optional});
             $sig->{sigil}       = $sigil;
             $sig->{name}        = $name;
         }
@@ -273,7 +310,7 @@ sub import {
             my $rhs = (!$sig->{is_ref_alias} and $sig->{sigil} =~ /^[@%]$/) ? "\@_[$idx..\$#_]" : "\$_[$idx]";
 
             # Handle a default value
-            $rhs = "\@_ > $idx ? $rhs : $sig->{default}" if defined $sig->{default};
+            $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})" if defined $sig->{default};
 
             # XXX We don't do anything with traits right now
 
@@ -413,10 +450,6 @@ the signature handler pluggable.
 Currently there is no support for types or declaring the type of the
 return value.
 
-=head2 What about anonymous methods?
-
-...what would an anonymous method do?
-
 =head2 How does this relate to Perl's built-in prototypes?
 
 It doesn't.  Perl prototypes are a rather different beastie from
@@ -430,6 +463,11 @@ Read-only parameters and aliasing will probably be supported with
 C<$arg is ro> and C<$arg is alias> respectively, mirroring Perl 6.
 
 Method traits are in the pondering stage.
+
+An API to query a method's signature is in the pondering stage.
+
+Now that we have method signatures, multi-methods are a distinct possibility.
+
 
 =head1 THANKS
 
