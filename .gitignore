@@ -1,0 +1,10 @@
+# Module::Build
+Build
+_build
+blib/
+
+# misc backups
+*.old
+*~
+*.bak
+
