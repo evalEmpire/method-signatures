@@ -21,7 +21,7 @@ my $build = Module::Build->new(
             license     => 'http://dev.perl.org/licenses/',
             bugtracker  =>
                 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures',
-            repository  => 'http://svn.schwern.org/svn/CPAN/Method-Signatures',
+            repository  => 'https://github.com/schwern/method-signatures/tree',
         },
     },
 );
