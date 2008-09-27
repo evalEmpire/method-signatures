@@ -410,7 +410,8 @@ web interface at L<http://rt.cpan.org>.  Report early, report often.
 =head2 C<method> is not declared at compile time.
 
 Unlike declaring a C<sub>, C<method> currently does not happen at
-compile time.  This usually isn't a problem.  We're looking to fix it.
+compile time.  This usually isn't a problem.  It may change, but it
+may be a good thing.
 
 =head2 Debugging
 
@@ -419,7 +420,7 @@ This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
 =head2 One liners
 
 If you want to write "use Method::Signatures" in a one-liner, do a
-C<-MMethod::Signatures> first.  This is due to a bug in
+C<-MMethod::Signatures> first.  This is due to a bug/feature/limitation in
 Devel::Declare.
 
 =head2 No source filter
