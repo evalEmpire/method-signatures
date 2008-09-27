@@ -420,7 +420,7 @@ This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
 =head2 One liners
 
 If you want to write "use Method::Signatures" in a one-liner, do a
-C<-MMethod::Signatures> first.  This is due to a bug/feature/limitation in
+C<-MMethod::Signatures> first.  This is due to a bug/limitation in
 Devel::Declare.
 
 =head2 No source filter
