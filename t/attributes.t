@@ -3,7 +3,15 @@
 use strict;
 use warnings;
 
-use Test::More skip_all => "waiting on Devel::Declare fix";
+use Test::More;
+
+BEGIN {
+    eval "use attributes qw(get);  1;" or plan skip_all => "Need attributes for this test";
+    eval "use Attribute::Handlers; 1;" or plan skip_all => "Need Attribute::Handlers for this test";
+
+    plan 'no_plan';
+}
+
 
 {
     package Stuff;
@@ -11,7 +19,31 @@ use Test::More skip_all => "waiting on Devel::Declare fix";
     use Test::More;
     use Method::Signatures;
 
-    method echo($arg) : Something {
+    method echo($arg) : method {
         return $arg;
     }
+
+    is( Stuff->echo(42), 42 );
+    is_deeply( [::get \&echo], ['method'] );
+}
+
+
+{
+    package Things;
+
+    use Test::More;
+    use Method::Signatures;
+    use Attribute::Handlers;
+
+    sub Test : ATTR {
+        my($package, $symbol, $referent, $attr, $data) = @_;
+
+        is_deeply( $data, { foo => 23 } ) || diag explain $data;
+    }
+
+    method foo($arg) : Test({foo => 23}) {
+        return $arg;
+    }
+
+    is( Things->foo(42), 42 );
 }

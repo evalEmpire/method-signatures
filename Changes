@@ -1,6 +1,7 @@
 0.11
     New Features
     * Added the "$arg!" required syntax (currently does nothing)
+    * Attributes now work
 
     New Docs
     - Documented how to set a trait and a default

@@ -333,10 +333,17 @@ sub import {
         my $inject = shift;
         skipspace;
         my $linestr = Devel::Declare::get_linestr;
-        if (substr($linestr, $Offset, 1) eq '{') {
-            substr($linestr, $Offset+1, 0) = $inject;
-            Devel::Declare::set_linestr($linestr);
+
+        if (substr($linestr, $Offset, 1) eq ':') {      # sub with attributes
+            substr($linestr, $Offset, 0) = "sub ";
+            my $block_pos = rindex($linestr, "{");
+            substr($linestr, $block_pos + 1, 0) = $inject;
         }
+        elsif (substr($linestr, $Offset, 1) eq '{') {      # without attributes
+            substr($linestr, $Offset+1, 0) = $inject;
+        }
+
+        Devel::Declare::set_linestr($linestr);
     }
 
     sub scope_injector_call {
