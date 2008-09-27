@@ -8,6 +8,8 @@ my $build = Module::Build->new(
     module_name     => 'Method::Signatures',
     license         => 'perl',
     requires        => {
+        'perl'              => '5.8.1',
+
         'Devel::Declare'    => '0.002000',
         'Test::More'        => '0.62',
         'Data::Alias'       => '1.07',
