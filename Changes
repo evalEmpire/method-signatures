@@ -1,4 +1,4 @@
-0.11
+0.11  Sat Sep 27 16:47:51 EDT 2008
     New Features
     * Added the "$arg!" required syntax (currently does nothing)
     * Attributes now work (thanks to mst)
