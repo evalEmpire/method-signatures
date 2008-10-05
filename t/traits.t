@@ -15,5 +15,10 @@ use Test::More 'no_plan';
         return $this;
     }
 
-    is( Stuff->whatever(23),    23 );
+    method andever($this is foo is bar) {
+        return $this;
+    }
+
+    is( Stuff->whatever(23),  23 );
+    is( Stuff->andever(42),    42 );
 }

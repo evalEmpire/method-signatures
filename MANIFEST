@@ -4,6 +4,7 @@ lib/Method/Signatures.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
+t/alias.t
 t/anon.t
 t/attributes.t
 t/begin.t

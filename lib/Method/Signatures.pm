@@ -142,8 +142,36 @@ Each parameter can be assigned a trait with the C<$arg is TRAIT> syntax.
 
 Any unknown trait is ignored.
 
-Currently there are no traits.  It's for forward compatibility.
+Most parameters have a default traits of C<is rw is copy>.
 
+=over 4
+
+=item B<ro>
+
+Read-only.  Assigning or modifying the parameter is an error.
+
+B<NOT IMPLEMENTED>
+
+=item B<rw>
+
+Read-write.  It's ok to read or write the parameter.
+
+This is a default trait.
+
+=item B<copy>
+
+The parameter will be a copy of the argument (just like C<<my $arg = shift>>).
+
+This is a default trait except for the C<\@foo> parameter.
+
+=item B<alias>
+
+The parameter will be an alias of the argument.  Any changes to the
+parameter will be reflected in the caller.
+
+This is a default trait for the C<\@foo> parameter.
+
+=back
 
 =head3 Traits and defaults
 
@@ -273,7 +301,9 @@ sub import {
             $sig->{is_at_underscore}    = $proto eq '@_';
             $sig->{is_ref_alias}        = $proto =~ s{^\\}{}x;
 
-            $sig->{trait}   = $1 if $proto =~ s{ \s+ is \s+ (\S+) \s* }{}x;
+            while($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
+                $sig->{traits}{$1}++;
+            }
             $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
 
             my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
@@ -307,18 +337,18 @@ sub import {
 
             # These are the defaults.
             my $lhs = "my ${sigil}${name}";
-            my $rhs = (!$sig->{is_ref_alias} and $sig->{sigil} =~ /^[@%]$/) ? "\@_[$idx..\$#_]" : "\$_[$idx]";
+            my $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
+                      $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
+                                                   "\$_[$idx]"           ;
 
             # Handle a default value
             $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})" if defined $sig->{default};
 
-            # XXX We don't do anything with traits right now
-
             # XXX is_optional is ignored
 
             # Handle \@foo
-            if( $sig->{is_ref_alias} ) {
-                push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $sigil."{$rhs}";
+            if( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+                push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
             }
             else {
                 push @code, "$lhs = $rhs;";
