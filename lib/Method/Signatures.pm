@@ -5,6 +5,7 @@ use warnings;
 
 use Devel::Declare ();
 use Data::Alias ();
+use Readonly;
 use Scope::Guard;
 use Sub::Name;
 
@@ -149,8 +150,6 @@ Most parameters have a default traits of C<is rw is copy>.
 =item B<ro>
 
 Read-only.  Assigning or modifying the parameter is an error.
-
-B<NOT IMPLEMENTED>
 
 =item B<rw>
 
@@ -350,6 +349,10 @@ sub import {
             if( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
                 push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
             }
+            # Handle "is ro"
+            elsif( $sig->{traits}{ro} ) {
+                push @code, "Readonly::Readonly $lhs => $rhs;";
+            }
             else {
                 push @code, "$lhs = $rhs;";
             }
@@ -529,9 +532,6 @@ subroutine signatures.
 =head2 What about...
 
 Named parameters are in the pondering stage.
-
-Read-only parameters and aliasing will probably be supported with
-C<$arg is ro> and C<$arg is alias> respectively, mirroring Perl 6.
 
 Method traits are in the pondering stage.
 

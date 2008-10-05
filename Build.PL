@@ -14,6 +14,12 @@ my $build = Module::Build->new(
         'Test::More'        => '0.62',
         'Data::Alias'       => '1.07',
         'Sub::Name'         => '0.04',
+        'Readonly'          => '1.03',
+    },
+
+    recommends          => {
+        # Makes "is ro" faster.
+        'Readonly::XS'      => '1.02',
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',

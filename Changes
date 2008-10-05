@@ -1,6 +1,7 @@
 0.12
     New Features
     * Added "is alias"
+    * Added "is ro"
     * Multiple traits supported "is copy is rw"
 
     Bug Fixes
