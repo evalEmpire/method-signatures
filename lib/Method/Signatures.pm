@@ -420,7 +420,7 @@ sub import {
 
 =head1 PERFORMANCE
 
-There is no performance penalty for using this module.
+There is no run-time performance penalty for using this module.
 
 
 =head1 EXPERIMENTING
