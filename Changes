@@ -1,3 +1,12 @@
+0.12
+    Bug Fixes
+    * Stole some code from MooseX::Method::Signatures to make attributes
+      parse better.
+
+    Other
+    - Repository moved to github.
+
+
 0.11  Sat Sep 27 16:47:51 EDT 2008
     New Features
     * Added the "$arg!" required syntax (currently does nothing)

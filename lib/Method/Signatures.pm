@@ -8,7 +8,7 @@ use Data::Alias ();
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 
 =head1 NAME
@@ -334,16 +334,49 @@ sub import {
         skipspace;
         my $linestr = Devel::Declare::get_linestr;
 
-        if (substr($linestr, $Offset, 1) eq ':') {      # sub with attributes
-            substr($linestr, $Offset, 0) = "sub ";
-            my $block_pos = rindex($linestr, "{");
-            substr($linestr, $block_pos + 1, 0) = $inject;
-        }
-        elsif (substr($linestr, $Offset, 1) eq '{') {      # without attributes
-            substr($linestr, $Offset+1, 0) = $inject;
+        my $attrs   = '';
+
+        if (substr($linestr, $Offset, 1) eq ':') {
+            while (substr($linestr, $Offset, 1) ne '{') {
+                if (substr($linestr, $Offset, 1) eq ':') {
+                    substr($linestr, $Offset, 1) = '';
+                    Devel::Declare::set_linestr($linestr);
+
+                    $attrs .= ' :';
+                }
+
+                skipspace;
+                $linestr = Devel::Declare::get_linestr();
+
+                if (my $len = Devel::Declare::toke_scan_word($Offset, 0)) {
+                    my $name = substr($linestr, $Offset, $len);
+                    substr($linestr, $Offset, $len) = '';
+                    Devel::Declare::set_linestr($linestr);
+
+                    $attrs .= " ${name}";
+
+                    if (substr($linestr, $Offset, 1) eq '(') {
+                        my $length = Devel::Declare::toke_scan_str($Offset);
+                        my $arg    = Devel::Declare::get_lex_stuff();
+                        Devel::Declare::clear_lex_stuff();
+                        $linestr = Devel::Declare::get_linestr();
+                        substr($linestr, $Offset, $length) = '';
+                        Devel::Declare::set_linestr($linestr);
+
+                        $attrs .= "(${arg})";
+                    }
+                }
+            }
+
+            $linestr = Devel::Declare::get_linestr();
         }
 
-        Devel::Declare::set_linestr($linestr);
+        if (substr($linestr, $Offset, 1) eq '{') {
+            substr($linestr, $Offset + 1, 0) = $inject;
+            substr($linestr, $Offset, 0) = "sub ${attrs}";
+            Devel::Declare::set_linestr($linestr);
+        }
+
     }
 
     sub scope_injector_call {
@@ -432,7 +465,7 @@ and there should be no weird side effects.
 
 Devel::Declare only effects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
-surprisnigly stable.
+surprisingly stable.
 
 =head2 What about regular subroutines?
 
@@ -500,7 +533,7 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<Sub::Signatures>, L<Perl6::Subs>
+L<MooseX::Method::Signatures>, L<Perl6::Signature>, L<Sub::Signatures>, L<Perl6::Subs>
 
 Perl 6 subroutine parameters and arguments -  L<http://perlcabal.org/syn/S06.html#Parameters_and_arguments>
 

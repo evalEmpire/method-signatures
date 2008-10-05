@@ -7,8 +7,6 @@ use Test::More 'no_plan';
     package Foo;
     use Method::Signatures;
 
-    sub method (&);
-
     method new (%args) {
         return bless {%args}, $self;
     }

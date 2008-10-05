@@ -1,6 +1,6 @@
 ---
 name: Method-Signatures
-version: 0.10
+version: 0.12
 author:
   - 'Michael G Schwern <schwern@pobox.com>'
 abstract: method declarations with signatures and no source filter
@@ -8,17 +8,18 @@ license: perl
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
   license: http://dev.perl.org/licenses/
-  repository: http://svn.schwern.org/svn/CPAN/Method-Signatures
+  repository: https://github.com/schwern/method-signatures/tree
 requires:
   Data::Alias: 1.07
   Devel::Declare: 0.002000
   Sub::Name: 0.04
   Test::More: 0.62
+  perl: 5.8.1
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 0.10
-generated_by: Module::Build version 0.280805
+    version: 0.12
+generated_by: Module::Build version 0.3
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2

@@ -41,9 +41,7 @@ BEGIN {
         is_deeply( $data, { foo => 23 } ) || diag explain $data;
     }
 
-    method foo($arg) : Test({foo => 23}) {
-        return $arg;
-    }
+    method echo($arg) : Test({foo => 23}) { return $arg }
 
-    is( Things->foo(42), 42 );
+    is( Things->echo(42), 42 );
 }
