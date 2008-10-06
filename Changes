@@ -1,4 +1,4 @@
-20081006
+20081006  Mon Oct  6 02:24:36 EDT 2008
     New Features
     * Implemented "is alias", "is ro", "is rw" and "is copy".
     * Multiple traits supported "is copy is rw"

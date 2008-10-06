@@ -1,17 +1,26 @@
 #!/usr/bin/perl -w
 
-use 5.006;
+use 5.008001;
 
 use Module::Build;
 
 my $build = Module::Build->new(
     module_name     => 'Method::Signatures',
     license         => 'perl',
+
+    configure_requires => {
+        'Module::Build'     => '0.26',
+    },
+
+    build_requires      => {
+        'Module::Build'     => '0.26',
+        'Test::More'        => '0.62',
+    },
+
     requires        => {
         'perl'              => '5.8.1',
 
         'Devel::Declare'    => '0.002000',
-        'Test::More'        => '0.62',
         'Data::Alias'       => '1.07',
         'Sub::Name'         => '0.04',
         'Readonly'          => '1.03',
@@ -20,6 +29,13 @@ my $build = Module::Build->new(
     recommends          => {
         # Makes "is ro" faster.
         'Readonly::XS'      => '1.02',
+    },
+
+    auto_features       => {
+        "fast 'is ro' (needs Readonly::XS)" => {
+            description             => 'faster "is ro" type',
+            requires                => { 'Readonly::XS' => '1.02' }
+        }
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
