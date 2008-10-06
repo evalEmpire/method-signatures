@@ -9,7 +9,7 @@ use Readonly;
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = 2008106;
+our $VERSION = 20081006;
 
 
 =head1 NAME
@@ -234,6 +234,101 @@ sub import {
 }
 
 
+sub make_proto_unwrap {
+    my ($proto) = @_;
+    $proto ||= '';
+
+    # Do all the signature parsing here
+    my %signature;
+    $signature{invocant} = '$self';
+    $signature{invocant} = $1 if $proto =~ s{^(.*):\s*}{};
+
+    my @protos = split /\s*,\s*/, $proto;
+    for my $idx (0..$#protos) {
+        my $sig = $signature{$idx} = {};
+        my $proto = $protos[$idx];
+
+        #            print STDERR "proto: $proto\n";
+
+        $sig->{proto}               = $proto;
+        $sig->{idx}                 = $idx;
+        $sig->{is_at_underscore}    = $proto eq '@_';
+        $sig->{is_ref_alias}        = $proto =~ s{^\\}{}x;
+
+        while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
+            $sig->{traits}{$1}++;
+        }
+        $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
+
+        my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
+        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default});
+        $sig->{is_optional} = 0 if $name =~ s{\!$}{};
+        $sig->{sigil}       = $sigil;
+        $sig->{name}        = $name;
+        $sig->{var}         = $sigil . $name;
+    }
+
+    # XXX At this point we could do sanity checks
+
+    # Then turn it into Perl code
+    my $inject = inject_from_signature(\%signature);
+    #        print STDERR "inject: $inject\n";
+
+    return $inject;
+}
+
+
+# Turn the parsed signature into Perl code
+sub inject_from_signature {
+    my $signature = shift;
+
+    my @code;
+    push @code, "my $signature->{invocant} = shift;";
+        
+    for ( my $idx = 0; my $sig = $signature->{$idx}; $idx++ ) {
+        next if $sig->{is_at_underscore};
+
+        my $sigil = $sig->{sigil};
+        my $name  = $sig->{name};
+
+        # These are the defaults.
+        my $lhs = "my $sig->{var}";
+        my $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
+          $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
+            "\$_[$idx]"           ;
+
+        # Handle a default value
+        $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})" if defined $sig->{default};
+
+        push @code, qq[Method::Signatures::required_arg('$sig->{var}') if \@_ <= $idx; ]
+          unless $sig->{is_optional};
+
+        # Handle \@foo
+        if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+            push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
+        }
+        # Handle "is ro"
+        elsif ( $sig->{traits}{ro} ) {
+            push @code, "Readonly::Readonly $lhs => $rhs;";
+        } else {
+            push @code, "$lhs = $rhs;";
+        }
+    }
+
+    # All on one line.
+    return join ' ', @code;
+}
+
+
+sub required_arg {
+    my $var = shift;
+
+    my($pack, $file, $line, $method) = caller(1);
+    die sprintf "%s() missing required argument %s at %s line %d.\n",
+        $method, $var, $file, $line;
+}
+
+
 # Stolen from Devel::Declare's t/method-no-semi.t
 {
     our ($Declarator, $Offset);
@@ -279,89 +374,7 @@ sub import {
         Devel::Declare::shadow_sub("${pack}::${Declarator}", $_[0]);
     }
 
-    sub make_proto_unwrap {
-        my ($proto) = @_;
-        $proto ||= '';
-
-        # Do all the signature parsing here
-        my %signature;
-        $signature{invocant} = '$self';
-        $signature{invocant} = $1 if $proto =~ s{^(.*):\s*}{};
-
-        my @protos = split /\s*,\s*/, $proto;
-        for my $idx (0..$#protos) {
-            my $sig = $signature{$idx} = {};
-            my $proto = $protos[$idx];
-
-#            print STDERR "proto: $proto\n";
-
-            $sig->{proto}               = $proto;
-            $sig->{idx}                 = $idx;
-            $sig->{is_at_underscore}    = $proto eq '@_';
-            $sig->{is_ref_alias}        = $proto =~ s{^\\}{}x;
-
-            while($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
-                $sig->{traits}{$1}++;
-            }
-            $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
-
-            my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
-            $sig->{is_optional} = ($name =~ s{\?$}{} or $sig->{default});
-            $sig->{is_required} = ($name =~ s{\!$}{} or !$sig->{is_optional});
-            $sig->{sigil}       = $sigil;
-            $sig->{name}        = $name;
-        }
-
-        # XXX At this point we could do sanity checks
-
-        # Then turn it into Perl code
-        my $inject = inject_from_signature(\%signature);
-#        print STDERR "inject: $inject\n";
-
-        return $inject;
-    }
-
-    # Turn the parsed signature into Perl code
-    sub inject_from_signature {
-        my $signature = shift;
-
-        my @code;
-        push @code, "my $signature->{invocant} = shift;";
-        
-        for( my $idx = 0; my $sig = $signature->{$idx}; $idx++ ) {
-            next if $sig->{is_at_underscore};
-
-            my $sigil = $sig->{sigil};
-            my $name  = $sig->{name};
-
-            # These are the defaults.
-            my $lhs = "my ${sigil}${name}";
-            my $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
-                      $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
-                                                   "\$_[$idx]"           ;
-
-            # Handle a default value
-            $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})" if defined $sig->{default};
-
-            # XXX is_optional is ignored
-
-            # Handle \@foo
-            if( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
-                push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
-            }
-            # Handle "is ro"
-            elsif( $sig->{traits}{ro} ) {
-                push @code, "Readonly::Readonly $lhs => $rhs;";
-            }
-            else {
-                push @code, "$lhs = $rhs;";
-            }
-        }
-
-        # All on one line.
-        return join ' ', @code;
-    }
-
+    # Improved attributed parsing from MooseX::Method::Signatures
     sub inject_if_block {
         my $inject = shift;
         skipspace;
@@ -453,7 +466,8 @@ sub import {
 
 =head1 PERFORMANCE
 
-There is no run-time performance penalty for using this module.
+There is no run-time performance penalty for using this module above
+what it normally costs to do argument handling.
 
 
 =head1 EXPERIMENTING
@@ -528,6 +542,10 @@ return value.
 
 It doesn't.  Perl prototypes are a rather different beastie from
 subroutine signatures.
+
+=head2 Error checking
+
+There currently is very little checking done on the prototype syntax.
 
 =head2 What about...
 

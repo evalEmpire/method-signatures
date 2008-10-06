@@ -26,8 +26,9 @@ use Test::More 'no_plan';
     is( Stuff->things(),        99 );
 
     method some_optional($that, $this?) {
-        return $that + $this
+        return $that + ($this || 0);
     }
 
     is( Stuff->some_optional(18, 22), 18 + 22 );
+    is( Stuff->some_optional(18), 18 );
 }

@@ -31,12 +31,12 @@ use Test::More 'no_plan';
         return $self, @_;
     }
     
-    method caller($foo, $bar) {
-        return CORE::caller;
+    method caller($height = 0) {
+        return (CORE::caller($height))[0..2];
     }
 
 #line 39
-    method warn($foo, $bar) {
+    method warn($foo?) {
         my $warning = '';
         local $SIG{__WARN__} = sub { $warning = join '', @_; };
         CORE::warn "Testing warn";
