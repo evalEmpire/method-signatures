@@ -1,12 +1,12 @@
 20081006
     New Features
-    * Added "is alias"
-    * Added "is ro"
+    * Implemented "is alias", "is ro", "is rw" and "is copy".
     * Multiple traits supported "is copy is rw"
+    * Implemented ! and ? (required and optional arguments)
 
     Bug Fixes
     * Stole some code from MooseX::Method::Signatures to make attributes
-      parse better.
+      parse better.  (thanks to Florian Ragwitz)
 
     Other
     - Repository moved to github.

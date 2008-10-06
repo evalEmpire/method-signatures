@@ -497,6 +497,8 @@ may be a good thing.
 
 This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
 
+You can see the Perl code Method::Signatures translates to by using B::Deparse.
+
 =head2 One liners
 
 If you want to write "use Method::Signatures" in a one-liner, do a
