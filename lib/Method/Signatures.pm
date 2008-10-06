@@ -568,6 +568,10 @@ Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
 makes the subroutine names come out right in caller().
 
+And thanks to Florian Ragwitz for his parallel
+L<MooseX::Method::Signatures> module from which I borrow ideas and
+code.
+
 
 =head1 LICENSE
 
