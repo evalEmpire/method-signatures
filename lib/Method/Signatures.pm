@@ -9,7 +9,7 @@ use Readonly;
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = '0.12';
+our $VERSION = 2008106;
 
 
 =head1 NAME

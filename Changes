@@ -1,4 +1,4 @@
-0.12
+20081006
     New Features
     * Added "is alias"
     * Added "is ro"
@@ -10,6 +10,7 @@
 
     Other
     - Repository moved to github.
+    - Changing to ISO date versions.
 
 
 0.11  Sat Sep 27 16:47:51 EDT 2008
