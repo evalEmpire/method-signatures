@@ -522,6 +522,8 @@ L<Devel::Declare> cannot yet change the way C<sub> behaves.  It's
 being worked on and when it works I'll release another module unifying
 method and sub.
 
+I might release something using C<func>.
+
 =head2 What about class methods?
 
 Right now there's nothing special about class methods.  Just use
@@ -543,11 +545,36 @@ return value.
 =head2 How does this relate to Perl's built-in prototypes?
 
 It doesn't.  Perl prototypes are a rather different beastie from
-subroutine signatures.
+subroutine signatures.  They don't work on methods anyway.
+
+A syntax for function prototypes is being considered.
+
+    func($foo, $bar?) is proto($;$)
+
 
 =head2 Error checking
 
 There currently is very little checking done on the prototype syntax.
+Here's some basic checks I would like to add, mostly to avoid
+ambiguous or non-sense situations.
+
+* If one positional param is optional, everything to the right must be optional
+
+    method foo($a, $b?, $c?)  # legal
+
+    method bar($a, $b?, $c)   # illegal, ambiguous
+
+Does C<<->bar(1,2)>> mean $a = 1 and $b = 2 or $a = 1, $c = 3?
+
+* If you're have named parameters, all your positional params must be required.
+
+    method foo($a, $b, :$c);    # legal
+    method bar($a?, $b?, :$c);   # illegal, ambiguous
+
+Does C<<->bar(c => 42)>> mean $a = 'c', $b = 42 or just $c = 42?
+
+* Positionals are resolved before named params.  They have precedence.
+
 
 =head2 What about...
 
@@ -559,10 +586,32 @@ An API to query a method's signature is in the pondering stage.
 
 Now that we have method signatures, multi-methods are a distinct possibility.
 
+Applying traits to all parameters as a short-hand?
+
+    # Equivalent?
+    method foo($a is ro, $b is ro, $c is ro)
+    method foo($a, $b, $c) is ro
+
+A "go really fast" switch.  Turn off all runtime checks that might
+bite into performance.
+
+Method traits.
+
+    method add($left, $right) is predictable   # declarative
+    method add($left, $right) is cached        # procedural
+                                               # (and Perl 6 compatible)
+
 
 =head1 THANKS
 
-This is really just sugar on top of Matt Trout's L<Devel::Declare> work.
+Most of this module is based on or copied from hard work done by many
+other people.
+
+All the really scary parts are copied from or rely on Matt Trout's
+L<Devel::Declare> work.
+
+The prototype syntax is a slight adaptation of all the
+excellent work the Perl 6 folks have already done.
 
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
