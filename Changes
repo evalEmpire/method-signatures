@@ -1,4 +1,7 @@
 Next
+    New Features
+    * Added named parameters.
+
     Docs
     * Some documentation on what is not allowed, even if we don't
       yet check for it.
