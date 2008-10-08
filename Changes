@@ -1,6 +1,9 @@
-20081008
+20081008  Wed Oct  8 09:48:33 EDT 2008
     New Features
-    * Named parameters have some basic compile-time error checks for illegal signatures
+    * Named parameters have some basic compile-time error checks for illegal signatures.
+
+    New Docs
+    * Document restritions on named parameters.
 
 
 20081007  Tue Oct  7 23:27:19 EDT 2008
