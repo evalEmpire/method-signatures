@@ -49,8 +49,10 @@ This is B<ALPHA SOFTWARE> which relies on B<YET MORE ALPHA SOFTWARE>.
 Use at your own risk.  Features may change.
 
 Provides a proper method keyword, like "sub" but specificly for making
-methods.  Also allows signatures.  Finally it will automatically
-provide the invocant as C<$self>.  No more C<my $self = shift>.
+methods.  It will automatically provide the invocant as C<$self>.  No
+more C<my $self = shift>.
+
+Also allows signatures, very similar to Perl 6 signatures.
 
 And it does all this with B<no source filters>.
 
@@ -258,6 +260,44 @@ An anonymous method can be declared just like an anonymous sub.
 
     $obj->$method(42);
 
+
+=head2 Differences from Perl 6
+
+Method::Signatures is mostly a straight subset of Perl 6 signatures.
+The important differences...
+
+=head3 Restrictions on named parameters
+
+As noted above, there are more restrictions on named parameters than
+in Perl 6.
+
+=head3 Named parameters are just hashes
+
+Perl 5 lacks all the fancy named parameter syntax for the caller.
+
+=head3 Parameters are copies.
+
+In Perl 6, parameters are aliases.  This makes sense in Perl 6 because
+Perl 6 is an "everything is an object" language.  In Perl 5 is not, so
+parameters are much more naturally passed as copies.
+
+You can alias using the "alias" trait.
+
+=head3 Can't use positional params as named params
+
+Perl 6 allows you to use any parameter as a named paramter.  Perl 5
+lacks the named parameter disambiguating syntax so it is not allowed.
+
+=head3 Addition of the C<\@foo> reference alias prototype
+
+Because in Perl 6 arrays and hashes don't get flattened, and their
+referencing syntax is much improved.  Perl 5 has no such luxury, so
+Method::Signatures added a way to alias references to normal variables
+to make them easier to work with.
+
+=head3 Addition of the C<@_> prototype
+
+Method::Signatures lets you punt and use @_ like in regular Perl 5.
 
 =cut
 
@@ -765,8 +805,6 @@ Does C<<->bar(c => 42)>> mean $a = 'c', $b = 42 or just $c = 42?
 
 
 =head2 What about...
-
-Named parameters are in the pondering stage.
 
 Method traits are in the pondering stage.
 
