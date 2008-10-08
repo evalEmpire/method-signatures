@@ -16,7 +16,8 @@ our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 sub DEBUG {
     return unless $DEBUG;
 
-    print STDERR "DEBUG: ", @_;
+    require Data::Dumper;
+    print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
 }
 
 
@@ -56,8 +57,6 @@ And it does all this with B<no source filters>.
 
 =head2 Signature syntax
 
-At the moment the signatures are very simple.
-
     method foo($bar, $baz) {
         $self->wibble($bar, $baz);
     }
@@ -78,10 +77,24 @@ signature.
 Future releases will add extensively to the signature syntax probably
 along the lines of Perl 6.
 
+
 =head3 C<@_>
 
 Other than removing C<$self>, C<@_> is left intact.  You are free to
 use C<@_> alongside the arguments provided by Method::Signatures.
+
+
+=head3 Named parameters
+
+Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
+
+    method foo(:$arg) {
+        ...
+    }
+
+    Class->foo( arg => 42 );
+
+Named parameters are optional and can have defaults.
 
 
 =head3 Aliased references
@@ -245,16 +258,24 @@ sub import {
 }
 
 
+sub _strip_ws {
+    $_[0] =~ s/^\s+//;
+    $_[0] =~ s/\s+$//;
+}
+
+
 sub make_proto_unwrap {
     my ($proto) = @_;
     $proto ||= '';
+
+    _strip_ws($proto);
 
     my @protos = split /\s*,\s*/, $proto;
 
     my %signature;
     $signature{invocant} = '$self';
     if( @protos ) {
-        $signature{invocant} = $1 if $protos[0] =~ s{^(.*?):\s*}{};
+        $signature{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
         shift @protos unless $protos[0] =~ /\S/;
     }
 
@@ -292,6 +313,8 @@ sub make_proto_unwrap {
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
+
+        DEBUG( "sig: ", $sig );
     }
 
     # XXX At this point we could do sanity checks
@@ -353,18 +376,15 @@ sub inject_for_sig {
                                             "\$_[$idx]"           ;
     }
 
+    my $check_exists = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
     if( defined $sig->{default} ) {
-        if( $sig->{named} ) {
-            $rhs = "exists \$args{$sig->{name}} ? ($rhs) : ($sig->{default})";
-        }
-        else {
-            $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})";
-        }
+        $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
-    push @code, qq[Method::Signatures::required_arg('$sig->{var}') if \@_ <= $idx; ]
-      unless $sig->{is_optional};
+    if( !$sig->{is_optional} ) {
+        push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
+    }
 
     # Handle \@foo
     if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
