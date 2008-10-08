@@ -442,8 +442,20 @@ sub inject_from_signature {
         push @code, inject_for_sig($sig);
     }
 
+    push @code, 'Method::Signatures::named_param_check(\%args);' if $signature->{has_named};
+
     # All on one line.
     return join ' ', @code;
+}
+
+
+sub named_param_check {
+    my $args = shift;
+    my @keys = keys %$args;
+
+    return 1 unless @keys;
+
+    signature_error("does not take @keys as named argument(s)");
 }
 
 
@@ -463,7 +475,7 @@ sub inject_for_sig {
     my $rhs;
 
     if( $sig->{named} ) {
-        $rhs = "\$args{$sig->{name}}";
+        $rhs = "delete \$args{$sig->{name}}";
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :

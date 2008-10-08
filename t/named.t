@@ -20,6 +20,12 @@ use Test::More 'no_plan';
 
     ::is_deeply( Foo->formalize( "stuff" ), { text => "stuff", justify => "left" } );
 
+#line 24
+    ok !eval {
+        Foo->formalize( "stuff", wibble => 23 );
+    };
+    is $@, "Foo::formalize() does not take wibble as named argument(s) at $0 line 25.\n";
+
 #line 25
     method foo( :$arg! ) {
         return $arg;
