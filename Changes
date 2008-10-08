@@ -6,6 +6,8 @@ Next
     * Some documentation on what is not allowed, even if we don't
       yet check for it.
     * More thanks!
+    * Add an example and comparision with regular Perl
+    * Add some debugging tips
 
 
 20081006  Mon Oct  6 02:24:36 EDT 2008

@@ -555,6 +555,48 @@ There is no run-time performance penalty for using this module above
 what it normally costs to do argument handling.
 
 
+=head1 DEBUGGING
+
+One of the best ways to figure out what Method::Signatures is doing is
+to run your code through B::Deparse (run the code with -MO=Deparse).
+
+
+=head1 EXAMPLE
+
+Here's an example of a method which displays some text and takes some
+extra options.
+
+  use Method::Signatures;
+
+  method display($text is ro, :$justify = "left", :$fh = \*STDOUT) {
+      ...
+  }
+
+  # $text = $stuff, $justify = "left" and $fh = \*STDOUT
+  $obj->display($stuff);
+
+  # $text = $stuff, $justify = "left" and $fh = \*STDERR
+  $obj->display($stuff, fh => \*STDERR);
+
+  # error, missing required $text argument
+  $obj->display();
+
+The display() method is equivalent to all this code.
+
+  sub display {
+      my $self = shift;
+
+      croak('display() missing required argument $text') unless @_ > 0;
+      Readonly my $text = $_[0];
+
+      my(%args) = @_[1 .. $#_];
+      my $justify = exists $args{justify} ? $args{justify} : 'left';
+      my $fh      = exists $args{fh}      ? $args{'fh'}    : \*STDOUT;
+
+      ...
+  }
+
+
 =head1 EXPERIMENTING
 
 If you want to experiment with the prototype syntax, replace
