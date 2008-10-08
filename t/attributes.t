@@ -3,14 +3,9 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More 'no_plan';
 
-BEGIN {
-    eval "use attributes;  1;" or plan skip_all => "Need attributes for this test";
-
-    plan 'no_plan';
-}
-
+use attributes;
 
 {
     package Stuff;
