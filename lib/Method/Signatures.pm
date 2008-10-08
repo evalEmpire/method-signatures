@@ -11,6 +11,14 @@ use Sub::Name;
 
 our $VERSION = 20081006;
 
+our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
+
+sub DEBUG {
+    return unless $DEBUG;
+
+    print STDERR "DEBUG: ", @_;
+}
+
 
 =head1 NAME
 
@@ -222,6 +230,9 @@ sub import {
     my $class = shift;
     my $caller = caller;
 
+    my $arg = shift;
+    $DEBUG = 1 if defined $arg and $arg eq ':DEBUG';
+
     Devel::Declare->setup_for(
         $caller,
         { method => { const => \&parser } }
@@ -238,22 +249,33 @@ sub make_proto_unwrap {
     my ($proto) = @_;
     $proto ||= '';
 
-    # Do all the signature parsing here
+    my @protos = split /\s*,\s*/, $proto;
+
     my %signature;
     $signature{invocant} = '$self';
-    $signature{invocant} = $1 if $proto =~ s{^(.*):\s*}{};
+    $signature{invocant} = $1 if $protos[0] =~ s{^(.*?):\s*}{};
 
-    my @protos = split /\s*,\s*/, $proto;
-    for my $idx (0..$#protos) {
-        my $sig = $signature{$idx} = {};
-        my $proto = $protos[$idx];
+    $signature{named}      = [];
+    $signature{positional} = [];
 
-        #            print STDERR "proto: $proto\n";
+    my $idx = 0;
+    for my $proto (@protos) {
+        DEBUG( "proto: $proto\n" );
+        my $sig   = {};
+        $sig->{named} = $proto =~ s{^:}{};
+
+        if( $sig->{named} ) {
+            push @{$signature{named}}, $sig;
+        }
+        else {
+            push @{$signature{positional}}, $sig;
+            $sig->{idx} = $idx;
+            $idx++;
+        }
 
         $sig->{proto}               = $proto;
-        $sig->{idx}                 = $idx;
         $sig->{is_at_underscore}    = $proto eq '@_';
-        $sig->{is_ref_alias}        = $proto =~ s{^\\}{}x;
+        $sig->{is_ref_alias}        = $proto =~ s{^\\}{};
 
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
@@ -261,7 +283,7 @@ sub make_proto_unwrap {
         $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
 
         my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default});
+        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named});
         $sig->{is_optional} = 0 if $name =~ s{\!$}{};
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
@@ -272,7 +294,7 @@ sub make_proto_unwrap {
 
     # Then turn it into Perl code
     my $inject = inject_from_signature(\%signature);
-    #        print STDERR "inject: $inject\n";
+    DEBUG( "inject: $inject\n" );
 
     return $inject;
 }
@@ -284,41 +306,73 @@ sub inject_from_signature {
 
     my @code;
     push @code, "my $signature->{invocant} = shift;";
-        
-    for ( my $idx = 0; my $sig = $signature->{$idx}; $idx++ ) {
-        next if $sig->{is_at_underscore};
 
-        my $sigil = $sig->{sigil};
-        my $name  = $sig->{name};
+    for my $sig (@{$signature->{positional}}) {
+        push @code, inject_for_sig($sig);
+    }
 
-        # These are the defaults.
-        my $lhs = "my $sig->{var}";
-        my $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
-          $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
-            "\$_[$idx]"           ;
+    my $first_named_idx = @{$signature->{positional}};
+    push @code, "my \%args = \@_[$first_named_idx..\$#_];";
 
-        # Handle a default value
-        $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})" if defined $sig->{default};
-
-        push @code, qq[Method::Signatures::required_arg('$sig->{var}') if \@_ <= $idx; ]
-          unless $sig->{is_optional};
-
-        # Handle \@foo
-        if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
-            push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
-        }
-        # Handle "is ro"
-        elsif ( $sig->{traits}{ro} ) {
-            push @code, "Readonly::Readonly $lhs => $rhs;";
-        } else {
-            push @code, "$lhs = $rhs;";
-        }
+    for my $sig (@{$signature->{named}}) {
+        push @code, inject_for_sig($sig);
     }
 
     # All on one line.
     return join ' ', @code;
 }
 
+
+sub inject_for_sig {
+    my $sig = shift;
+
+    return if $sig->{is_at_underscore};
+
+    my @code;
+
+    my $sigil = $sig->{sigil};
+    my $name  = $sig->{name};
+    my $idx   = $sig->{idx};
+
+    # These are the defaults.
+    my $lhs = "my $sig->{var}";
+    my $rhs;
+
+    if( $sig->{named} ) {
+        $rhs = "\$args{$sig->{name}}";
+    }
+    else {
+        $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
+               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
+                                            "\$_[$idx]"           ;
+    }
+
+    # Handle a default value
+    if( defined $sig->{default} ) {
+        if( $sig->{named} ) {
+            $rhs = "exists \$args{$sig->{name}} ? ($rhs) : ($sig->{default})";
+        }
+        else {
+            $rhs = "(\@_ > $idx) ? ($rhs) : ($sig->{default})";
+        }
+    }
+
+    push @code, qq[Method::Signatures::required_arg('$sig->{var}') if \@_ <= $idx; ]
+      unless $sig->{is_optional};
+
+    # Handle \@foo
+    if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+        push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
+    }
+    # Handle "is ro"
+    elsif ( $sig->{traits}{ro} ) {
+        push @code, "Readonly::Readonly $lhs => $rhs;";
+    } else {
+        push @code, "$lhs = $rhs;";
+    }
+
+    return @code;
+}
 
 sub required_arg {
     my $var = shift;
@@ -357,6 +411,7 @@ sub required_arg {
         skipspace;
     
         my $linestr = Devel::Declare::get_linestr();
+        DEBUG( "strip_proto/\$linestr: $linestr\n" );
         if (substr($linestr, $Offset, 1) eq '(') {
             my $length = Devel::Declare::toke_scan_str($Offset);
             my $proto = Devel::Declare::get_lex_stuff();
@@ -364,6 +419,9 @@ sub required_arg {
             $linestr = Devel::Declare::get_linestr();
             substr($linestr, $Offset, $length) = '';
             Devel::Declare::set_linestr($linestr);
+
+            DEBUG( "strip_proto/\$proto: $proto\n" );
+
             return $proto;
         }
         return;
@@ -382,6 +440,7 @@ sub required_arg {
 
         my $attrs   = '';
 
+        DEBUG("inject_if_block/\$linestr: $linestr\n");
         if (substr($linestr, $Offset, 1) eq ':') {
             while (substr($linestr, $Offset, 1) ne '{') {
                 if (substr($linestr, $Offset, 1) eq ':') {
