@@ -9,7 +9,7 @@ use Readonly;
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = 20081007;
+our $VERSION = 20081008;
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
@@ -94,7 +94,29 @@ Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
 
     Class->foo( arg => 42 );
 
-Named parameters are optional and can have defaults.
+Named parameters by default are optional.
+
+Required positional parameters and named parameters can be mixed, but
+the named params must come last.
+
+    method foo( $a, $b, :$c )   # legal
+
+Named parameters are passed in as a hash after all positional arguments.
+
+    method display( $text, :$justify = 'left', :$enchef = 0 ) {
+        ...
+    }
+
+    # $text = "Some stuff", $justify = "right", $enchef = 0
+    $obj->display( "Some stuff", justify => "right" );
+
+You cannot mix optional positional params with named params as that
+leads to ambiguities.
+
+    method foo( $a, $b?, :$c )  # illegal
+
+    # Is this $a = 'c', $b = 42 or $c = 42?
+    $obj->foo( c => 42 );
 
 
 =head3 Aliased references
@@ -281,6 +303,13 @@ sub make_proto_unwrap {
 
     $signature{named}      = [];
     $signature{positional} = [];
+    $signature{overall}    = {
+        has_optional            => 0,
+        has_optional_positional => 0,
+        has_named               => 0,
+        has_positional          => 0,
+        has_invocant            => $signature{invocant} ? 1 : 0,
+    };
 
     my $idx = 0;
     for my $proto (@protos) {
@@ -289,11 +318,7 @@ sub make_proto_unwrap {
         my $sig   = {};
         $sig->{named} = $proto =~ s{^:}{};
 
-        if( $sig->{named} ) {
-            push @{$signature{named}}, $sig;
-        }
-        else {
-            push @{$signature{positional}}, $sig;
+        if( !$sig->{named} ) {
             $sig->{idx} = $idx;
             $idx++;
         }
@@ -314,16 +339,46 @@ sub make_proto_unwrap {
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
 
+        check_signature($sig, \%signature);
+
+        if( $sig->{named} ) {
+            push @{$signature{named}}, $sig;
+        }
+        else {
+            push @{$signature{positional}}, $sig;
+        }
+
+        $signature{has_optional}++              if $sig->{is_optional};
+        $signature{has_named}++                 if $sig->{named};
+        $signature{has_positional}++            if !$sig->{named};
+        $signature{has_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
+
         DEBUG( "sig: ", $sig );
     }
-
-    # XXX At this point we could do sanity checks
 
     # Then turn it into Perl code
     my $inject = inject_from_signature(\%signature);
     DEBUG( "inject: $inject\n" );
 
     return $inject;
+}
+
+
+sub check_signature {
+    my($sig, $signature) = @_;
+
+    if( $sig->{named} ) {
+        if( $signature->{has_optional_positional} ) {
+            my $pos_var = $signature->{positional}[-1]{var};
+            die("named parameter $sig->{var} mixed with optional positional $pos_var\n");
+        }
+    }
+    else {
+        if( $signature->{has_named} ) {
+            my $named_var = $signature->{named}[-1]{var};
+            die("positional parameter $sig->{var} after named param $named_var\n");
+        }
+    }
 }
 
 
@@ -400,12 +455,18 @@ sub inject_for_sig {
     return @code;
 }
 
+sub signature_error {
+    my $msg = shift;
+    my $height = shift || 1;
+
+    my($pack, $file, $line, $method) = caller($height + 1);
+    die "$method() $msg at $file line $line.\n";
+}
+
 sub required_arg {
     my $var = shift;
 
-    my($pack, $file, $line, $method) = caller(1);
-    die sprintf "%s() missing required argument %s at %s line %d.\n",
-        $method, $var, $file, $line;
+    signature_error sprintf "missing required argument $var";
 }
 
 

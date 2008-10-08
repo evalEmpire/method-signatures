@@ -7,6 +7,7 @@ use Test::More 'no_plan';
     package Foo;
 
     use Method::Signatures;
+    use Test::More;
 
     method formalize($text, :$justify = "left", :$case) {
         my %params;
@@ -19,12 +20,30 @@ use Test::More 'no_plan';
 
     ::is_deeply( Foo->formalize( "stuff" ), { text => "stuff", justify => "left" } );
 
-#line 23
+#line 25
     method foo( :$arg! ) {
         return $arg;
     }
 
     ::is( Foo->foo( arg => 42 ), 42 );
     ::ok !eval { foo() };
-    ::is $@, "Foo::foo() missing required argument \$arg at $0 line 28.\n";
+    ::is $@, "Foo::foo() missing required argument \$arg at $0 line 30.\n";
+
+
+    # Compile time errors need internal refactoring before I can get file, line and method
+    # information.
+    eval q{
+        method wrong( :$named, $pos ) {}
+    };
+    like $@, qr/positional parameter \$pos after named param \$named/;
+
+    eval q{
+        method wrong( $foo, :$named, $bar ) {}
+    };
+    like $@, qr/positional parameter \$bar after named param \$named/;
+
+    eval q{
+        method wrong( $foo, $bar?, :$named ) {}
+    };
+    like $@, qr/named parameter \$named mixed with optional positional \$bar/;
 }

@@ -1,3 +1,8 @@
+20081008
+    New Features
+    * Named parameters have some basic compile-time error checks for illegal signatures
+
+
 20081007  Tue Oct  7 23:27:19 EDT 2008
     New Features
     * Added named parameters.
