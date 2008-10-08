@@ -253,7 +253,10 @@ sub make_proto_unwrap {
 
     my %signature;
     $signature{invocant} = '$self';
-    $signature{invocant} = $1 if $protos[0] =~ s{^(.*?):\s*}{};
+    if( @protos ) {
+        $signature{invocant} = $1 if $protos[0] =~ s{^(.*?):\s*}{};
+        shift @protos unless $protos[0] =~ /\S/;
+    }
 
     $signature{named}      = [];
     $signature{positional} = [];
@@ -261,6 +264,7 @@ sub make_proto_unwrap {
     my $idx = 0;
     for my $proto (@protos) {
         DEBUG( "proto: $proto\n" );
+
         my $sig   = {};
         $sig->{named} = $proto =~ s{^:}{};
 
@@ -310,6 +314,8 @@ sub inject_from_signature {
     for my $sig (@{$signature->{positional}}) {
         push @code, inject_for_sig($sig);
     }
+
+    return join ' ', @code unless @{$signature->{named}};
 
     my $first_named_idx = @{$signature->{positional}};
     push @code, "my \%args = \@_[$first_named_idx..\$#_];";
