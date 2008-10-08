@@ -6,8 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    eval "use attributes qw(get);  1;" or plan skip_all => "Need attributes for this test";
-    eval "use Attribute::Handlers; 1;" or plan skip_all => "Need Attribute::Handlers for this test";
+    eval "use attributes;  1;" or plan skip_all => "Need attributes for this test";
 
     plan 'no_plan';
 }
@@ -24,24 +23,28 @@ BEGIN {
     }
 
     is( Stuff->echo(42), 42 );
-    is_deeply( [::get \&echo], ['method'] );
+    is_deeply( [attributes::get \&echo], ['method'] );
 }
 
 
 {
-    package Things;
+    use attributes;
 
-    use Test::More;
-    use Method::Signatures;
-    use Attribute::Handlers;
+    my $attrs;
+    my $cb_called;
 
-    sub Test : ATTR {
-        my($package, $symbol, $referent, $attr, $data) = @_;
-
-        is_deeply( $data, { foo => 23 } ) || diag explain $data;
+    sub MODIFY_CODE_ATTRIBUTES {
+        my ($pkg, $code, @attrs) = @_;
+        $cb_called = 1;
+        $attrs = \@attrs;
+        return ();
     }
 
-    method echo($arg) : Test({foo => 23}) { return $arg }
+    method moo : Bar Baz(fubar) {
+    }
 
-    is( Things->echo(42), 42 );
+    method foo :Bar :Moo(:Ko{oh) : Baz(fu{bar:): { return {} }
+
+    ok($cb_called, 'attribute handler got called');
+    is_deeply($attrs, [qw/Bar Moo(:Ko{oh) Baz(fu{bar:)/], '... with the right attributes');
 }
