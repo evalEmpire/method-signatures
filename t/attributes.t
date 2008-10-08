@@ -23,7 +23,10 @@ use attributes;
 
 
 {
+    package Things;
+
     use attributes;
+    use Method::Signatures;
 
     my $attrs;
     my $cb_called;
@@ -35,10 +38,10 @@ use attributes;
         return ();
     }
 
-    method moo : Bar Baz(fubar) {
+    method moo($foo, $bar) : Bar Baz(fubar) {
     }
 
-    method foo :Bar :Moo(:Ko{oh) : Baz(fu{bar:): { return {} }
+    method foo() :Bar :Moo(:Ko{oh) : Baz(fu{bar:): { return {} }
 
     ok($cb_called, 'attribute handler got called');
     is_deeply($attrs, [qw/Bar Moo(:Ko{oh) Baz(fu{bar:)/], '... with the right attributes');
