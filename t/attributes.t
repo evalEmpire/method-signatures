@@ -43,6 +43,6 @@ use attributes;
 
     method foo() :Bar :Moo(:Ko{oh) : Baz(fu{bar:): { return {} }
 
-    ok($cb_called, 'attribute handler got called');
-    is_deeply($attrs, [qw/Bar Moo(:Ko{oh) Baz(fu{bar:)/], '... with the right attributes');
+    ::ok($cb_called, 'attribute handler got called');
+    ::is_deeply($attrs, [qw/Bar Moo(:Ko{oh) Baz(fu{bar:)/], '... with the right attributes');
 }
