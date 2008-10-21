@@ -313,7 +313,7 @@ sub import {
         { method => { const => \&parser } }
     );
 
-    DEBUG("import for $caller done");
+    DEBUG("import for $caller done\n");
 
     # I don't really understand why we need to declare method
     # in the caller's namespace.
@@ -557,8 +557,16 @@ sub required_arg {
             my $length = Devel::Declare::toke_scan_str($Offset);
             my $proto = Devel::Declare::get_lex_stuff();
             Devel::Declare::clear_lex_stuff();
-            $linestr = Devel::Declare::get_linestr();
+            if( $length < 0 ) {
+                $linestr .= Devel::Declare::get_linestr();
+                $length = abs($length) + 1;
+            }
+            else {
+                $linestr = Devel::Declare::get_linestr();
+            }
+            DEBUG("strip_proto/Offset: $Offset, length: $length, linestr, '$linestr'\n");
             substr($linestr, $Offset, $length) = '';
+            DEBUG("strip_proto/after substr: linestr, '$linestr'\n");
             Devel::Declare::set_linestr($linestr);
 
             DEBUG( "strip_proto/\$proto: $proto\n" );
