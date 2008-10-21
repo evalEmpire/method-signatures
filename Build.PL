@@ -8,6 +8,8 @@ my $build = Module::Build->new(
     module_name     => 'Method::Signatures',
     license         => 'perl',
 
+    recursive_test_files => 1,
+
     configure_requires => {
         'Module::Build'     => '0.26',
     },
