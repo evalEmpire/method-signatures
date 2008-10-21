@@ -15,5 +15,6 @@ method foo(
 {
     return $arg;
 }
+
 is $@, '';
 is( Foo->foo(42), 42 );
