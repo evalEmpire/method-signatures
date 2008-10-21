@@ -26,6 +26,7 @@ my $build = Module::Build->new(
         'Data::Alias'       => '1.07',
         'Sub::Name'         => '0.04',
         'Readonly'          => '1.03',
+        PPI                 => '1.203',
     },
 
     recommends          => {

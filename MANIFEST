@@ -1,6 +1,7 @@
 Build.PL
 Changes
 lib/Method/Signatures.pm
+lib/Method/Signatures/Parser.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
@@ -25,4 +26,5 @@ t/paren_on_own_line.t
 t/refs.t
 t/required.t
 t/ro.t
+t/split_proto.t
 t/traits.t

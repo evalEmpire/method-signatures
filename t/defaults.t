@@ -53,17 +53,17 @@ use Test::More 'no_plan';
     use Test::More;
     use Method::Signatures;
 
-    TODO: {
-        local $TODO = "Cannot handle a default with a comma in it";
-
-        ok eval q{
-            method hello($msg = "Hello, world!") {
-                return $msg;
-            }
-
-            is( Bar->hello,               "Hello, word!" );
-            is( Bar->hello("Greetings!"), "Greetings!" );
-        };
-        is $@, '';
+    method hello($msg = "Hello, world!") {
+        return $msg;
     }
+
+    is( Bar->hello,               "Hello, world!" );
+    is( Bar->hello("Greetings!"), "Greetings!" );
+
+    method hi($msg = q,Hi,) {
+        return $msg;
+    }
+
+    is( Bar->hi,                "Hi" );
+    is( Bar->hi("Yo"),          "Yo" );
 }

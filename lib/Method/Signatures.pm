@@ -3,6 +3,8 @@ package Method::Signatures;
 use strict;
 use warnings;
 
+use Method::Signatures::Parser;
+
 use Devel::Declare ();
 use Data::Alias ();
 use Readonly;
@@ -334,7 +336,7 @@ sub make_proto_unwrap {
 
     _strip_ws($proto);
 
-    my @protos = split /\s*,\s*/, $proto;
+    my @protos = split_proto($proto);
 
     my %signature;
     $signature{invocant} = '$self';
