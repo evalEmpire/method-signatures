@@ -573,15 +573,18 @@ sub required_arg {
             my $proto = Devel::Declare::get_lex_stuff();
             Devel::Declare::clear_lex_stuff();
             if( $length < 0 ) {
+                # Need to scan ahead more
                 $linestr .= Devel::Declare::get_linestr();
-                $length = abs($length) + 1;
+                $length = length($linestr) - rindex($linestr, ")") + 1;
             }
             else {
                 $linestr = Devel::Declare::get_linestr();
             }
+
             DEBUG("strip_proto/Offset: $Offset, length: $length, linestr, '$linestr'\n");
             substr($linestr, $Offset, $length) = '';
             DEBUG("strip_proto/after substr: linestr, '$linestr'\n");
+
             Devel::Declare::set_linestr($linestr);
 
             DEBUG( "strip_proto/\$proto: $proto\n" );

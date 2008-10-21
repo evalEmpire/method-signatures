@@ -7,6 +7,7 @@ Next
     * A default value with a comma in it is properly parsed.
     * Default values can now be any literal, even wacky things like q,Hi!,
     * The closing paren of a signature can now be on its own line.
+    * The closing paren and the opening block can be on the same line.
 
     New Docs
     * Documented differences from Perl 6
