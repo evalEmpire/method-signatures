@@ -14,17 +14,18 @@ sub split_proto {
     return unless $proto =~ /\S/;
 
     my $ppi = PPI::Document->new(\$proto);
-    my @tokens = $ppi->tokens;
+    my $statement = $ppi->find_first("PPI::Statement");
+    my $token = $statement->first_token;
 
     my @proto = ('');
-    for my $token (@tokens) {
+    do {
         if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
             push @proto, '';
         }
         else {
             $proto[-1] .= $token->content;
         }
-    }
+    } while ( $token = $token->next_sibling );
 
     strip_ws($_) for @proto;
     return @proto;

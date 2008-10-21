@@ -164,6 +164,19 @@ For example,
         return $this + $that;
     }
 
+Almost any expression can be used as a default.
+
+    method silly(
+        $num    = 42,
+        $string = q[Hello, world!],
+        $hash   = { this => 42, that => 23 },
+        $code   = sub { $num + 4 },
+        @nums   = (1,2,3),
+    )
+    {
+        ...
+    }
+
 Defaults will only be used if the argument is not passed in at all.
 Passing in C<undef> will override the default.  That means...
 

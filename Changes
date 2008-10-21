@@ -1,6 +1,7 @@
 Next
     New Features
     * Checks for unspecified arguments
+    * Almost anything can be used as a default.
 
     Bug Fixes
     * A default value with a comma in it is properly parsed.

@@ -60,10 +60,25 @@ use Test::More 'no_plan';
     is( Bar->hello,               "Hello, world!" );
     is( Bar->hello("Greetings!"), "Greetings!" );
 
+
     method hi($msg = q,Hi,) {
         return $msg;
     }
 
     is( Bar->hi,                "Hi" );
     is( Bar->hi("Yo"),          "Yo" );
+
+
+    method list(@args = (1,2,3)) {
+        return @args;
+    }
+
+    is_deeply [Bar->list()], [1,2,3];
+
+
+    method code($num, $code = sub { $num + 2 }) {
+        return $code->();
+    }
+
+    is( Bar->code(42), 44 );
 }
