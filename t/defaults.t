@@ -46,3 +46,24 @@ use Test::More 'no_plan';
     is( Stuff->copy_cat("wibble"), "wibble" );
     is( Stuff->copy_cat(23, 42),   42 );
 }
+
+
+{
+    package Bar;
+    use Test::More;
+    use Method::Signatures;
+
+    TODO: {
+        local $TODO = "Cannot handle a default with a comma in it";
+
+        ok eval q{
+            method hello($msg = "Hello, world!") {
+                return $msg;
+            }
+
+            is( Bar->hello,               "Hello, word!" );
+            is( Bar->hello("Greetings!"), "Greetings!" );
+        };
+        is $@, '';
+    }
+}
