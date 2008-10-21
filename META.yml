@@ -1,6 +1,6 @@
 ---
 name: Method-Signatures
-version: 20081008
+version: 20081021
 author:
   - 'Michael G Schwern <schwern@pobox.com>'
 abstract: method declarations with signatures and no source filter
@@ -14,18 +14,22 @@ configure_requires:
 requires:
   Data::Alias: 1.07
   Devel::Declare: 0.002000
+  PPI: 1.203
   Readonly: 1.03
   Sub::Name: 0.04
   perl: 5.8.1
 build_requires:
   Module::Build: 0.26
   Test::More: 0.62
+  Test::Warn: 0.10
 recommends:
   Readonly::XS: 1.02
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 20081008
+    version: 20081021
+  Method::Signatures::Parser:
+    file: lib/Method/Signatures/Parser.pm
 generated_by: Module::Build version 0.3
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
