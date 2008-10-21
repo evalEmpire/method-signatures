@@ -14,11 +14,17 @@ method foo(:$name, :$value) {
 
 
 TODO: {
-    local $TODO = 'Odd number warning should happen at caller';
+    # Test::Warn is having issues with $TODO.
+    Test::More->builder->todo_start("Odd number of elements should happen at the caller");
 
 #line 20
+    my @result;
     warning_like {
-#        local $TODO;
-        is_deeply [Foo->foo(name => 42, value =>)], [42, undef];
+        @result = Foo->foo(name => 42, value =>);
     } qr/^Odd number of elements in hash assignment at \Q$0\E line 22.$/;
+
+    Test::More->builder->todo_end;
+
+    # Or should it be an error?
+    is_deeply \@result, [42, undef];
 }
