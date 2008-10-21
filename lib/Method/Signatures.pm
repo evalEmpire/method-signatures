@@ -313,6 +313,8 @@ sub import {
         { method => { const => \&parser } }
     );
 
+    DEBUG("import for $caller done");
+
     # I don't really understand why we need to declare method
     # in the caller's namespace.
     no strict 'refs';
@@ -621,6 +623,7 @@ sub required_arg {
             Devel::Declare::set_linestr($linestr);
         }
 
+        DEBUG("inject_if_block done\n");
     }
 
     sub scope_injector_call {
@@ -648,6 +651,8 @@ sub required_arg {
         } else {
             shadow(sub (&) { shift });
         }
+
+        DEBUG("parser done\n");
     }
 
     sub inject_scope {
