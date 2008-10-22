@@ -1,3 +1,8 @@
+20081021.1911  Tue Oct 21 19:11:47 PDT 2008
+    Test Fixes
+    * Used a new feature of Test::Builder, upgrade dependency.
+
+
 20081021  Tue Oct 21 01:43:24 PDT 2008
     New Features
     * Checks for unspecified arguments

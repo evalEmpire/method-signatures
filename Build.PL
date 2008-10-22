@@ -16,7 +16,7 @@ my $build = Module::Build->new(
 
     build_requires      => {
         'Module::Build'     => '0.26',
-        'Test::More'        => '0.62',
+        'Test::More'        => '0.82',
         'Test::Warn'        => '0.10',
     },
 
