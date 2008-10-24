@@ -366,6 +366,7 @@ sub make_proto_unwrap {
         has_named               => 0,
         has_positional          => 0,
         has_invocant            => $signature{invocant} ? 1 : 0,
+        num_slurpy              => 0
     };
 
     my $idx = 0;
@@ -395,6 +396,7 @@ sub make_proto_unwrap {
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
+        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
 
         check_signature($sig, \%signature);
 
@@ -405,10 +407,12 @@ sub make_proto_unwrap {
             push @{$signature{positional}}, $sig;
         }
 
-        $signature{has_optional}++              if $sig->{is_optional};
-        $signature{has_named}++                 if $sig->{named};
-        $signature{has_positional}++            if !$sig->{named};
-        $signature{has_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
+        my $overall = $signature{overall};
+        $overall->{has_optional}++              if $sig->{is_optional};
+        $overall->{has_named}++                 if $sig->{named};
+        $overall->{has_positional}++            if !$sig->{named};
+        $overall->{has_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
+        $overall->{num_slurpy}++                if $sig->{is_slurpy};
 
         DEBUG( "sig: ", $sig );
     }
@@ -424,14 +428,17 @@ sub make_proto_unwrap {
 sub check_signature {
     my($sig, $signature) = @_;
 
+    die("signature can only have one slurpy parameter") if
+      $sig->{is_slurpy} and $signature->{overall}{num_slurpy} >= 1;
+
     if( $sig->{named} ) {
-        if( $signature->{has_optional_positional} ) {
+        if( $signature->{overall}{has_optional_positional} ) {
             my $pos_var = $signature->{positional}[-1]{var};
             die("named parameter $sig->{var} mixed with optional positional $pos_var\n");
         }
     }
     else {
-        if( $signature->{has_named} ) {
+        if( $signature->{overall}{has_named} ) {
             my $named_var = $signature->{named}[-1]{var};
             die("positional parameter $sig->{var} after named param $named_var\n");
         }
@@ -459,7 +466,7 @@ sub inject_from_signature {
         push @code, inject_for_sig($sig);
     }
 
-    push @code, 'Method::Signatures::named_param_check(\%args);' if $signature->{has_named};
+    push @code, 'Method::Signatures::named_param_check(\%args);' if $signature->{overall}{has_named};
 
     # All on one line.
     return join ' ', @code;

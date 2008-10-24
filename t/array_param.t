@@ -3,9 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-plan tests => 4;
+use Test::More tests => 5;
 
 {
     package Bla;
@@ -29,13 +27,14 @@ plan tests => 4;
     }
 
     eval q{
-         method two_array_params ($a, @b, @c, $d) {
-         }
+         method two_array_params ($a, @b, @c) {}
     };
-    {
-	local $TODO = "I think this is not possible to handle";
-	like($@, qr{More than one array parameter is not allowed}, "Two array params");
-    }
+    like($@, qr{signature can only have one slurpy parameter}, "Two array params");
+
+    eval q{
+         method two_slurpy_params ($a, %b, $c, @d, $e) {}
+    };
+    like($@, qr{signature can only have one slurpy parameter}, "Two slurpy params");
 }
 
 {
