@@ -25,7 +25,7 @@ sub split_proto {
         else {
             $proto[-1] .= $token->content;
         }
-    } while ( $token = $token->next_sibling );
+    } while( $token = $token->next_sibling );
 
     strip_ws($_) for @proto;
     return @proto;
