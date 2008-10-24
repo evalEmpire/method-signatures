@@ -1,3 +1,9 @@
+Next
+    New Features
+    * Two or more slurpy parameters (ie. @foo or %bar) in a signature is
+      an error.
+
+
 20081021.1911  Tue Oct 21 19:11:47 PDT 2008
     Test Fixes
     * Used a new feature of Test::Builder, upgrade dependency.
