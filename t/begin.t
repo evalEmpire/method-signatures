@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 
-package Foo;
-
 # The method keyword should be evaluated at BEGIN time
+
+package Foo;
 
 use Test::More 'no_plan';
 
@@ -14,6 +14,7 @@ TODO: {
     local $TODO = 'method not done at compile time';
 
     ok eval { is( Foo->foo(42), 42 ) };
+    is $@, '';
 }
 
 sub bar {
