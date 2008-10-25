@@ -1,24 +1,29 @@
 #!/usr/bin/perl -w
 
-use Test::More skip_all => 'none of this works';
+use Test::More 'no_plan';
+
+TODO: {
+    todo_skip "This is still totally hosed", 2;
+
+    is eval {
+        local $SIG{ALRM} = sub { die "Alarm!\n"; };
+
+        alarm 5;
+        my $ret = qx{$^X "-Ilib" -le 'package Foo;  use Method::Signatures;  method foo(\$bar) { print \$bar } Foo->foo(42)'};
+        alarm 0;
+        $ret;
+    }, "42\n";
+    is $@, '';
+}
+
 
 is eval {
     local $SIG{ALRM} = sub { die "Alarm!\n"; };
 
+    local $ENV{PERLDB_OPTS} = 'NonStop';
     alarm 5;
-    my $ret = `$^X "-Ilib" -le 'package Foo;  use Method::Signatures;  method foo(\$bar) { print \$bar } Foo->foo(42)'`;
+    my $ret = qx{$^X "-Ilib" -dw t/simple.plx};
     alarm 0;
     $ret;
-}, "42\n";
-is $@, '';
-
-
-is eval {
-    local $SIG{ALRM} = sub { die "Alarm!\n"; };
-
-    alarm 5;
-    my $ret = `$^X "-Ilib" -dle 'package Foo;  use Method::Signatures;  method foo(\$bar) { print \$bar } Foo->foo(42)'`;
-    alarm 0;
-    $ret;
-}, "42\n";
+}, "42";
 is $@, '';

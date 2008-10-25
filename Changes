@@ -3,6 +3,9 @@ Next
     * Two or more slurpy parameters (ie. @foo or %bar) in a signature is
       an error.
 
+    Bug Fixes
+    * The debugger now works, thanks to an upgrade in Devel::Declare.
+
 
 20081021.1911  Tue Oct 21 19:11:47 PDT 2008
     Test Fixes

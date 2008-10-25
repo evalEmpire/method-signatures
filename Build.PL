@@ -23,10 +23,11 @@ my $build = Module::Build->new(
     requires        => {
         'perl'              => '5.8.1',
 
-        'Devel::Declare'    => '0.002000',
+        'Devel::Declare'    => '0.003000',
         'Data::Alias'       => '1.07',
         'Sub::Name'         => '0.04',
         'Readonly'          => '1.03',
+        'Scope::Guard'      => '0.03',
         PPI                 => '1.203',
     },
 

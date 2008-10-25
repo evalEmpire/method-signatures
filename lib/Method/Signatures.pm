@@ -773,8 +773,6 @@ may be a good thing.
 
 =head2 Debugging
 
-This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
-
 You can see the Perl code Method::Signatures translates to by using B::Deparse.
 
 =head2 One liners
