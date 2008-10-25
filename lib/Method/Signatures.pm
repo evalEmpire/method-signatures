@@ -11,7 +11,7 @@ use Readonly;
 use Scope::Guard;
 use Sub::Name;
 
-our $VERSION = '20081021.1911';
+our $VERSION = '20081025';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
