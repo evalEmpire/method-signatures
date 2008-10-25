@@ -3,13 +3,11 @@ package Method::Signatures;
 use strict;
 use warnings;
 
+use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 
-use Devel::Declare ();
 use Data::Alias ();
 use Readonly;
-use Scope::Guard;
-use Sub::Name;
 
 our $VERSION = '20081021.1911';
 
@@ -323,17 +321,12 @@ sub import {
     my $arg = shift;
     $DEBUG = 1 if defined $arg and $arg eq ':DEBUG';
 
-    Devel::Declare->setup_for(
-        $caller,
-        { method => { const => \&parser } }
+    $class->install_methodhandler(
+        into => $caller,
+        name => 'method',
     );
 
     DEBUG("import for $caller done\n");
-
-    # I don't really understand why we need to declare method
-    # in the caller's namespace.
-    no strict 'refs';
-    *{$caller.'::method'} = sub (&) {};
 }
 
 
@@ -343,7 +336,9 @@ sub _strip_ws {
 }
 
 
-sub make_proto_unwrap {
+# Overriden method from D::D::MS
+sub parse_proto {
+    my $self = shift;
     my ($proto) = @_;
     $proto ||= '';
 
@@ -543,160 +538,6 @@ sub required_arg {
     my $var = shift;
 
     signature_error sprintf "missing required argument $var";
-}
-
-
-# Stolen from Devel::Declare's t/method-no-semi.t
-{
-    our ($Declarator, $Offset);
-
-    sub skip_declarator {
-        $Offset += Devel::Declare::toke_move_past_token($Offset);
-    }
-
-    sub skipspace {
-        $Offset += Devel::Declare::toke_skipspace($Offset);
-    }
-
-    sub strip_name {
-        skipspace;
-        if (my $len = Devel::Declare::toke_scan_word($Offset, 1)) {
-            my $linestr = Devel::Declare::get_linestr();
-            my $name = substr($linestr, $Offset, $len);
-            substr($linestr, $Offset, $len) = '';
-            Devel::Declare::set_linestr($linestr);
-            return $name;
-        }
-        return;
-    }
-
-    sub strip_proto {
-        skipspace;
-    
-        my $linestr = Devel::Declare::get_linestr();
-        DEBUG( "strip_proto/\$linestr: $linestr\n" );
-        if (substr($linestr, $Offset, 1) eq '(') {
-            my $length = Devel::Declare::toke_scan_str($Offset);
-            my $proto = Devel::Declare::get_lex_stuff();
-            Devel::Declare::clear_lex_stuff();
-            if( $length < 0 ) {
-                # Need to scan ahead more
-                $linestr .= Devel::Declare::get_linestr();
-                $length = length($linestr) - rindex($linestr, ")") + 1;
-            }
-            else {
-                $linestr = Devel::Declare::get_linestr();
-            }
-
-            DEBUG("strip_proto/Offset: $Offset, length: $length, linestr, '$linestr'\n");
-            substr($linestr, $Offset, $length) = '';
-            DEBUG("strip_proto/after substr: linestr, '$linestr'\n");
-
-            Devel::Declare::set_linestr($linestr);
-
-            DEBUG( "strip_proto/\$proto: $proto\n" );
-
-            return $proto;
-        }
-        return;
-    }
-
-    sub shadow {
-        my $pack = Devel::Declare::get_curstash_name;
-        Devel::Declare::shadow_sub("${pack}::${Declarator}", $_[0]);
-    }
-
-    # Improved attributed parsing from MooseX::Method::Signatures
-    sub inject_if_block {
-        my $inject = shift;
-        skipspace;
-        my $linestr = Devel::Declare::get_linestr;
-
-        my $attrs   = '';
-
-        DEBUG("inject_if_block/\$linestr: $linestr\n");
-        if (substr($linestr, $Offset, 1) eq ':') {
-            while (substr($linestr, $Offset, 1) ne '{') {
-                if (substr($linestr, $Offset, 1) eq ':') {
-                    substr($linestr, $Offset, 1) = '';
-                    Devel::Declare::set_linestr($linestr);
-
-                    $attrs .= ' :';
-                }
-
-                skipspace;
-                $linestr = Devel::Declare::get_linestr();
-
-                if (my $len = Devel::Declare::toke_scan_word($Offset, 0)) {
-                    my $name = substr($linestr, $Offset, $len);
-                    substr($linestr, $Offset, $len) = '';
-                    Devel::Declare::set_linestr($linestr);
-
-                    $attrs .= " ${name}";
-
-                    if (substr($linestr, $Offset, 1) eq '(') {
-                        my $length = Devel::Declare::toke_scan_str($Offset);
-                        my $arg    = Devel::Declare::get_lex_stuff();
-                        Devel::Declare::clear_lex_stuff();
-                        $linestr = Devel::Declare::get_linestr();
-                        substr($linestr, $Offset, $length) = '';
-                        Devel::Declare::set_linestr($linestr);
-
-                        $attrs .= "(${arg})";
-                    }
-                }
-            }
-
-            $linestr = Devel::Declare::get_linestr();
-        }
-
-        if (substr($linestr, $Offset, 1) eq '{') {
-            substr($linestr, $Offset + 1, 0) = $inject;
-            substr($linestr, $Offset, 0) = "sub ${attrs}";
-            Devel::Declare::set_linestr($linestr);
-        }
-
-        DEBUG("inject_if_block done\n");
-    }
-
-    sub scope_injector_call {
-        return ' BEGIN { Method::Signatures::inject_scope }; ';
-    }
-
-    sub parser {
-        local ($Declarator, $Offset) = @_;
-        skip_declarator;
-        my $name = strip_name;
-        my $proto = strip_proto;
-        my $inject = make_proto_unwrap($proto);
-        if (defined $name) {
-            $inject = scope_injector_call().$inject;
-        }
-        inject_if_block($inject);
-        if (defined $name) {
-            $name = join('::', Devel::Declare::get_curstash_name(), $name)
-              unless ($name =~ /::/);
-            shadow(sub (&) {
-                no strict 'refs';
-                # So caller() gets the subroutine name
-                *{$name} = subname $name => shift;
-            });
-        } else {
-            shadow(sub (&) { shift });
-        }
-
-        DEBUG("parser done\n");
-    }
-
-    sub inject_scope {
-        $^H |= 0x120000;
-        $^H{DD_METHODHANDLERS} = Scope::Guard->new(sub {
-            my $linestr = Devel::Declare::get_linestr;
-            my $offset = Devel::Declare::get_linestr_offset;
-            substr($linestr, $offset, 0) = ';';
-            Devel::Declare::set_linestr($linestr);
-        });
-    }
 }
 
 
