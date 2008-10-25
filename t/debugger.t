@@ -9,12 +9,23 @@ TODO: {
         local $SIG{ALRM} = sub { die "Alarm!\n"; };
 
         alarm 5;
-        my $ret = qx{$^X "-Ilib" -le 'package Foo;  use Method::Signatures;  method foo(\$bar) { print \$bar } Foo->foo(42)'};
+        my $ret = qx{$^X "-Ilib" -le "package Foo;  use Method::Signatures;  method foo() { 42 } print Foo->foo()"};
         alarm 0;
         $ret;
-    }, "42\n";
+    }, "42\n", 'one-liner';
     is $@, '';
 }
+
+
+is eval {
+    local $SIG{ALRM} = sub { die "Alarm!\n"; };
+
+    alarm 5;
+    my $ret = qx{$^X "-Ilib" -MMethod::Signatures -le "package Foo;  use Method::Signatures;  method foo() { 42 } print Foo->foo()"};
+    alarm 0;
+    $ret;
+}, "42\n", 'one liner with -MMethod::Signatures';
+is $@, '';
 
 
 is eval {
@@ -25,5 +36,5 @@ is eval {
     my $ret = qx{$^X "-Ilib" -dw t/simple.plx};
     alarm 0;
     $ret;
-}, "42";
+}, "42", 'debugger';
 is $@, '';
