@@ -24,7 +24,8 @@ my $build = Module::Build->new(
     requires        => {
         'perl'              => '5.8.1',
 
-        'Devel::Declare'    => '0.003002',
+        'Devel::Declare::MethodInstallerSimple' => '0.003003',
+        'Devel::BeginLift'  => '0.001001',
         'Data::Alias'       => '1.07',
         'Readonly'          => '1.03',
         PPI                 => '1.203',

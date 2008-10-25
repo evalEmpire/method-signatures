@@ -6,6 +6,7 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 
+use Devel::BeginLift;
 use Data::Alias ();
 use Readonly;
 
@@ -322,11 +323,24 @@ sub import {
     $DEBUG = 1 if defined $arg and $arg eq ':DEBUG';
 
     $class->install_methodhandler(
-        into => $caller,
-        name => 'method',
+        into            => $caller,
+        name            => 'method',
     );
 
     DEBUG("import for $caller done\n");
+}
+
+
+sub code_for {
+    my($self, $name) = @_;
+
+    my $code = $self->SUPER::code_for($name);
+
+    if( defined $name ) {
+        Devel::BeginLift->setup_for_cv($code);
+    }
+
+    return $code;
 }
 
 
@@ -605,12 +619,6 @@ versions.
 Please report bugs and leave feedback at
 E<lt>bug-Method-SignaturesE<gt> at E<lt>rt.cpan.orgE<gt>.  Or use the
 web interface at L<http://rt.cpan.org>.  Report early, report often.
-
-=head2 C<method> is not declared at compile time.
-
-Unlike declaring a C<sub>, C<method> currently does not happen at
-compile time.  This usually isn't a problem.  It may change, but it
-may be a good thing.
 
 =head2 Debugging
 
