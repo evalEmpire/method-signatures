@@ -730,8 +730,8 @@ Method traits.
 Most of this module is based on or copied from hard work done by many
 other people.
 
-All the really scary parts are copied from or rely on Matt Trout's
-L<Devel::Declare> work.
+All the really scary parts are copied from or rely on Matt Trout's,
+Florian Ragwitz's and Rhesa Rozendaal's L<Devel::Declare> work.
 
 The prototype syntax is a slight adaptation of all the
 excellent work the Perl 6 folks have already done.
@@ -742,7 +742,8 @@ makes the subroutine names come out right in caller().
 
 And thanks to Florian Ragwitz for his parallel
 L<MooseX::Method::Signatures> module from which I borrow ideas and
-code.
+code and L<Devel::BeginLift> which lets the methods be declared
+at compile time.
 
 
 =head1 LICENSE
