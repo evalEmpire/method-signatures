@@ -1,5 +1,7 @@
 Build.PL
 Changes
+examples/iso_date_example.t
+examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Parser.pm
 MANIFEST			This list of files
@@ -14,6 +16,7 @@ t/caller.t
 t/debugger.t
 t/defaults.t
 t/examples/iso_date_example.t
+t/examples/silly.t
 t/examples/strip_ws.t
 t/invocant.t
 t/lib/Dev/Null.pm
@@ -23,8 +26,10 @@ t/odd_number.t
 t/one_line.t
 t/optional.t
 t/paren_on_own_line.t
+t/paren_plus_open_block.t
 t/refs.t
 t/required.t
 t/ro.t
+t/simple.plx
 t/split_proto.t
 t/traits.t
