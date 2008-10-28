@@ -24,7 +24,7 @@ my $build = Module::Build->new(
     requires        => {
         'perl'              => '5.8.1',
 
-        'Devel::Declare::MethodInstallerSimple' => '0.003003',
+        'Devel::Declare::MethodInstaller::Simple' => '0.003003',
         'Devel::BeginLift'  => '0.001001',
         'Data::Alias'       => '1.07',
         'Readonly'          => '1.03',
