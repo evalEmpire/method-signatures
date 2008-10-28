@@ -29,17 +29,17 @@ Method::Signatures - method declarations with signatures and no source filter
 =head1 SYNOPSIS
 
     package Foo;
-    
+
     use Method::Signatures;
-    
+
     method new (%args) {
         return bless {%args}, $self;
     }
-    
+
     method get ($key) {
         return $self->{$key};
     }
-    
+
     method set ($key, $val) {
         return $self->{$key} = $val;
     }
