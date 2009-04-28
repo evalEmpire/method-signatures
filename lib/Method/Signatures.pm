@@ -299,7 +299,7 @@ You can alias using the "alias" trait.
 
 =head3 Can't use positional params as named params
 
-Perl 6 allows you to use any parameter as a named paramter.  Perl 5
+Perl 6 allows you to use any parameter as a named parameter.  Perl 5
 lacks the named parameter disambiguating syntax so it is not allowed.
 
 =head3 Addition of the C<\@foo> reference alias prototype
