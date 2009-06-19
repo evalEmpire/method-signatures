@@ -353,28 +353,59 @@ sub _strip_ws {
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
-    my ($proto) = @_;
-    $proto ||= '';
+    return $self->parse_method( proto => shift );
+}
 
-    _strip_ws($proto);
 
-    my @protos = split_proto($proto);
+# Parse a method signature
+sub parse_method {
+    my $self = shift;
+    my %args = @_;
+    my @protos = $self->_split_proto($args{proto} || []);
+    my $signature = $args{signature} || {};
 
-    my %signature;
-    $signature{invocant} = '$self';
+    $signature->{invocant} = '$self';
     if( @protos ) {
-        $signature{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
+        $signature->{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
         shift @protos unless $protos[0] =~ /\S/;
     }
 
-    $signature{named}      = [];
-    $signature{positional} = [];
-    $signature{overall}    = {
+    return $self->parse_sub( proto => \@protos, signature => $signature );
+}
+
+
+sub _split_proto {
+    my $self = shift;
+    my $proto = shift;
+
+    my @protos;
+    if( ref $proto ) {
+        @protos = @$proto;
+    }
+    else {
+        _strip_ws($proto);
+        @protos = split_proto($proto);
+    }
+
+    return @protos;
+}
+
+
+# Parse a subroutine signature
+sub parse_sub {
+    my $self = shift;
+    my %args = @_;
+    my @protos = $self->_split_proto($args{proto} || []);
+    my $signature = $args{signature} || {};
+
+    $signature->{named}      = [];
+    $signature->{positional} = [];
+    $signature->{overall}    = {
         has_optional            => 0,
         has_optional_positional => 0,
         has_named               => 0,
         has_positional          => 0,
-        has_invocant            => $signature{invocant} ? 1 : 0,
+        has_invocant            => $signature->{invocant} ? 1 : 0,
         num_slurpy              => 0
     };
 
@@ -407,16 +438,16 @@ sub parse_proto {
         $sig->{var}         = $sigil . $name;
         $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
 
-        check_signature($sig, \%signature);
+        check_signature($sig, $signature);
 
         if( $sig->{named} ) {
-            push @{$signature{named}}, $sig;
+            push @{$signature->{named}}, $sig;
         }
         else {
-            push @{$signature{positional}}, $sig;
+            push @{$signature->{positional}}, $sig;
         }
 
-        my $overall = $signature{overall};
+        my $overall = $signature->{overall};
         $overall->{has_optional}++              if $sig->{is_optional};
         $overall->{has_named}++                 if $sig->{named};
         $overall->{has_positional}++            if !$sig->{named};
@@ -427,9 +458,8 @@ sub parse_proto {
     }
 
     # Then turn it into Perl code
-    my $inject = inject_from_signature(\%signature);
+    my $inject = inject_from_signature($signature);
     DEBUG( "inject: $inject\n" );
-
     return $inject;
 }
 
@@ -460,7 +490,7 @@ sub inject_from_signature {
     my $signature = shift;
 
     my @code;
-    push @code, "my $signature->{invocant} = shift;";
+    push @code, "my $signature->{invocant} = shift;" if $signature->{invocant};
 
     for my $sig (@{$signature->{positional}}) {
         push @code, inject_for_sig($sig);
