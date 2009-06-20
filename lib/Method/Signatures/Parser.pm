@@ -3,8 +3,6 @@ package Method::Signatures::Parser;
 use strict;
 use warnings;
 
-use PPI;
-use PPI::Dumper;
 use base qw(Exporter);
 our @EXPORT = qw(split_proto);
 
@@ -13,6 +11,7 @@ sub split_proto {
     my $proto = shift;
     return unless $proto =~ /\S/;
 
+    require PPI;
     my $ppi = PPI::Document->new(\$proto);
     my $statement = $ppi->find_first("PPI::Statement");
     my $token = $statement->first_token;

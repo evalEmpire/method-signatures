@@ -10,7 +10,7 @@ use Devel::BeginLift;
 use Data::Alias ();
 use Readonly;
 
-our $VERSION = '20081028';
+our $VERSION = '20090620';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
