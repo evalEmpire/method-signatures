@@ -6,7 +6,6 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 
-use Devel::BeginLift;
 use Data::Alias ();
 use Readonly;
 
@@ -337,6 +336,7 @@ sub code_for {
     my $code = $self->SUPER::code_for($name);
 
     if( defined $name ) {
+        require Devel::BeginLift;
         Devel::BeginLift->setup_for_cv($code);
     }
 
