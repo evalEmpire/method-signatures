@@ -505,18 +505,16 @@ sub inject_from_signature {
         push @code, inject_for_sig($sig);
     }
 
-    push @code, 'Method::Signatures::named_param_check(\%args);' if $signature->{overall}{has_named};
+    push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
 
     # All on one line.
     return join ' ', @code;
 }
 
 
-sub named_param_check {
+sub named_param_error {
     my $args = shift;
     my @keys = keys %$args;
-
-    return 1 unless @keys;
 
     signature_error("does not take @keys as named argument(s)");
 }
