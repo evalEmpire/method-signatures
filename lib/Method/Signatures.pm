@@ -29,7 +29,7 @@ BEGIN {
 
 =head1 NAME
 
-Method::Signatures - method declarations with signatures and no source filter
+Method::Signatures - method and function declarations with signatures and no source filter
 
 =head1 SYNOPSIS
 
@@ -49,14 +49,21 @@ Method::Signatures - method declarations with signatures and no source filter
         return $self->{$key} = $val;
     }
 
+    func hello($greeting, $place) {
+        print "$greeting, $place!\n";
+    }
+
 =head1 DESCRIPTION
 
-This is B<ALPHA SOFTWARE> which relies on B<YET MORE ALPHA SOFTWARE>.
-Use at your own risk.  Features may change.
+Provides two new keywords, C<func> and C<method> so you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
 
-Provides a proper method keyword, like "sub" but specificly for making
-methods.  It will automatically provide the invocant as C<$self>.  No
-more C<my $self = shift>.
+C<func> is like C<sub> but takes a signature where the prototype would
+normally go.  This takes the place of C<my($foo, $bar) = @_> and does
+a whole lot more.
+
+C<method> is like C<func> but specificly for making methods.  It will
+automatically provide the invocant as C<$self>.  No more C<my $self =
+shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
 
@@ -64,6 +71,22 @@ And it does all this with B<no source filters>.
 
 
 =head2 Signature syntax
+
+    func echo($message) {
+        print "$message\n";
+    }
+
+is equivalent to:
+
+    sub echo {
+        my($message) = @_;
+        print "$message\n";
+    }
+
+except the original line numbering is preserved and the arguments are
+checked to make sure they match the signature.
+
+Similarly
 
     method foo($bar, $baz) {
         $self->wibble($bar, $baz);
@@ -76,14 +99,6 @@ is equivalent to:
         my($bar, $baz) = @_;
         $self->wibble($bar, $baz);
     }
-
-except the original line numbering is preserved.
-
-No checks are made that the arguments being passed in match the
-signature.
-
-Future releases will add extensively to the signature syntax probably
-along the lines of Perl 6.
 
 
 =head3 C<@_>
@@ -334,6 +349,12 @@ sub import {
     $class->install_methodhandler(
         into            => $caller,
         name            => 'method',
+        invocant        => '$self'
+    );
+
+    $class->install_methodhandler(
+        into            => $caller,
+        name            => 'func',
     );
 
     DEBUG("import for $caller done\n");
@@ -363,24 +384,26 @@ sub _strip_ws {
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
-    return $self->parse_method( proto => shift );
+    return $self->parse_signature( proto => shift, invocant => $self->{invocant} );
 }
 
 
-# Parse a method signature
-sub parse_method {
+# Parse a signature
+sub parse_signature {
     my $self = shift;
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
     my $signature = $args{signature} || {};
 
-    $signature->{invocant} = '$self';
-    if( @protos ) {
-        $signature->{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
-        shift @protos unless $protos[0] =~ /\S/;
+    # Special case for methods, they will pass in an invocant to use as the default
+    if( $signature->{invocant} = $args{invocant} ) {
+        if( @protos ) {
+            $signature->{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
+            shift @protos unless $protos[0] =~ /\S/;
+        }
     }
 
-    return $self->parse_sub( proto => \@protos, signature => $signature );
+    return $self->parse_func( proto => \@protos, signature => $signature );
 }
 
 
@@ -402,7 +425,7 @@ sub _split_proto {
 
 
 # Parse a subroutine signature
-sub parse_sub {
+sub parse_func {
     my $self = shift;
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
