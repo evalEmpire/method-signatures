@@ -1,3 +1,10 @@
+20100730
+    Incompatible Changes
+    * Data::Alias is now optional.  This is because it does not work in 5.12
+      and there's no fix in sight.  If you want to use aliasing in your
+      distribution it will have to depend on Data::Alias itself.
+
+
 20090620  Sat Jun 20 01:26:59 PDT 2009
     Performance
     * Load PPI on demand to reduce load time (needed by perl5i)

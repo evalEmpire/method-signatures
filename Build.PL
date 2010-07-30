@@ -26,7 +26,6 @@ my $build = Module::Build->new(
 
         'Devel::Declare::MethodInstaller::Simple' => '0.003003',
         'Devel::BeginLift'  => '0.001001',
-        'Data::Alias'       => '1.07',
         'Readonly'          => '1.03',
         PPI                 => '1.203',
     },

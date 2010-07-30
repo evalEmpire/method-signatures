@@ -6,7 +6,6 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 
-use Data::Alias ();
 use Readonly;
 
 our $VERSION = '20090620';
@@ -18,6 +17,13 @@ sub DEBUG {
 
     require Data::Dumper;
     print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
+}
+
+
+# For some reason Data::Alias must be loaded at our own compile time.
+our $HAVE_DATA_ALIAS;
+BEGIN {
+    $HAVE_DATA_ALIAS = eval { require Data::Alias; } ? 1 : 0;
 }
 
 
@@ -135,6 +141,10 @@ reference.
 
     my @bar = (1,2,3);
     Stuff->add_one(\@bar);  # @bar is now (2,3,4)
+
+This feature requires L<Data::Alias> to be installed.
+Method::Signatures does not depend on it because it does not currently
+work after 5.10.
 
 
 =head3 Invocant parameter
@@ -556,6 +566,15 @@ sub inject_for_sig {
 
     # Handle \@foo
     if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+        if( !$HAVE_DATA_ALIAS ) {
+            require Carp;
+            # I couldn't get @CARP_NOT to work
+            local %Carp::CarpInternal = %Carp::CarpInternal;
+            $Carp::CarpInternal{"Devel::Declare"} = 1;
+            $Carp::CarpInternal{"Devel::Declare::MethodInstaller::Simple"} = 1;
+            $Carp::CarpInternal{"Method::Signatures"} = 1;
+            Carp::croak("The alias trait was used on $sig->{var}, but Data::Alias is not installed");
+        }
         push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
     }
     # Handle "is ro"
@@ -660,10 +679,10 @@ Devel::Declare.
 
 =head2 No source filter
 
-While this module does rely on the hairy black magic of
-L<Devel::Declare> and L<Data::Alias> it does not depend on a source
-filter.  As such, it doesn't try to parse and rewrite your source code
-and there should be no weird side effects.
+While this module does rely on the black magic of L<Devel::Declare> to
+access Perl's own parser, it does not depend on a source filter.  As
+such, it doesn't try to parse and rewrite your source code and there
+should be no weird side effects.
 
 Devel::Declare only effects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
