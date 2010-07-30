@@ -830,7 +830,13 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<MooseX::Method::Signatures>, L<Perl6::Signature>, L<Sub::Signatures>, L<Perl6::Subs>
+L<MooseX::Method::Signatures> for a method keyword that works well with Moose.
+
+L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
+
+L<Method::Signatures::Simple> for a more basic version of what Method::Signatures provides.
+
+L<signatures> for C<sub> with signatures.
 
 Perl 6 subroutine parameters and arguments -  L<http://perlcabal.org/syn/S06.html#Parameters_and_arguments>
 

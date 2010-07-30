@@ -1,4 +1,4 @@
-20100730  Fri Jul 30 12:36:22 PDT 2010
+20100730
     New Features
     * Added func() to handle functions.
 
@@ -6,6 +6,10 @@
     * Data::Alias is now optional.  This is because it does not work in 5.12
       and there's no fix in sight.  If you want to use aliasing in your
       distribution it will have to depend on Data::Alias itself.
+
+    Docs
+    * Updated the SEE ALSO
+    * Removed the assertion that no checks are done on the signature    
 
 
 20090620  Sat Jun 20 01:26:59 PDT 2009
