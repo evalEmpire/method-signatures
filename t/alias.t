@@ -3,7 +3,12 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
+
+BEGIN {
+    plan skip_all => "Data::Alias not available" unless eval { require Data::Alias };
+    plan 'no_plan';
+}
 
 {
     package Stuff;

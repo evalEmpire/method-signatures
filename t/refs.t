@@ -6,7 +6,12 @@ use warnings;
 use lib 't/lib';
 use Dev::Null;
 
-use Test::More 'no_plan';
+use Test::More;
+
+BEGIN {
+    plan skip_all => "Data::Alias not available" unless eval { require Data::Alias };
+    plan 'no_plan';
+}
 
 # Test a basic alias.
 {
