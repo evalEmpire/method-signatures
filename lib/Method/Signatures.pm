@@ -8,7 +8,7 @@ use Method::Signatures::Parser;
 
 use Readonly;
 
-our $VERSION = '20090620';
+our $VERSION = '20100730';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
