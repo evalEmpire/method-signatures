@@ -45,6 +45,10 @@ Method::Signatures - method and function declarations with signatures and no sou
         print "$greeting, $place!\n";
     }
 
+    # Or, to install into another package:
+
+    use Method::Signatures { into => 'Some::Other::Package' };
+
 =head1 DESCRIPTION
 
 Provides two new keywords, C<func> and C<method> so you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
@@ -332,7 +336,19 @@ sub import {
     my $caller = caller;
 
     my $arg = shift;
-    $DEBUG = 1 if defined $arg and $arg eq ':DEBUG';
+    if (defined $arg) {
+        if (ref $arg) {
+            $DEBUG  = $arg->{debug}  if exists $arg->{debug};
+            $caller = $arg->{into}   if exists $arg->{into};
+        }
+        elsif ($arg eq ':DEBUG') {
+            $DEBUG = 1;
+        }
+        else {
+            require Carp;
+            Carp::croak("Invalid Module::Signatures argument $arg");
+        }
+    }
 
     $class->install_methodhandler(
         into            => $caller,
