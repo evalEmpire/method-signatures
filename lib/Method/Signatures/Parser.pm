@@ -2,6 +2,7 @@ package Method::Signatures::Parser;
 
 use strict;
 use warnings;
+use Carp ();
 
 use base qw(Exporter);
 our @EXPORT = qw(split_proto);
@@ -14,6 +15,7 @@ sub split_proto {
     require PPI;
     my $ppi = PPI::Document->new(\$proto);
     my $statement = $ppi->find_first("PPI::Statement");
+    Carp::confess("Failed to find statement") unless $statement;
     my $token = $statement->first_token;
 
     my @proto = ('');
