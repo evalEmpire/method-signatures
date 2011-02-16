@@ -26,20 +26,8 @@ my $build = Module::Build->new(
 
         'Devel::Declare::MethodInstaller::Simple' => '0.003003',
         'Devel::BeginLift'  => '0.001001',
-        'Readonly'          => '1.03',
+        'Const::Fast'       => '0.006',
         PPI                 => '1.203',
-    },
-
-    recommends          => {
-        # Makes "is ro" faster.
-        'Readonly::XS'      => '1.02',
-    },
-
-    auto_features       => {
-        "fast 'is ro' (needs Readonly::XS)" => {
-            description             => 'faster "is ro" type',
-            requires                => { 'Readonly::XS' => '1.02' }
-        }
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',

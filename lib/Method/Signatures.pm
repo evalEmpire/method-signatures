@@ -6,8 +6,6 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 
-use Readonly;
-
 our $VERSION = '20100730';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
@@ -602,7 +600,8 @@ sub inject_for_sig {
     }
     # Handle "is ro"
     elsif ( $sig->{traits}{ro} ) {
-        push @code, "Readonly::Readonly $lhs => $rhs;";
+        require Const::Fast;
+        push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
         push @code, "$lhs = $rhs;";
     }
@@ -663,7 +662,7 @@ The display() method is equivalent to all this code.
       my $self = shift;
 
       croak('display() missing required argument $text') unless @_ > 0;
-      Readonly my $text = $_[0];
+      const my $text = $_[0];
 
       my(%args) = @_[1 .. $#_];
       my $justify = exists $args{justify} ? $args{justify} : 'left';

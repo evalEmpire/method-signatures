@@ -1,3 +1,9 @@
+Next
+    Misc
+    * Use Const::Fast to implement read only arguments.  This avoids the
+      optional Readonly::XS to make it fast.
+
+
 20100730  Fri Jul 30 12:54:20 PDT 2010
     New Features
     * Added func() to handle functions.
