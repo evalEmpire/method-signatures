@@ -28,6 +28,7 @@ my $build = Module::Build->new(
         'Devel::BeginLift'  => '0.001001',
         'Const::Fast'       => '0.006',
         PPI                 => '1.203',
+        'Data::Alias'       => '1.08',
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',

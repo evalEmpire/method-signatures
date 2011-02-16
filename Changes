@@ -1,4 +1,8 @@
 Next
+    New Features
+    * Data::Alias is no longer optional.  It's been fixed and is now
+      maintained.  Aliasing will now always work.
+
     Misc
     * Use Const::Fast to implement read only arguments.  This avoids the
       optional Readonly::XS to make it fast.

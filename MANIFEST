@@ -21,10 +21,8 @@ t/examples/strip_ws.t
 t/func.t
 t/invocant.t
 t/lib/Dev/Null.pm
-t/lib/NoAlias.pm
 t/method.t
 t/named.t
-t/no_alias.t
 t/odd_number.t
 t/one_line.t
 t/optional.t
