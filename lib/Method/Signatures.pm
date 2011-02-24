@@ -435,6 +435,10 @@ sub parse_func {
         DEBUG( "proto: $proto\n" );
 
         my $sig   = {};
+        $sig->{proto} = $proto;
+
+        $sig->{type} = $1 if $proto =~ s{^ ([a-z]\w*(?:\:\:\w+)*) \s+ }{}ix;
+
         $sig->{named} = $proto =~ s{^:}{};
 
         if( !$sig->{named} ) {
@@ -442,10 +446,8 @@ sub parse_func {
             $idx++;
         }
 
-        $sig->{proto}               = $proto;
         $sig->{is_at_underscore}    = $proto eq '@_';
         $sig->{is_ref_alias}        = $proto =~ s{^\\}{};
-        $sig->{type} = $1 if $proto =~ s{^ ([a-z]\w*(?:\:\:\w+)*) \s+ }{}ix;
 
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
@@ -576,6 +578,10 @@ sub inject_for_sig {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
+    if( $sig->{type} ) {
+        push @code, $self->inject_for_type_check($sig);
+    }
+
     if( !$sig->{is_optional} ) {
         push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
     }
@@ -594,6 +600,9 @@ sub inject_for_sig {
 
     return @code;
 }
+
+# A hook for extension authors
+sub inject_for_type_check {}
 
 sub signature_error {
     my $msg = shift;

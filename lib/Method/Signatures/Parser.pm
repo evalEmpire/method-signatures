@@ -24,7 +24,9 @@ sub split_proto {
         else {
             $proto[-1] .= $token->content;
         }
-    } while( $token = $token->next_sibling );
+
+        $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
+    } while( $token );
 
     strip_ws($_) for @proto;
     return @proto;
