@@ -518,7 +518,7 @@ sub inject_from_signature {
     push @code, "my $signature->{invocant} = shift;" if $signature->{invocant};
 
     for my $sig (@{$signature->{positional}}) {
-        push @code, inject_for_sig($sig);
+        push @code, $self->inject_for_sig($sig);
     }
 
     return join ' ', @code unless @{$signature->{named}};
@@ -527,7 +527,7 @@ sub inject_from_signature {
     push @code, "my \%args = \@_[$first_named_idx..\$#_];";
 
     for my $sig (@{$signature->{named}}) {
-        push @code, inject_for_sig($sig);
+        push @code, $self->inject_for_sig($sig);
     }
 
     push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
@@ -546,6 +546,7 @@ sub named_param_error {
 
 
 sub inject_for_sig {
+    my $self = shift;
     my $sig = shift;
 
     return if $sig->{is_at_underscore};
