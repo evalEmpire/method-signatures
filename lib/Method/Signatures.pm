@@ -445,6 +445,7 @@ sub parse_func {
         $sig->{proto}               = $proto;
         $sig->{is_at_underscore}    = $proto eq '@_';
         $sig->{is_ref_alias}        = $proto =~ s{^\\}{};
+        $sig->{type} = $1 if $proto =~ s{^ ([a-z]\w*(?:\:\:\w+)*) \s+ }{}ix;
 
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
@@ -478,8 +479,10 @@ sub parse_func {
         DEBUG( "sig: ", $sig );
     }
 
+    $self->{signature} = $signature;
+
     # Then turn it into Perl code
-    my $inject = inject_from_signature($signature);
+    my $inject = $self->inject_from_signature($signature);
     DEBUG( "inject: $inject\n" );
     return $inject;
 }
@@ -508,6 +511,7 @@ sub check_signature {
 
 # Turn the parsed signature into Perl code
 sub inject_from_signature {
+    my $self      = shift;
     my $signature = shift;
 
     my @code;
