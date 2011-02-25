@@ -45,7 +45,7 @@ Method::Signatures - method and function declarations with signatures and no sou
         print "$greeting, $place!\n";
     }
 
-    # Or, to install into another package:
+    # Or, to install into another package (e.g. when bunding pragmas):
 
     use Method::Signatures { into => 'Some::Other::Package' };
 
