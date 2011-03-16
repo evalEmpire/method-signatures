@@ -625,7 +625,22 @@ sub inject_for_sig {
 }
 
 # A hook for extension authors
-sub inject_for_type_check {}
+sub inject_for_type_check
+{
+    my $self = shift;
+    my $class = ref $self || $self;
+    my ($sig) = @_;
+
+    if ($TYPES)
+    {
+    }
+    else
+    {
+        require Carp;
+        Carp::croak(q{Type checking not implemented in base Method::Signatures; try 'use Method::Signatures qw<:TYPES>'});
+    }
+    return '';
+}
 
 sub signature_error {
     my $msg = shift;
