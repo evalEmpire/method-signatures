@@ -633,6 +633,7 @@ sub inject_for_type_check
 
     if ($TYPES)
     {
+        return "${class}::type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
     }
     else
     {
@@ -640,6 +641,45 @@ sub inject_for_type_check
         Carp::croak(q{Type checking not implemented in base Method::Signatures; try 'use Method::Signatures qw<:TYPES>'});
     }
     return '';
+}
+
+# you can also override this instead of inject_for_type_check if you'd rather
+our %types;                                                             # cache for type constraint objects
+sub type_check
+{
+    my ($type, $value, $name) = @_;
+
+    require Any::Moose;
+    Any::Moose->import('::Util::TypeConstraints');
+
+    # find it if isn't cached
+    unless ($types{$type})
+    {
+        # note that all these assignments could be cached, but I didn't want to do any premature
+        # optimization (also note that I'm pretty sure they _can't_ be hoisted up to the top of the
+        # module, because I don't think they're guaranteed to succeed at compile-time)
+        no strict 'refs';
+        my $mutc       = any_moose('::Util::TypeConstraints');
+        my $findit     = "${mutc}::find_or_parse_type_constraint";
+        my $isa_class  = "${mutc}::find_type_constraint"->("ClassName");
+        my $make_class = "${mutc}::class_type";
+
+        $types{$type}  = $findit->($type) ||
+                         (
+                            $isa_class->check($type) ? $make_class->($type)
+                          : die "The type $type is unrecognized (perhaps you forgot to load it?)"
+                         );
+    }
+
+    # throw an error if the type check fails
+    unless ($types{$type}->check($value))
+    {
+        require Carp;
+
+        my $caller = (caller(1))[3];
+        $value = defined $value ? qq{"$value"} : 'undef';
+        Carp::croak(qq{The '$name' parameter ($value) to $caller is not of type $type});
+    }
 }
 
 sub signature_error {
