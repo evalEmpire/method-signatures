@@ -662,11 +662,15 @@ sub type_check
         my $mutc       = any_moose('::Util::TypeConstraints');
         my $findit     = "${mutc}::find_or_parse_type_constraint";
         my $isa_class  = "${mutc}::find_type_constraint"->("ClassName");
+        my $isa_role   = "${mutc}::find_type_constraint"->("RoleName");
         my $make_class = "${mutc}::class_type";
+        my $make_role  = "${mutc}::role_type";
 
         $types{$type}  = $findit->($type) ||
                          (
-                            $isa_class->check($type) ? $make_class->($type)
+                            # have to check roles before classes, because a RoleName isa ClassName
+                            $isa_role->check($type)  ? $make_role->($type)
+                          : $isa_class->check($type) ? $make_class->($type)
                           : die "The type $type is unrecognized (perhaps you forgot to load it?)"
                          );
     }

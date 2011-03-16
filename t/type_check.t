@@ -12,14 +12,9 @@ use Method::Signatures qw<:TYPES>;
 
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
 { package Foo::Baz; sub new { bless {}, __PACKAGE__; } }
-{ package Foo::Barlike; use Any::Moose '::Role'; }
-{ package Foo::Bar::WithRole; use Any::Moose; with 'Foo::Barlike'; }
-{ package Foo::Mooselike; use Moose::Role; }
-{ package Foo::Bar::WithMooseRole; use Any::Moose; with 'Foo::Barlike'; }
 
 our $foobar = Foo::Bar->new;
 our $foobaz = Foo::Baz->new;
-our $foobar_role = Foo::Bar::WithRole->new;
 
 
 # types to check below
@@ -36,7 +31,6 @@ our @TYPES =
     bool            =>  'Bool'              =>  0                               =>  'fool'                              ,
     aref            =>  'ArrayRef',         =>  [[ 42, undef ]]                 =>  42                                  ,
     class           =>  'Foo::Bar'          =>  $foobar                         =>  $foobaz                             ,
-    role            =>  'Foo::Barlike'      =>  $foobar_role                    =>  $foobar                             ,
     maybe_int       =>  'Maybe[Int]'        =>  [ 42, undef ]                   =>  'foo'                               ,
     paramized_aref  =>  'ArrayRef[Num]'     =>  [[ 6.5, 42, 1e23 ]]             =>  [[ 6.5, 42, 'thing' ]]              ,
     paramized_href  =>  'HashRef[Num]'      =>  { a => 6.5, b => 2, c => 1e23 } =>  { a => 6.5, b => 42, c => 'thing' } ,
