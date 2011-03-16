@@ -14,6 +14,7 @@ note "types"; {
         q[type $bar, Some::Type @this]      => [positional => "type", "Some::Type"],
         q[RFC1234::Foo::bar32 $var]         => [positional => "RFC1234::Foo::bar32"],
         q[Foo :$var]                        => [named => "Foo"],
+        q[Foo::Bar $var]                    => [positional => "Foo::Bar"],
     );
 
     for my $proto (keys %tests) {
@@ -43,9 +44,10 @@ note "inject_for_type_check"; {
     }
     
     my $ms = My::MS->new;
-    my $code = $ms->parse_func( proto => 'Foo $this, :$bar, Baz :%baz' );
+    my $code = $ms->parse_func( proto => 'Foo $this, :$bar, Baz :%baz, Foo::Bar :$foobar' );
     like $code, qr{type_check\('\$this'\)};
     like $code, qr{type_check\('\%baz'\)};
+    like $code, qr{type_check\('\$foobar'\)};
 }
 
 done_testing;

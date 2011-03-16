@@ -409,7 +409,7 @@ sub parse_signature {
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
         if( @protos ) {
-            $signature->{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
+            $signature->{invocant} = $1 if $protos[0] =~ s{^ ([^:\s]+) : (?! :) \s* }{}x;
             shift @protos unless $protos[0] =~ /\S/;
         }
     }
