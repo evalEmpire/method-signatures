@@ -12,6 +12,9 @@ our $VERSION = '20110216.1153_01';
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
 our $TYPES;
+our $TYPENAME = qr/[a-z]\w*(?:\:\:\w+)*/i;
+our $PARAMETERIZED = qr/(?:Maybe|ArrayRef|HashRef|ScalarRef)\[$TYPENAME\]/;
+our $DISJUNCTION = qr/(?:$TYPENAME|$PARAMETERIZED)\|(?:$TYPENAME|$PARAMETERIZED)/;
 
 sub DEBUG {
     return unless $DEBUG;
@@ -460,7 +463,8 @@ sub parse_func {
         my $sig   = {};
         $sig->{proto} = $proto;
 
-        $sig->{type} = $1 if $proto =~ s{^ ([a-z]\w*(?:\:\:\w+)*) \s+ }{}ix;
+        # $TYPENAME, $PARAMETERIZED, and $DISJUNCTION defined up at top, for performance reasons
+        $sig->{type} = $1 if $proto =~ s{^ ($TYPENAME | $PARAMETERIZED | $DISJUNCTION) \s+ }{}iox;
 
         $sig->{named} = $proto =~ s{^:}{};
 
