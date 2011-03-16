@@ -642,6 +642,7 @@ sub inject_for_type_check
     else
     {
         require Carp;
+        local $Carp::CarpLevel = 1;
         Carp::croak(q{Type checking not implemented in base Method::Signatures; try 'use Method::Signatures qw<:TYPES>'});
     }
     return '';
@@ -675,7 +676,11 @@ sub type_check
                             # have to check roles before classes, because a RoleName isa ClassName
                             $isa_role->check($type)  ? $make_role->($type)
                           : $isa_class->check($type) ? $make_class->($type)
-                          : die "The type $type is unrecognized (perhaps you forgot to load it?)"
+                          : (
+                               require Carp,
+                               local $Carp::CarpLevel = 1,
+                               Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)"
+                            )
                          );
     }
 
@@ -683,6 +688,7 @@ sub type_check
     unless ($types{$type}->check($value))
     {
         require Carp;
+        local $Carp::CarpLevel = 1;
 
         my $caller = (caller(1))[3];
         $value = defined $value ? qq{"$value"} : 'undef';
