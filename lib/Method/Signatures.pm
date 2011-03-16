@@ -11,6 +11,8 @@ our $VERSION = '20110216.1153_01';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
+our $TYPES;
+
 sub DEBUG {
     return unless $DEBUG;
 
@@ -334,6 +336,8 @@ Method::Signatures lets you punt and use @_ like in regular Perl 5.
 sub import {
     my $class = shift;
     my $caller = caller;
+    # default values
+    $TYPES = 0;
 
     my $arg = shift;
     if (defined $arg) {
@@ -343,6 +347,9 @@ sub import {
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
+        }
+        elsif ($arg eq ':TYPES') {
+            $TYPES = 1;
         }
         else {
             require Carp;
