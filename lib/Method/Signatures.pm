@@ -601,10 +601,6 @@ sub inject_for_sig {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
-    if( $sig->{type} ) {
-        push @code, $self->inject_for_type_check($sig);
-    }
-
     if( !$sig->{is_optional} ) {
         push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
     }
@@ -619,6 +615,10 @@ sub inject_for_sig {
         push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
         push @code, "$lhs = $rhs;";
+    }
+
+    if( $sig->{type} ) {
+        push @code, $self->inject_for_type_check($sig);
     }
 
     return @code;
