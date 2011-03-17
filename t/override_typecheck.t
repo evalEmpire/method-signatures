@@ -8,7 +8,7 @@ use Test::More;
 use Test::Warn;
 
 
-use MSOverride;
+use OverrideTypeCheck;
 
 func foo (Int $bar) {}
 

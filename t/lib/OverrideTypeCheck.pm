@@ -1,6 +1,6 @@
 # package for t/override.t
 
-package MSOverride;
+package OverrideTypeCheck;
 use base qw< Method::Signatures >;
 
 
