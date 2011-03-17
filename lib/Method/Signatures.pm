@@ -11,9 +11,10 @@ our $VERSION = '20110216.1153_01';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
-my $TYPENAME = qr/[a-z]\w*(?:\:\:\w+)*/i;
-my $PARAMETERIZED = qr/(?:Maybe|ArrayRef|HashRef|ScalarRef)\[$TYPENAME\]/;
-my $DISJUNCTION = qr/(?:$TYPENAME|$PARAMETERIZED)\|(?:$TYPENAME|$PARAMETERIZED)/;
+# set up some regexen using for parsing types
+my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
+my $PARAMETERIZED = qr{   (?: Maybe | ArrayRef | HashRef | ScalarRef ) \[ $TYPENAME \]           }x;
+my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
 
 sub DEBUG {
     return unless $DEBUG;
@@ -590,7 +591,7 @@ sub inject_for_sig {
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
-               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
+               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
                                             "\$_[$idx]"           ;
     }
 
