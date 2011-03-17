@@ -11,9 +11,9 @@ our $VERSION = '20110216.1153_01';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
-our $TYPENAME = qr/[a-z]\w*(?:\:\:\w+)*/i;
-our $PARAMETERIZED = qr/(?:Maybe|ArrayRef|HashRef|ScalarRef)\[$TYPENAME\]/;
-our $DISJUNCTION = qr/(?:$TYPENAME|$PARAMETERIZED)\|(?:$TYPENAME|$PARAMETERIZED)/;
+my $TYPENAME = qr/[a-z]\w*(?:\:\:\w+)*/i;
+my $PARAMETERIZED = qr/(?:Maybe|ArrayRef|HashRef|ScalarRef)\[$TYPENAME\]/;
+my $DISJUNCTION = qr/(?:$TYPENAME|$PARAMETERIZED)\|(?:$TYPENAME|$PARAMETERIZED)/;
 
 sub DEBUG {
     return unless $DEBUG;
