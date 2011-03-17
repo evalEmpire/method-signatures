@@ -26,8 +26,7 @@ TODO: {
 
 SKIP:
 {
-    eval "use Role::Basic ()";
-    skip "Role::Basic required for testing basic roles", 2 if $@;
+    eval "use Role::Basic ()" or skip "Role::Basic required for testing basic roles", 2;
 
     require BasicRoleTest;
     use Method::Signatures;

@@ -10,8 +10,7 @@ use Test::Exception;
 
 SKIP:
 {
-    eval "use Moose ()";
-    skip "Moose required for testing Moose types", 1 if $@;
+    eval "use Moose ()" or skip "Moose required for testing Moose types", 1;
 
     require MooseLoadTest;
 

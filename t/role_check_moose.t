@@ -12,8 +12,7 @@ use Test::Exception;
 
 SKIP:
 {
-    eval "use Moose ()";
-    skip "Moose required for testing Moose roles", 2 if $@;
+    eval "use Moose ()" or skip "Moose required for testing Moose roles", 2;
 
     require MooseRoleTest;
     use Method::Signatures;
