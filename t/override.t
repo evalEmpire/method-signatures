@@ -8,7 +8,7 @@ use Test::More;
 use Test::Warn;
 
 
-use MSOverride qw< :TYPES >;
+use MSOverride;
 
 func foo (Int $bar) {}
 

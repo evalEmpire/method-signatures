@@ -16,12 +16,13 @@ use Test::More;
 
     method new ($class:) { bless {}, $class; }
 
-    method foo1 (Int $bar) {};
+	# not using a type here, so we won't expect Moose *or* Mouse to get loaded
+    method foo1 ($bar) {};
 }
 
 my $foobar = Foo::Bar->new;
 
-# at this point, neither Mouse nor Moose should be loaded (yet)
+# at this point, neither Mouse nor Moose should be loaded
 
 is $INC{'Mouse/Util/TypeConstraints.pm'}, undef, 'no type checking module loaded before method call';
 is $INC{'Moose/Util/TypeConstraints.pm'}, undef, 'no type checking module loaded before method call';
@@ -29,10 +30,10 @@ is $INC{'Moose/Util/TypeConstraints.pm'}, undef, 'no type checking module loaded
 
 $foobar->foo1(42);
 
-# now we should have loaded Mouse, not Moose, to do our type checking
+# _still_ should have no Moose and no Mouse, because we haven't requested any type checking
 
-like $INC{'Mouse/Util/TypeConstraints.pm'}, qr{Mouse/Util/TypeConstraints\.pm$}, 'loaded Mouse';
-is $INC{'Moose/Util/TypeConstraints.pm'}, undef, "didn't load Moose";
+is $INC{'Mouse/Util/TypeConstraints.pm'}, undef, 'no type checking module loaded before method call';
+is $INC{'Moose/Util/TypeConstraints.pm'}, undef, 'no type checking module loaded before method call';
 
 
 done_testing;

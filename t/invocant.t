@@ -13,7 +13,7 @@ our $skip_no_invocants;
     package Stuff;
 
     use Test::More;
-    use Method::Signatures qw< :TYPES >;
+    use Method::Signatures;
 
     sub new { bless {}, __PACKAGE__ }
 

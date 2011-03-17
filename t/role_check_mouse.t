@@ -11,7 +11,7 @@ use Test::Exception;
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
 
 require MouseRoleTest;
-use Method::Signatures qw< :TYPES >;
+use Method::Signatures;
 
 my $mouse = WithMouseRole->new;
 my $foobar = Foo::Bar->new;

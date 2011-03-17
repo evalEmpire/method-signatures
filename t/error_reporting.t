@@ -16,9 +16,8 @@ use Test::Exception;
 #
 # The errors we're concerned about are:
 #
-#   *)  The error thrown when you try to declare type checking without specifying :TYPES.
-#   *)  The error thrown when you try to pass a type that is unrecognized (and :TYPES is on).
-#   *)  The error thrown when you try to pass an argument of the wrong type (and :TYPES is on).
+#   *)  The error thrown when you try to pass a type that is unrecognized.
+#   *)  The error thrown when you try to pass an argument of the wrong type.
 #
 # This is mildly tricky, since trapping the error to check it means the error could end up reported
 # as being in "eval 27" or somesuch.  So we're going to use a few different layers of files that
@@ -26,11 +25,6 @@ use Test::Exception;
 # we'll just call require instead of use.
 #
 # Ready? Here we go.
-
-
-# unimplemented types (compile-time error)
-throws_ok { require NoTypes } qr{not implemented.*at .*/NoTypes.pm line 1133$}m,
-        'unimplemented type reports correctly';
 
 
 # unrecognized type (run-time error)

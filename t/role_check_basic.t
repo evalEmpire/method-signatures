@@ -30,7 +30,7 @@ SKIP:
     skip "Role::Basic required for testing basic roles", 2 if $@;
 
     require BasicRoleTest;
-    use Method::Signatures qw< :TYPES >;
+    use Method::Signatures;
 
     my $basic = WithBasicRole->new;
     my $foobar = Foo::Bar->new;

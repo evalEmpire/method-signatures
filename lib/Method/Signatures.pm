@@ -11,7 +11,6 @@ our $VERSION = '20110216.1153_01';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
-our $TYPES;
 our $TYPENAME = qr/[a-z]\w*(?:\:\:\w+)*/i;
 our $PARAMETERIZED = qr/(?:Maybe|ArrayRef|HashRef|ScalarRef)\[$TYPENAME\]/;
 our $DISJUNCTION = qr/(?:$TYPENAME|$PARAMETERIZED)\|(?:$TYPENAME|$PARAMETERIZED)/;
@@ -340,7 +339,6 @@ sub import {
     my $class = shift;
     my $caller = caller;
     # default values
-    $TYPES = 0;
 
     my $arg = shift;
     if (defined $arg) {
@@ -350,9 +348,6 @@ sub import {
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
-        }
-        elsif ($arg eq ':TYPES') {
-            $TYPES = 1;
         }
         else {
             require Carp;
@@ -635,17 +630,7 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    if ($TYPES)
-    {
-        return "${class}::type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
-    }
-    else
-    {
-        require Carp;
-        local $Carp::CarpLevel = 1;
-        Carp::croak(q{Type checking not implemented in base Method::Signatures; try 'use Method::Signatures qw<:TYPES>'});
-    }
-    return '';
+	return "${class}::type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
 }
 
 # you can also override this instead of inject_for_type_check if you'd rather

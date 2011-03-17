@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More;
 
-use Method::Signatures qw< :TYPES >;
+use Method::Signatures;
 
 note "types"; {
     my %tests = (

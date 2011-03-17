@@ -16,7 +16,7 @@ SKIP:
     skip "Moose required for testing Moose roles", 2 if $@;
 
     require MooseRoleTest;
-    use Method::Signatures qw< :TYPES >;
+    use Method::Signatures;
 
     my $moose = WithMooseRole->new;
     my $foobar = Foo::Bar->new;

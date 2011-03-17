@@ -4,7 +4,7 @@
 package Foo::Bar;
 
 use Moose;
-use Method::Signatures qw<:TYPES>;
+use Method::Signatures;
 
 method check_int (Int $bar) {};
 method check_paramized_sref (ScalarRef[Num] $bar) {};

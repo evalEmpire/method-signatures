@@ -7,7 +7,7 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 
-use Method::Signatures qw<:TYPES>;
+use Method::Signatures;
 
 
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
@@ -52,7 +52,7 @@ our $tester;
     use Test::Warn;
     use Test::Exception;
 
-    use Method::Signatures qw<:TYPES>;
+    use Method::Signatures;
 
     method new ($class:) { bless {}, $class; }
 
