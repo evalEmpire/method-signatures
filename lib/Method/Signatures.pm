@@ -630,13 +630,13 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-	return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
+    return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
 }
 
 # you can also override this instead of inject_for_type_check if you'd rather
 # note that it's a class method, not an object method
 # that's because it's called at runtime, when there is no Method::Signatures object still around
-our %types;                                                             # cache for type constraint objects
+my %types;                                                              # cache for type constraint objects
 sub type_check
 {
     my ($class, $type, $value, $name) = @_;

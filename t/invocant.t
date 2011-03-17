@@ -44,7 +44,7 @@ our $skip_no_invocants;
         }
 
     };
-	is $@, '', 'compiles without invocant';
+    is $@, '', 'compiles without invocant';
 }
 
 {

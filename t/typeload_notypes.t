@@ -16,7 +16,7 @@ use Test::More;
 
     method new ($class:) { bless {}, $class; }
 
-	# not using a type here, so we won't expect Moose *or* Mouse to get loaded
+    # not using a type here, so we won't expect Moose *or* Mouse to get loaded
     method foo1 ($bar) {};
 }
 
