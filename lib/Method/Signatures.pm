@@ -638,6 +638,7 @@ sub inject_for_type_check
 # note that it's a class method, not an object method
 # that's because it's called at runtime, when there is no Method::Signatures object still around
 my %types;                                                              # cache for type constraint objects
+my ($mutc, $findit, $isa_class, $isa_role, $make_class, $make_role);    # method names needed for finding/making such obj's
 sub type_check
 {
     my ($class, $type, $value, $name) = @_;
@@ -648,16 +649,16 @@ sub type_check
     # find it if isn't cached
     unless ($types{$type})
     {
-        # note that all these assignments could be cached, but I didn't want to do any premature
-        # optimization (also note that I'm pretty sure they _can't_ be hoisted up to the top of the
-        # module, because I don't think they're guaranteed to succeed at compile-time)
         no strict 'refs';
-        my $mutc       = any_moose('::Util::TypeConstraints');
-        my $findit     = "${mutc}::find_or_parse_type_constraint";
-        my $isa_class  = "${mutc}::find_type_constraint"->("ClassName");
-        my $isa_role   = "${mutc}::find_type_constraint"->("RoleName");
-        my $make_class = "${mutc}::class_type";
-        my $make_role  = "${mutc}::role_type";
+        unless ($mutc)
+        {
+            $mutc       = any_moose('::Util::TypeConstraints');
+            $findit     = "${mutc}::find_or_parse_type_constraint";
+            $isa_class  = "${mutc}::find_type_constraint"->("ClassName");
+            $isa_role   = "${mutc}::find_type_constraint"->("RoleName");
+            $make_class = "${mutc}::class_type";
+            $make_role  = "${mutc}::role_type";
+        }
 
         $types{$type}  = $findit->($type) ||
                          (
