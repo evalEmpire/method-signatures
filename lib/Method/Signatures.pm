@@ -13,7 +13,7 @@ our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
 # set up some regexen using for parsing types
 my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
-my $PARAMETERIZED = qr{   (?: Maybe | ArrayRef | HashRef | ScalarRef ) \[ $TYPENAME \]           }x;
+my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
 my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
 
 sub DEBUG {
@@ -668,47 +668,53 @@ sub _init_mutc
     require Any::Moose;
     Any::Moose->import('::Util::TypeConstraints');
 
-	no strict 'refs';
-	my $class = any_moose('::Util::TypeConstraints');
-	$mutc{class} = $class;
+    no strict 'refs';
+    my $class = any_moose('::Util::TypeConstraints');
+    $mutc{class} = $class;
 
-	$mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-	$mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-	$mutc{make_class} = \&{ $class . '::class_type'                    };
-	$mutc{make_role}  = \&{ $class . '::role_type'                     };
+    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
+    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
+    $mutc{make_class} = \&{ $class . '::class_type'                    };
+    $mutc{make_role}  = \&{ $class . '::role_type'                     };
 
-	$mutc{isa_class}  = $mutc{pull}->("ClassName");
-	$mutc{isa_role}   = $mutc{pull}->("RoleName");
+    $mutc{isa_class}  = $mutc{pull}->("ClassName");
+    $mutc{isa_role}   = $mutc{pull}->("RoleName");
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
 # be called when the type is not found in our cache.
 sub _make_constraint
 {
-	my ($type) = @_;
+    my ($type) = @_;
 
-	_init_mutc() unless $mutc{class};
+    _init_mutc() unless $mutc{class};
 
-	# Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
-	# parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
-	my $constr = $mutc{findit}->($type);
-	return $constr if $constr;
+    # Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
+    # parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
+    my $constr = eval { $mutc{findit}->($type) };
+    if ($@)
+    {
+        require Carp;
+        local $Carp::CarpLevel = 1;
+        Carp::croak "The type $type is unrecognized (looks like it doesn't parse correctly)";
+    }
+    return $constr if $constr;
 
-	# Check for roles.  Note that you *must* check for roles before you check for classes, because a
-	# role ISA class.
-	return $mutc{make_role}->($type) if $mutc{isa_role}->check($type);
+    # Check for roles.  Note that you *must* check for roles before you check for classes, because a
+    # role ISA class.
+    return $mutc{make_role}->($type) if $mutc{isa_role}->check($type);
 
-	# Now check for classes.
-	return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
+    # Now check for classes.
+    return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-	# caller(0) is _make_constraint
-	# caller(1) is type_check
-	# caller(2) is the method actually being called
-	my $caller = (caller(2))[3];
+    # caller(0) is _make_constraint
+    # caller(1) is type_check
+    # caller(2) is the method actually being called
+    my $caller = (caller(2))[3];
 
-	require Carp;
-	local $Carp::CarpLevel = 1;
-	Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)";
+    require Carp;
+    local $Carp::CarpLevel = 1;
+    Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)";
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -722,7 +728,7 @@ sub type_check
     my ($class, $type, $value, $name) = @_;
 
     # find it if isn't cached
-	$mutc{cache}->{$type} ||= _make_constraint($type);
+    $mutc{cache}->{$type} ||= _make_constraint($type);
 
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))

@@ -58,7 +58,7 @@ our $tester;
 
     sub _list { return ref $_[0] eq 'ARRAY' ? @{$_[0]} : ( $_[0] ); }
     sub _error
-    { 
+    {
         my ($self, $varname, $type, $val, $method) = @_;
         my $class = ref $self;
         my $error = quotemeta qq{The '$varname' parameter ("$val") to ${class}::$method is not of type $type};
@@ -126,12 +126,19 @@ our $tester;
             'call with undefined Int arg is okay';
 
 
-    # finally, a type that shouldn't be recognized
+    # finally, some types that shouldn't be recognized
 
     $method = 'unknown_type';
-    warning_is { eval qq{ method $method (Bmoogle \$bar) {} } } undef, 'no warnings when type loaded';
+    warning_is { eval qq{ method $method (Bmoogle \$bar) {} } } undef, 'no warnings when weird type loaded';
     throws_ok { $tester->$method(42) } qr/The type Bmoogle is unrecognized \(perhaps you forgot to load it\?\)/,
             'call with unrecognized type dies';
+
+    # this one is a bit specialer in that it involved an unrecognized parameterization
+    $method = 'unknown_paramized_type';
+    warning_is { eval qq{ method $method (Bmoogle[Int] \$bar) {} } } undef, 'no warnings when weird paramized type loaded';
+    throws_ok { $tester->$method(42) } qr/The type Bmoogle\[Int\] is unrecognized \(looks like it doesn't parse correctly\)/,
+            'call with unrecognized paramized type dies';
+
 }
 
 
