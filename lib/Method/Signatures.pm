@@ -694,7 +694,7 @@ sub _make_constraint
     my $constr = eval { $mutc{findit}->($type) };
     if ($@)
     {
-        _type_error("The type $type is unrecognized (looks like it doesn't parse correctly)");
+        _type_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
     }
     return $constr if $constr;
 
@@ -705,7 +705,7 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-    _type_error("The type $type is unrecognized (perhaps you forgot to load it?)");
+    _type_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
 
 # This is a helper function to throw errors from type checking so that they appear to be from the
@@ -714,9 +714,16 @@ sub _type_error
 {
     my ($msg) = @_;
 
+    my $caller;
+    my $pkg = __PACKAGE__;
+    my $level = 1;
+    do {
+        $caller = (caller($level++))[3];
+    } while $caller =~ /^$pkg/;
+
     require Carp;
     local $Carp::CarpLevel = 1;
-    Carp::croak $msg;
+    Carp::croak "In call to $caller : $msg";
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -735,9 +742,8 @@ sub type_check
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
-        my $caller = (caller(1))[3];
         $value = defined $value ? qq{"$value"} : 'undef';
-        _type_error(qq{The '$name' parameter ($value) to $caller is not of type $type});
+        _type_error(qq{the '$name' parameter ($value) is not of type $type});
     }
 }
 

@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
+use GenErrorRegex qw< badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -24,7 +25,7 @@ func mousey (MouseRole $foo) {}
 lives_ok { mousey($mouse) } 'Mouse role passes okay';
 
 # negative test
-throws_ok { mousey($foobar) } qr/The 'foo' parameter \(.*\) to main::mousey is not of type MouseRole/,
+throws_ok { mousey($foobar) } badval_error(undef, foo => MouseRole => $foobar, 'mousey'),
         'Mouse role fails when appropriate';
 
 

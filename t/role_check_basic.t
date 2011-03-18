@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
+use GenErrorRegex qw< badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -42,7 +43,7 @@ SKIP:
     lives_ok { basicy($basic) } 'Basic role passes okay';
 
     # negative test
-    throws_ok { basicy($foobar) } qr/The 'foo' parameter \(.*\) to main::basicy is not of type BasicRole/,
+    throws_ok { basicy($foobar) } badval_error(undef, foo => BasicRole => $foobar, 'basicy'),
             'Basic role fails when appropriate';
 }
 

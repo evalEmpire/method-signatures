@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
+use GenErrorRegex qw< badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -12,7 +13,7 @@ use Test::Exception;
 
 SKIP:
 {
-    eval "use Moose ()" or skip "Moose required for testing Moose roles", 2;
+    require Moose or skip "Moose required for testing Moose roles", 2;
 
     require MooseRoleTest;
     use Method::Signatures;
@@ -28,7 +29,7 @@ SKIP:
     lives_ok { moosey($moose) } 'Moose role passes okay';
 
     # negative test
-    throws_ok { moosey($foobar) } qr/The 'foo' parameter \(.*\) to main::moosey is not of type MooseRole/,
+    throws_ok { moosey($foobar) } badval_error(undef, foo => MooseRole => $foobar, 'moosey'),
             'Moose role fails when appropriate';
 }
 

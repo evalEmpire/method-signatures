@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
+use GenErrorRegex qw< badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -10,7 +11,7 @@ use Test::Exception;
 
 SKIP:
 {
-    eval "use Moose ()" or skip "Moose required for testing Moose types", 1;
+    require Moose or skip "Moose required for testing Moose types", 1;
 
     require MooseLoadTest;
 
@@ -30,9 +31,10 @@ SKIP:
     # tests for ScalarRef[X] have to live here, because they only work with Moose
 
     my $method = 'check_paramized_sref';
+    my $bad_ref = \'thing';
     lives_ok { $foobar->$method(\42) } 'call with good value for paramized_sref passes';
-    throws_ok { $foobar->check_paramized_sref(\'thing') }
-            qr/The 'bar' parameter \("SCALAR\(.*?\)"\) to Foo::Bar::$method is not of type ScalarRef\[Num\]/,
+    throws_ok { $foobar->$method($bad_ref) }
+            badval_error($foobar, bar => 'ScalarRef[Num]' => $bad_ref, $method),
             'call with bad value for paramized_sref dies';
 }
 
