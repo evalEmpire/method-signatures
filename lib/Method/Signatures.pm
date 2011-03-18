@@ -46,6 +46,12 @@ Method::Signatures - method and function declarations with signatures and no sou
         return $self->{$key} = $val;
     }
 
+    # Can also get type checking if you like:
+
+    method set (Str $key, Int $val) {
+        return $self->{$key} = $val;        # now you know $key is always an integer
+    }
+
     func hello($greeting, $place) {
         print "$greeting, $place!\n";
     }
@@ -67,6 +73,8 @@ automatically provide the invocant as C<$self>.  No more C<my $self =
 shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
+
+Also does type checking, understanding all the types that Moose (or Mouse) would understand.
 
 And it does all this with B<no source filters>.
 
@@ -161,7 +169,7 @@ reference.
 
 =head3 Invocant parameter
 
-The method invocant (ie. C<$self>) can be changed as the first
+The method invocant (i.e. C<$self>) can be changed as the first
 parameter.  Put a colon after it instead of a comma.
 
     method foo($class:) {
@@ -211,6 +219,66 @@ Earlier parameters may be used in later defaults.
     }
 
 All variables with defaults are considered optional.
+
+
+=head3 Types
+
+Parameters can also be given types.  If they are, the value passed in
+will be validated against the type provided.  Types are provided by
+L<Mouse> (or L<Moose>, if it is already loaded), so the set of default
+types that are understood can be found in
+L<Mouse::Util::TypeConstraints> (or L<Moose::Util::TypeConstraints>;
+they are generally the same, but there may be small differences).
+
+    # avoid "argument isn't numeric" warnings
+    method add(Int $this = 23, Int $that = 42) {
+        return $this + $that;
+    }
+
+If a type isn't recognized as a default, it is checked to see whether
+it is a role or a class.  If the type corresponds to a role name, then
+the value is checked that it C<DOES> that role.  If the type
+corresponds to a class name (that isn't a role name), then the value
+is checked that it C<isa> object of that class (taking inheritance
+into consideration, of course).
+
+L<Mouse> (and L<Moose>) also understand some parameterized types; see
+their documentation for more details.
+
+    method add(Int $this = 23, Maybe[Int] $that) {
+        # $this will definitely be defined
+        # but $that might be undef
+        return defined $that ? $this + $that : $this;
+    }
+
+You may also use disjunctions, which means that you are willing to
+accept a value of either type.
+
+    method add(Int $this = 23, Int|ArrayRef[Int] $that) {
+        # $that could be a single number,
+        # or a reference to an array of numbers
+        use List::Util qw<sum>;
+        my @ints = ($this);
+        push @ints, ref $that ? @$that : $that;
+        return sum(@ints);
+    }
+
+If the value does not validate against the type, a run-time exception
+is thrown.
+
+    Class->add('cow', 'boy'); # make a cowboy!
+    # no, get an error:
+    # In call to Class::add : the 'this' parameter ("cow") is not of type Int
+
+Note that values are type-checked in the order they are declared (as
+opposed to the order they are passed in), if that matters.
+
+You cannot declare a type for an invocant.
+
+    # this generates a compile-time error
+    method new(ClassName $class:) {
+        ...
+    }
 
 
 =head3 Parameter traits
@@ -753,6 +821,20 @@ sub type_check
 There is no run-time performance penalty for using this module above
 what it normally costs to do argument handling.
 
+There is also no run-time penalty for type-checking if you do not
+declare types.  The run-time penalty if you do declare types should be
+very similar to using L<Mouse::Util::TypeConstraints> (or
+L<Moose::Util::TypeConstraints>) directly, and should be faster than
+using a module such as L<MooseX::Params::Validate>.  The magic of
+L<Any::Moose> is used to give you the lightweight L<Mouse> if you have
+not yet loaded L<Moose>, or the full-bodied L<Moose> if you have.
+Type-checking modules are not loaded until run-time, so this is fine:
+
+    use Method::Signatures;
+    use Moose;
+    # you will still get Moose type checking
+    # (assuming you declare one or more methods with types)
+
 
 =head1 DEBUGGING
 
@@ -803,6 +885,12 @@ C<Method::Signatures::make_proto_unwrap>.  It takes a method prototype
 and returns a string of Perl 5 code which will be placed at the
 beginning of that method.
 
+If you would like to try to provide your own type checking, subclass
+L<Method::Signatures> and either override C<type_check> or
+C<inject_for_type_check>.  The former is probably fine for most
+applications; you might need the latter if you want to modify what
+parameters are passed into the type checking method.
+
 This interface is experimental, unstable and will change between
 versions.
 
@@ -850,15 +938,10 @@ C<$class> as your invocant like the normal Perl 5 convention.
 There may be special syntax to separate class from object methods in
 the future.
 
-=head2 What about types?
-
-I would like to add some sort of types in the future or simply make
-the signature handler pluggable.
-
 =head2 What about the return value?
 
-Currently there is no support for types or declaring the type of the
-return value.
+Currently there is no support for declaring the type of the return
+value.
 
 =head2 How does this relate to Perl's built-in prototypes?
 
@@ -908,6 +991,8 @@ Applying traits to all parameters as a short-hand?
     method foo($a is ro, $b is ro, $c is ro)
     method foo($a, $b, $c) is ro
 
+L<Role::Basic> roles are currently not recognized by the type system.
+
 A "go really fast" switch.  Turn off all runtime checks that might
 bite into performance.
 
@@ -953,7 +1038,7 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<MooseX::Method::Signatures> for a method keyword that works well with Moose.
+L<MooseX::Method::Signatures> for a method keyword that also works with Moose.
 
 L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
 
@@ -962,6 +1047,9 @@ L<Method::Signatures::Simple> for a more basic version of what Method::Signature
 L<signatures> for C<sub> with signatures.
 
 Perl 6 subroutine parameters and arguments -  L<http://perlcabal.org/syn/S06.html#Parameters_and_arguments>
+
+L<Moose::Util::TypeConstraints> or L<Mouse::Util::TypeConstraints> for
+further details on how the type-checking works.
 
 =cut
 
