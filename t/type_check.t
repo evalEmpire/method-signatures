@@ -57,11 +57,18 @@ our $tester;
     method new ($class:) { bless {}, $class; }
 
     sub _list { return ref $_[0] eq 'ARRAY' ? @{$_[0]} : ( $_[0] ); }
-    sub _error
+    sub _badval_error
     {
         my ($self, $varname, $type, $val, $method) = @_;
         my $class = ref $self;
         my $error = quotemeta qq{The '$varname' parameter ("$val") to ${class}::$method is not of type $type};
+        return qr/$error/;
+    }
+    sub _badtype_error
+    {
+        my ($self, $type, $submsg, $method) = @_;
+        my $class = ref $self;
+        my $error = quotemeta qq{The type $type is unrecognized ($submsg)};
         return qr/$error/;
     }
 
@@ -92,7 +99,7 @@ our $tester;
         foreach (@vals)
         {
             my $tag = @vals ? ' (#' . $count++ . ')' : '';
-            throws_ok { $tester->$method($_) } $tester->_error(bar => $type, $_, $method),
+            throws_ok { $tester->$method($_) } $tester->_badval_error(bar => $type, $_, $method),
                     "call with bad value for $name dies";
         }
     }
@@ -103,20 +110,20 @@ our $tester;
     my $method = 'check_mixed_type_first';
     warning_is { eval qq{ method $method (Int \$bar, \$baz) {} } } undef, 'no warnings (type, notype)';
     lives_ok { $tester->$method(0, 'thing') } 'call with good values (type, notype) passes';
-    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_error(bar => Int => thing1 => $method),
+    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_badval_error(bar => Int => thing1 => $method),
             'call with bad values (type, notype) dies';
 
     $method = 'check_mixed_type_second';
     warning_is { eval qq{ method $method (\$bar, Int \$baz) {} } } undef, 'no warnings (notype, type)';
     lives_ok { $tester->$method('thing', 1) } 'call with good values (notype, type) passes';
-    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_error(baz => Int => thing2 => $method),
+    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_badval_error(baz => Int => thing2 => $method),
             'call with bad values (notype, type) dies';
 
     $method = 'check_multiple_types';
     warning_is { eval qq{ method $method (Int \$bar, Int \$baz) {} } } undef, 'no warnings when type loaded';
     lives_ok { $tester->$method(1, 1) } 'call with good values (type, type) passes';
     # with two types, and bad values for both, they should fail in order of declaration
-    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_error(bar => Int => thing1 => $method),
+    throws_ok { $tester->$method('thing1', 'thing2') } $tester->_badval_error(bar => Int => thing1 => $method),
             'call with bad values (type, type) dies';
 
     # want to try one with undef as well to make sure we don't get an uninitialized warning
@@ -127,16 +134,19 @@ our $tester;
 
 
     # finally, some types that shouldn't be recognized
+    my $type;
 
     $method = 'unknown_type';
-    warning_is { eval qq{ method $method (Bmoogle \$bar) {} } } undef, 'no warnings when weird type loaded';
-    throws_ok { $tester->$method(42) } qr/The type Bmoogle is unrecognized \(perhaps you forgot to load it\?\)/,
+    $type = 'Bmoogle';
+    warning_is { eval qq{ method $method ($type \$bar) {} } } undef, 'no warnings when weird type loaded';
+    throws_ok { $tester->$method(42) } $tester->_badtype_error($type, "perhaps you forgot to load it?", $method),
             'call with unrecognized type dies';
 
     # this one is a bit specialer in that it involved an unrecognized parameterization
     $method = 'unknown_paramized_type';
-    warning_is { eval qq{ method $method (Bmoogle[Int] \$bar) {} } } undef, 'no warnings when weird paramized type loaded';
-    throws_ok { $tester->$method(42) } qr/The type Bmoogle\[Int\] is unrecognized \(looks like it doesn't parse correctly\)/,
+    $type = 'Bmoogle[Int]';
+    warning_is { eval qq{ method $method ($type \$bar) {} } } undef, 'no warnings when weird paramized type loaded';
+    throws_ok { $tester->$method(42) } $tester->_badtype_error($type, "looks like it doesn't parse correctly", $method),
             'call with unrecognized paramized type dies';
 
 }
