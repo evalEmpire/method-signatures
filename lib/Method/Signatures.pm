@@ -694,9 +694,7 @@ sub _make_constraint
     my $constr = eval { $mutc{findit}->($type) };
     if ($@)
     {
-        require Carp;
-        local $Carp::CarpLevel = 1;
-        Carp::croak "The type $type is unrecognized (looks like it doesn't parse correctly)";
+        _type_error("The type $type is unrecognized (looks like it doesn't parse correctly)");
     }
     return $constr if $constr;
 
@@ -707,14 +705,18 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-    # caller(0) is _make_constraint
-    # caller(1) is type_check
-    # caller(2) is the method actually being called
-    my $caller = (caller(2))[3];
+    _type_error("The type $type is unrecognized (perhaps you forgot to load it?)");
+}
+
+# This is a helper function to throw errors from type checking so that they appear to be from the
+# point of the calling sub, not any of the Method::Signatures subs.
+sub _type_error
+{
+    my ($msg) = @_;
 
     require Carp;
     local $Carp::CarpLevel = 1;
-    Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)";
+    Carp::croak $msg;
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -733,12 +735,9 @@ sub type_check
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
-        require Carp;
-        local $Carp::CarpLevel = 1;
-
         my $caller = (caller(1))[3];
         $value = defined $value ? qq{"$value"} : 'undef';
-        Carp::croak(qq{The '$name' parameter ($value) to $caller is not of type $type});
+        _type_error(qq{The '$name' parameter ($value) to $caller is not of type $type});
     }
 }
 
