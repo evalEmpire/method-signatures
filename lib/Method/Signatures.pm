@@ -625,6 +625,7 @@ sub inject_for_sig {
 }
 
 # A hook for extension authors
+# (see also type_check below)
 sub inject_for_type_check
 {
     my $self = shift;
@@ -632,57 +633,6 @@ sub inject_for_type_check
     my ($sig) = @_;
 
     return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
-}
-
-# you can also override this instead of inject_for_type_check if you'd rather
-# note that it's a class method, not an object method
-# that's because it's called at runtime, when there is no Method::Signatures object still around
-my %types;                                                              # cache for type constraint objects
-my ($mutc, $findit, $isa_class, $isa_role, $make_class, $make_role);    # method names needed for finding/making such obj's
-sub type_check
-{
-    my ($class, $type, $value, $name) = @_;
-
-    require Any::Moose;
-    Any::Moose->import('::Util::TypeConstraints');
-
-    # find it if isn't cached
-    unless ($types{$type})
-    {
-        no strict 'refs';
-        unless ($mutc)
-        {
-            $mutc       = any_moose('::Util::TypeConstraints');
-            $findit     = "${mutc}::find_or_parse_type_constraint";
-            $isa_class  = "${mutc}::find_type_constraint"->("ClassName");
-            $isa_role   = "${mutc}::find_type_constraint"->("RoleName");
-            $make_class = "${mutc}::class_type";
-            $make_role  = "${mutc}::role_type";
-        }
-
-        $types{$type}  = $findit->($type) ||
-                         (
-                            # have to check roles before classes, because a RoleName isa ClassName
-                            $isa_role->check($type)  ? $make_role->($type)
-                          : $isa_class->check($type) ? $make_class->($type)
-                          : (
-                               require Carp,
-                               local $Carp::CarpLevel = 1,
-                               Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)"
-                            )
-                         );
-    }
-
-    # throw an error if the type check fails
-    unless ($types{$type}->check($value))
-    {
-        require Carp;
-        local $Carp::CarpLevel = 1;
-
-        my $caller = (caller(1))[3];
-        $value = defined $value ? qq{"$value"} : 'undef';
-        Carp::croak(qq{The '$name' parameter ($value) to $caller is not of type $type});
-    }
 }
 
 sub signature_error {
@@ -697,6 +647,93 @@ sub required_arg {
     my $var = shift;
 
     signature_error sprintf "missing required argument $var";
+}
+
+
+# STUFF FOR TYPE CHECKING
+
+# This variable will hold all the bits we need.  MUTC could stand for Moose::Util::TypeConstraint,
+# or it could stand for Mouse::Util::TypeConstraint ... depends on which one you've got loaded (or
+# Mouse if you have neither loaded).  Because we use Any::Moose to allow the user to choose
+# whichever they like, we'll need to figure out the exact method names to call.  We'll also need a
+# type constraint cache, where we stick our constraints once we find or create them.  This insures
+# that we only have to run down any given constraint once, the first time it's seen, and then after
+# that it's simple enough to pluck back out.  This is very similar to how MooseX::Params::Validate
+# does it.
+my %mutc;
+
+# This is a helper function to initialize our %mutc variable.
+sub _init_mutc
+{
+    require Any::Moose;
+    Any::Moose->import('::Util::TypeConstraints');
+
+	no strict 'refs';
+	my $class = any_moose('::Util::TypeConstraints');
+	$mutc{class} = $class;
+
+	$mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
+	$mutc{pull}       = \&{ $class . '::find_type_constraint'          };
+	$mutc{make_class} = \&{ $class . '::class_type'                    };
+	$mutc{make_role}  = \&{ $class . '::role_type'                     };
+
+	$mutc{isa_class}  = $mutc{pull}->("ClassName");
+	$mutc{isa_role}   = $mutc{pull}->("RoleName");
+}
+
+# This is a helper function to find (or create) the constraint we need for a given type.  It would
+# be called when the type is not found in our cache.
+sub _make_constraint
+{
+	my ($type) = @_;
+
+	_init_mutc() unless $mutc{class};
+
+	# Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
+	# parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
+	my $constr = $mutc{findit}->($type);
+	return $constr if $constr;
+
+	# Check for roles.  Note that you *must* check for roles before you check for classes, because a
+	# role ISA class.
+	return $mutc{make_role}->($type) if $mutc{isa_role}->check($type);
+
+	# Now check for classes.
+	return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
+
+	# caller(0) is _make_constraint
+	# caller(1) is type_check
+	# caller(2) is the method actually being called
+	my $caller = (caller(2))[3];
+
+	require Carp;
+	local $Carp::CarpLevel = 1;
+	Carp::croak "The type $type is unrecognized (perhaps you forgot to load it?)";
+}
+
+# This method does the actual type checking.  It's what we inject into our user's method, to be
+# called directly by them.
+#
+# Note that you can override this instead of inject_for_type_check if you'd rather.  If you do,
+# remember that this is a class method, not an object method.  That's because it's called at
+# runtime, when there is no Method::Signatures object still around.
+sub type_check
+{
+    my ($class, $type, $value, $name) = @_;
+
+    # find it if isn't cached
+	$mutc{cache}->{$type} ||= _make_constraint($type);
+
+    # throw an error if the type check fails
+    unless ($mutc{cache}->{$type}->check($value))
+    {
+        require Carp;
+        local $Carp::CarpLevel = 1;
+
+        my $caller = (caller(1))[3];
+        $value = defined $value ? qq{"$value"} : 'undef';
+        Carp::croak(qq{The '$name' parameter ($value) to $caller is not of type $type});
+    }
 }
 
 
