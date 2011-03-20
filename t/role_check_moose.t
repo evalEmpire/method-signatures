@@ -13,7 +13,7 @@ use Test::Exception;
 
 SKIP:
 {
-    require Moose or skip "Moose required for testing Moose roles", 2;
+    eval { require Moose } or skip "Moose required for testing Moose roles", 2;
 
     require MooseRoleTest;
     use Method::Signatures;

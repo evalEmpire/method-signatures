@@ -11,7 +11,7 @@ use Test::Exception;
 
 SKIP:
 {
-    require Moose or skip "Moose required for testing Moose types", 1;
+    eval { require Moose } or skip "Moose required for testing Moose types", 1;
 
     require MooseLoadTest;
 
