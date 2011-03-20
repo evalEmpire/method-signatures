@@ -714,7 +714,7 @@ sub signature_error {
 sub required_arg {
     my $var = shift;
 
-    signature_error sprintf "missing required argument $var";
+    signature_error("missing required argument $var");
 }
 
 
