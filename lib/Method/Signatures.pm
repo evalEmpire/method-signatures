@@ -11,6 +11,11 @@ our $VERSION = '20110216.1153_01';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
+# set up some regexen using for parsing types
+my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
+my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
+my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
+
 sub DEBUG {
     return unless $DEBUG;
 
@@ -41,6 +46,12 @@ Method::Signatures - method and function declarations with signatures and no sou
         return $self->{$key} = $val;
     }
 
+    # Can also get type checking if you like:
+
+    method set (Str $key, Int $val) {
+        return $self->{$key} = $val;        # now you know $key is always an integer
+    }
+
     func hello($greeting, $place) {
         print "$greeting, $place!\n";
     }
@@ -62,6 +73,8 @@ automatically provide the invocant as C<$self>.  No more C<my $self =
 shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
+
+Also does type checking, understanding all the types that Moose (or Mouse) would understand.
 
 And it does all this with B<no source filters>.
 
@@ -156,7 +169,7 @@ reference.
 
 =head3 Invocant parameter
 
-The method invocant (ie. C<$self>) can be changed as the first
+The method invocant (i.e. C<$self>) can be changed as the first
 parameter.  Put a colon after it instead of a comma.
 
     method foo($class:) {
@@ -206,6 +219,66 @@ Earlier parameters may be used in later defaults.
     }
 
 All variables with defaults are considered optional.
+
+
+=head3 Types
+
+Parameters can also be given types.  If they are, the value passed in
+will be validated against the type provided.  Types are provided by
+L<Mouse> (or L<Moose>, if it is already loaded), so the set of default
+types that are understood can be found in
+L<Mouse::Util::TypeConstraints> (or L<Moose::Util::TypeConstraints>;
+they are generally the same, but there may be small differences).
+
+    # avoid "argument isn't numeric" warnings
+    method add(Int $this = 23, Int $that = 42) {
+        return $this + $that;
+    }
+
+If a type isn't recognized as a default, it is checked to see whether
+it is a role or a class.  If the type corresponds to a role name, then
+the value is checked that it C<DOES> that role.  If the type
+corresponds to a class name (that isn't a role name), then the value
+is checked that it C<isa> object of that class (taking inheritance
+into consideration, of course).
+
+L<Mouse> (and L<Moose>) also understand some parameterized types; see
+their documentation for more details.
+
+    method add(Int $this = 23, Maybe[Int] $that) {
+        # $this will definitely be defined
+        # but $that might be undef
+        return defined $that ? $this + $that : $this;
+    }
+
+You may also use disjunctions, which means that you are willing to
+accept a value of either type.
+
+    method add(Int $this = 23, Int|ArrayRef[Int] $that) {
+        # $that could be a single number,
+        # or a reference to an array of numbers
+        use List::Util qw<sum>;
+        my @ints = ($this);
+        push @ints, ref $that ? @$that : $that;
+        return sum(@ints);
+    }
+
+If the value does not validate against the type, a run-time exception
+is thrown.
+
+    Class->add('cow', 'boy'); # make a cowboy!
+    # no, get an error:
+    # In call to Class::add : the 'this' parameter ("cow") is not of type Int
+
+Note that values are type-checked in the order they are declared (as
+opposed to the order they are passed in), if that matters.
+
+You cannot declare a type for an invocant.
+
+    # this generates a compile-time error
+    method new(ClassName $class:) {
+        ...
+    }
 
 
 =head3 Parameter traits
@@ -334,6 +407,7 @@ Method::Signatures lets you punt and use @_ like in regular Perl 5.
 sub import {
     my $class = shift;
     my $caller = caller;
+    # default values
 
     my $arg = shift;
     if (defined $arg) {
@@ -402,7 +476,7 @@ sub parse_signature {
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
         if( @protos ) {
-            $signature->{invocant} = $1 if $protos[0] =~ s{^(\S+?):\s*}{};
+            $signature->{invocant} = $1 if $protos[0] =~ s{^ ([^:\s]+) : (?! :) \s* }{}x;
             shift @protos unless $protos[0] =~ /\S/;
         }
     }
@@ -453,7 +527,8 @@ sub parse_func {
         my $sig   = {};
         $sig->{proto} = $proto;
 
-        $sig->{type} = $1 if $proto =~ s{^ ([a-z]\w*(?:\:\:\w+)*) \s+ }{}ix;
+        # $TYPENAME, $PARAMETERIZED, and $DISJUNCTION defined up at top, for performance reasons
+        $sig->{type} = $1 if $proto =~ s{^ ($TYPENAME | $PARAMETERIZED | $DISJUNCTION) \s+ }{}iox;
 
         $sig->{named} = $proto =~ s{^:}{};
 
@@ -584,7 +659,7 @@ sub inject_for_sig {
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
-               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     : 
+               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
                                             "\$_[$idx]"           ;
     }
 
@@ -592,10 +667,6 @@ sub inject_for_sig {
     # Handle a default value
     if( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
-    }
-
-    if( $sig->{type} ) {
-        push @code, $self->inject_for_type_check($sig);
     }
 
     if( !$sig->{is_optional} ) {
@@ -614,11 +685,23 @@ sub inject_for_sig {
         push @code, "$lhs = $rhs;";
     }
 
+    if( $sig->{type} ) {
+        push @code, $self->inject_for_type_check($sig);
+    }
+
     return @code;
 }
 
 # A hook for extension authors
-sub inject_for_type_check {}
+# (see also type_check below)
+sub inject_for_type_check
+{
+    my $self = shift;
+    my $class = ref $self || $self;
+    my ($sig) = @_;
+
+    return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
+}
 
 sub signature_error {
     my $msg = shift;
@@ -635,10 +718,122 @@ sub required_arg {
 }
 
 
+# STUFF FOR TYPE CHECKING
+
+# This variable will hold all the bits we need.  MUTC could stand for Moose::Util::TypeConstraint,
+# or it could stand for Mouse::Util::TypeConstraint ... depends on which one you've got loaded (or
+# Mouse if you have neither loaded).  Because we use Any::Moose to allow the user to choose
+# whichever they like, we'll need to figure out the exact method names to call.  We'll also need a
+# type constraint cache, where we stick our constraints once we find or create them.  This insures
+# that we only have to run down any given constraint once, the first time it's seen, and then after
+# that it's simple enough to pluck back out.  This is very similar to how MooseX::Params::Validate
+# does it.
+my %mutc;
+
+# This is a helper function to initialize our %mutc variable.
+sub _init_mutc
+{
+    require Any::Moose;
+    Any::Moose->import('::Util::TypeConstraints');
+
+    no strict 'refs';
+    my $class = any_moose('::Util::TypeConstraints');
+    $mutc{class} = $class;
+
+    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
+    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
+    $mutc{make_class} = \&{ $class . '::class_type'                    };
+    $mutc{make_role}  = \&{ $class . '::role_type'                     };
+
+    $mutc{isa_class}  = $mutc{pull}->("ClassName");
+    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+}
+
+# This is a helper function to find (or create) the constraint we need for a given type.  It would
+# be called when the type is not found in our cache.
+sub _make_constraint
+{
+    my ($type) = @_;
+
+    _init_mutc() unless $mutc{class};
+
+    # Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
+    # parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
+    my $constr = eval { $mutc{findit}->($type) };
+    if ($@)
+    {
+        _type_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+    }
+    return $constr if $constr;
+
+    # Check for roles.  Note that you *must* check for roles before you check for classes, because a
+    # role ISA class.
+    return $mutc{make_role}->($type) if $mutc{isa_role}->check($type);
+
+    # Now check for classes.
+    return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
+
+    _type_error("the type $type is unrecognized (perhaps you forgot to load it?)");
+}
+
+# This is a helper function to throw errors from type checking so that they appear to be from the
+# point of the calling sub, not any of the Method::Signatures subs.
+sub _type_error
+{
+    my ($msg) = @_;
+
+    my $caller;
+    my $pkg = __PACKAGE__;
+    my $level = 1;
+    do {
+        $caller = (caller($level++))[3];
+    } while $caller =~ /^$pkg/;
+
+    require Carp;
+    local $Carp::CarpLevel = 1;
+    Carp::croak "In call to $caller : $msg";
+}
+
+# This method does the actual type checking.  It's what we inject into our user's method, to be
+# called directly by them.
+#
+# Note that you can override this instead of inject_for_type_check if you'd rather.  If you do,
+# remember that this is a class method, not an object method.  That's because it's called at
+# runtime, when there is no Method::Signatures object still around.
+sub type_check
+{
+    my ($class, $type, $value, $name) = @_;
+
+    # find it if isn't cached
+    $mutc{cache}->{$type} ||= _make_constraint($type);
+
+    # throw an error if the type check fails
+    unless ($mutc{cache}->{$type}->check($value))
+    {
+        $value = defined $value ? qq{"$value"} : 'undef';
+        _type_error(qq{the '$name' parameter ($value) is not of type $type});
+    }
+}
+
+
 =head1 PERFORMANCE
 
 There is no run-time performance penalty for using this module above
 what it normally costs to do argument handling.
+
+There is also no run-time penalty for type-checking if you do not
+declare types.  The run-time penalty if you do declare types should be
+very similar to using L<Mouse::Util::TypeConstraints> (or
+L<Moose::Util::TypeConstraints>) directly, and should be faster than
+using a module such as L<MooseX::Params::Validate>.  The magic of
+L<Any::Moose> is used to give you the lightweight L<Mouse> if you have
+not yet loaded L<Moose>, or the full-bodied L<Moose> if you have.
+Type-checking modules are not loaded until run-time, so this is fine:
+
+    use Method::Signatures;
+    use Moose;
+    # you will still get Moose type checking
+    # (assuming you declare one or more methods with types)
 
 
 =head1 DEBUGGING
@@ -690,6 +885,12 @@ C<Method::Signatures::make_proto_unwrap>.  It takes a method prototype
 and returns a string of Perl 5 code which will be placed at the
 beginning of that method.
 
+If you would like to try to provide your own type checking, subclass
+L<Method::Signatures> and either override C<type_check> or
+C<inject_for_type_check>.  The former is probably fine for most
+applications; you might need the latter if you want to modify what
+parameters are passed into the type checking method.
+
 This interface is experimental, unstable and will change between
 versions.
 
@@ -737,15 +938,10 @@ C<$class> as your invocant like the normal Perl 5 convention.
 There may be special syntax to separate class from object methods in
 the future.
 
-=head2 What about types?
-
-I would like to add some sort of types in the future or simply make
-the signature handler pluggable.
-
 =head2 What about the return value?
 
-Currently there is no support for types or declaring the type of the
-return value.
+Currently there is no support for declaring the type of the return
+value.
 
 =head2 How does this relate to Perl's built-in prototypes?
 
@@ -795,6 +991,8 @@ Applying traits to all parameters as a short-hand?
     method foo($a is ro, $b is ro, $c is ro)
     method foo($a, $b, $c) is ro
 
+L<Role::Basic> roles are currently not recognized by the type system.
+
 A "go really fast" switch.  Turn off all runtime checks that might
 bite into performance.
 
@@ -840,7 +1038,7 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<MooseX::Method::Signatures> for a method keyword that works well with Moose.
+L<MooseX::Method::Signatures> for a method keyword that also works with Moose.
 
 L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
 
@@ -849,6 +1047,9 @@ L<Method::Signatures::Simple> for a more basic version of what Method::Signature
 L<signatures> for C<sub> with signatures.
 
 Perl 6 subroutine parameters and arguments -  L<http://perlcabal.org/syn/S06.html#Parameters_and_arguments>
+
+L<Moose::Util::TypeConstraints> or L<Mouse::Util::TypeConstraints> for
+further details on how the type-checking works.
 
 =cut
 
