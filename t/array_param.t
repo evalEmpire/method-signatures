@@ -11,19 +11,19 @@ use Test::More tests => 5;
     use Method::Signatures;
 
     method new ($class:) {
-	bless {}, $class;
+        bless {}, $class;
     }
 
     method array_param_at_start (@a, $b, $c) {
-	return "@a|$b|$c";
+        return "@a|$b|$c";
     }
 
     method array_param_in_midst ($a, @b, $c) {
-	return "$a|@b|$c";
+        return "$a|@b|$c";
     }
 
     method array_param_at_end ($a, $b, @c) {
-	return "$a|$b|@c";
+        return "$a|$b|@c";
     }
 
     eval q{
