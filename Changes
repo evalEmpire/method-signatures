@@ -1,6 +1,7 @@
 Next
     New Features
-    * Added support for Perl 6 style type syntax, but no behavior.
+    * Added support for Perl 6 style type syntax backed by Any::Moose
+      (barefootcoder) [github #3]
 
 
 20110216.1153_001  Wed, 16 Feb 2011 11:35:05 +1100
