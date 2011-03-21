@@ -3,6 +3,11 @@ Next
     * Added support for Perl 6 style type syntax backed by Any::Moose
       (barefootcoder) [github #3]
 
+    Test Fixes
+    * t/syntax_errors.t would fail on some versions of Perl because
+      we wouldn't get the expected error message out of eval.
+      [github #4]
+
 
 20110216.1153_001  Wed, 16 Feb 2011 11:35:05 +1100
     New Features
