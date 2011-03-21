@@ -221,12 +221,25 @@ Earlier parameters may be used in later defaults.
 All variables with defaults are considered optional.
 
 
-=head3 Types
+=head3 Type Constraints
 
-Parameters can also be given types.  If they are, the value passed in
-will be validated against the type provided.  Types are provided by
-L<Mouse> (or L<Moose>, if it is already loaded), so the set of default
-types that are understood can be found in
+Parameters can also be given type constraints.  If they are, the value
+passed in will be validated against the type constraint provided.
+Types are provided by L<Any::Moose> which will load L<Mouse> if
+L<Moose> is not already loaded.
+
+Type constraints can be a type, a role or a class.  Each will be
+checked in turn until one of them passes.
+
+    * First, is the $value of that type declared in Moose (or Mouse)?
+
+    * Then, does the $value have that role?
+        $value->DOES($type);
+
+    * Finally, is the $value an object of that class?
+        $value->isa($type);
+
+The set of default types that are understood can be found in
 L<Mouse::Util::TypeConstraints> (or L<Moose::Util::TypeConstraints>;
 they are generally the same, but there may be small differences).
 
@@ -234,13 +247,6 @@ they are generally the same, but there may be small differences).
     method add(Int $this = 23, Int $that = 42) {
         return $this + $that;
     }
-
-If a type isn't recognized as a default, it is checked to see whether
-it is a role or a class.  If the type corresponds to a role name, then
-the value is checked that it C<DOES> that role.  If the type
-corresponds to a class name (that isn't a role name), then the value
-is checked that it C<isa> object of that class (taking inheritance
-into consideration, of course).
 
 L<Mouse> (and L<Moose>) also understand some parameterized types; see
 their documentation for more details.
@@ -266,14 +272,11 @@ accept a value of either type.
 If the value does not validate against the type, a run-time exception
 is thrown.
 
-    Class->add('cow', 'boy'); # make a cowboy!
-    # no, get an error:
+    # Error will be:
     # In call to Class::add : the 'this' parameter ("cow") is not of type Int
+    Class->add('cow', 'boy'); # make a cowboy!
 
-Note that values are type-checked in the order they are declared (as
-opposed to the order they are passed in), if that matters.
-
-You cannot declare a type for an invocant.
+You cannot declare the type of the invocant.
 
     # this generates a compile-time error
     method new(ClassName $class:) {
@@ -828,6 +831,7 @@ L<Moose::Util::TypeConstraints>) directly, and should be faster than
 using a module such as L<MooseX::Params::Validate>.  The magic of
 L<Any::Moose> is used to give you the lightweight L<Mouse> if you have
 not yet loaded L<Moose>, or the full-bodied L<Moose> if you have.
+
 Type-checking modules are not loaded until run-time, so this is fine:
 
     use Method::Signatures;
