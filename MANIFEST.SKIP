@@ -37,3 +37,4 @@
 ^\.git
 ^\.#
 ^MYMETA.yml$
+^MYMETA\.json$

@@ -1,4 +1,4 @@
-Next
+20110322.0027_001  Tue, 22 Mar 2011 00:27:00 +1100
     New Features
     * Added support for Perl 6 style type syntax backed by Any::Moose
       (barefootcoder) [github #3]

@@ -1,0 +1,64 @@
+{
+   "abstract" : "method and function declarations with signatures and no source filter",
+   "author" : [
+      "Michael G Schwern <schwern@pobox.com>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110580",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Method-Signatures",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Module::Build" : "0.26",
+            "Test::Builder" : "0.82",
+            "Test::More" : "0.82",
+            "Test::Warn" : "0.10"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.26"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Const::Fast" : "0.006",
+            "Data::Alias" : "1.08",
+            "Devel::BeginLift" : "0.001001",
+            "Devel::Declare::MethodInstaller::Simple" : "0.003003",
+            "PPI" : "1.203",
+            "perl" : "v5.8.1"
+         }
+      }
+   },
+   "provides" : {
+      "Method::Signatures" : {
+         "file" : "lib/Method/Signatures.pm",
+         "version" : "20110322.0027_001"
+      },
+      "Method::Signatures::Parser" : {
+         "file" : "lib/Method/Signatures/Parser.pm",
+         "version" : 0
+      }
+   },
+   "release_status" : "testing",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
+      },
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ],
+      "repository" : {
+         "url" : "https://github.com/schwern/method-signatures/tree"
+      }
+   },
+   "version" : "20110322.0027_001"
+}
