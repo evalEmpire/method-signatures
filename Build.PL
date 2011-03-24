@@ -29,6 +29,7 @@ my $build = Module::Build->new(
         'Const::Fast'       => '0.006',
         PPI                 => '1.203',
         'Data::Alias'       => '1.08',
+        'Any::Moose'        => '0.11',
     },
     
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
