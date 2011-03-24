@@ -7,7 +7,7 @@ use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Data::Alias;
 
-our $VERSION = '20110322.0027_001';
+our $VERSION = '20110324.1600_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 

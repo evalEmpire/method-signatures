@@ -29,6 +29,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Any::Moose" : "0.11",
             "Const::Fast" : "0.006",
             "Data::Alias" : "1.08",
             "Devel::BeginLift" : "0.001001",
@@ -41,7 +42,7 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20110322.0027_001"
+         "version" : "20110324.1600_001"
       },
       "Method::Signatures::Parser" : {
          "file" : "lib/Method/Signatures/Parser.pm",
@@ -60,5 +61,5 @@
          "url" : "https://github.com/schwern/method-signatures/tree"
       }
    },
-   "version" : "20110322.0027_001"
+   "version" : "20110324.1600_001"
 }
