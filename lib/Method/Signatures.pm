@@ -339,14 +339,18 @@ Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 To declare a parameter optional, use the C<$arg?> syntax.
 
-Currently nothing is done with this.  It's for forward compatibility.
+Since named parameters are optional by default, this only has an effect on
+positional parameters.
 
 
 =head3 Required parameters
 
 To declare a parameter as required, use the C<$arg!> syntax.
 
-All parameters without defaults are required by default.
+Since positional parameters are required by default, this only has an effect on
+named parameters.  Using this syntax for a parameter with a default (e.g.
+C<$arg! = 0>) is non-sensical, but not an error: the parameter would be
+considered required, so the default could never be used.
 
 
 =head3 The C<@_> signature
