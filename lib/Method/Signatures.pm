@@ -49,7 +49,7 @@ Method::Signatures - method and function declarations with signatures and no sou
     # Can also get type checking if you like:
 
     method set (Str $key, Int $val) {
-        return $self->{$key} = $val;        # now you know $key is always an integer
+        return $self->{$key} = $val;        # now you know $val is always an integer
     }
 
     func hello($greeting, $place) {
