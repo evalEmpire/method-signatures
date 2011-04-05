@@ -662,15 +662,17 @@ sub inject_for_sig {
     my $rhs;
 
     if( $sig->{named} ) {
-        $rhs = "delete \$args{$sig->{name}}";
+        $sig->{passed_in} = "\$args{$sig->{name}}";
+        $rhs = "delete $sig->{passed_in}";
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
                $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
                                             "\$_[$idx]"           ;
+        $sig->{passed_in} = $rhs;
     }
 
-    my $check_exists = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+    my $check_exists = $sig->{exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
     if( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
@@ -678,6 +680,10 @@ sub inject_for_sig {
 
     if( !$sig->{is_optional} ) {
         push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
+    }
+
+    if( $sig->{type} ) {
+        push @code, $self->inject_for_type_check($sig);
     }
 
     # Handle \@foo
@@ -692,10 +698,6 @@ sub inject_for_sig {
         push @code, "$lhs = $rhs;";
     }
 
-    if( $sig->{type} ) {
-        push @code, $self->inject_for_type_check($sig);
-    }
-
     return @code;
 }
 
@@ -707,7 +709,7 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
+    return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') if $sig->{exists};";
 }
 
 sub signature_error {
