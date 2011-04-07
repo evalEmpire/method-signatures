@@ -793,15 +793,18 @@ sub _type_error
 {
     my ($msg) = @_;
 
+    local @CARP_NOT = ( __PACKAGE__ );
+    my $skip = qr/^${\(join('|', @CARP_NOT))}/;
+
     my $caller;
-    my $pkg = __PACKAGE__;
     my $level = 0;
     do {
         $caller = (caller(++$level))[3];
-    } while $caller =~ /^$pkg/;
+    } while $caller =~ /$skip/;
 
-    ($pkg = $caller) =~ s/::(\w+)?$//;
-    local @CARP_NOT = ( $pkg );
+    # we don't need __PACKAGE__ in @CARP_NOT, but we do need the package of the sub with the error
+    (my $pkg = $caller) =~ s/::(\w+)?$//;
+    $CARP_NOT[0] = $pkg;
 
     require Carp;
     Carp::croak "In call to $caller : $msg";
