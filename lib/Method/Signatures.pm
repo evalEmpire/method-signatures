@@ -11,6 +11,8 @@ our $VERSION = '20110324.1600_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
+our @CARP_NOT;
+
 # set up some regexen using for parsing types
 my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
 my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
@@ -793,13 +795,15 @@ sub _type_error
 
     my $caller;
     my $pkg = __PACKAGE__;
-    my $level = 1;
+    my $level = 0;
     do {
-        $caller = (caller($level++))[3];
+        $caller = (caller(++$level))[3];
     } while $caller =~ /^$pkg/;
 
+    ($pkg = $caller) =~ s/::(\w+)?$//;
+    local @CARP_NOT = ( $pkg );
+
     require Carp;
-    local $Carp::CarpLevel = 1;
     Carp::croak "In call to $caller : $msg";
 }
 
