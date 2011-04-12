@@ -711,7 +711,8 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') if $sig->{exists};";
+    my $check_exists = $sig->{is_optional} ? "if $sig->{exists}" : '';
+    return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') $check_exists;";
 }
 
 sub signature_error {
