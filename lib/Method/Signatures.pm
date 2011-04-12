@@ -471,7 +471,7 @@ sub _strip_ws {
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
-    return $self->parse_signature( proto => shift, invocant => $self->{invocant} );
+    return $self->parse_signature( proto => shift, invocant => $self->{invocant}, pre_invocant => $self->{pre_invocant} );
 }
 
 
@@ -481,6 +481,10 @@ sub parse_signature {
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
     my $signature = $args{signature} || {};
+
+    # JIC there's anything we need to pull out before the invocant
+    # (primary example would be the $orig for around modifiers in Moose/Mouse
+    $signature->{pre_invocant} = $args{pre_invocant};
 
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
