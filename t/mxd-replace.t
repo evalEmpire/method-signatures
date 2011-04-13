@@ -6,12 +6,17 @@ use lib 't/lib';
 use GenErrorRegex qw< badval_error badtype_error >;
 
 
+# First test: try the method where you load MXD, then load MSM, which inserts itself into MXD
+# and replaces MXMS.
+
+
 SKIP:
 {
     eval { require MooseX::Declare } or skip "MooseX::Declare required for this test", 1;
 
-    eval "use MS_MXD_Replace";
-    is $@, '', 'loaded test module';
+    # have to require here or else we try to load MXD before we check for it not being there (above)
+    require MS_MXD_Replace or die("can't load test module: $@");
+    MS_MXD_Replace->import;
 
     my $foo = Foo->new;
     my $foobar = Foo::Bar->new;
