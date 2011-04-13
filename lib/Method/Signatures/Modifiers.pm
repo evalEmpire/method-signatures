@@ -3,6 +3,8 @@ package Method::Signatures::Modifiers;
 use strict;
 use warnings;
 
+use Sub::Name;
+
 use constant BASE => 'Method::Signatures';
 use base BASE;
 
@@ -109,7 +111,8 @@ sub code_for
                 unless $class->can($name);
 
         no strict 'refs';
-        $meta->$add($name => shift);
+        my $code = subname "${class}::$name" => shift;
+        $meta->$add($name => $code);
     };
 
     return $code;

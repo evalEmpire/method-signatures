@@ -16,8 +16,14 @@ SKIP:
     my $foo = Foo->new;
     my $foobar = Foo::Bar->new;
 
-    throws_ok { $foo->foo('bmoogle') } badval_error($foo, num => Num => 'bmoogle' => 'foo'), 'MXD using MS for method';
-    throws_ok { $foobar->foo(.5) } badval_error($foobar, num => Int => .5 => 'foo'), 'MXD using MS for around';
+    foreach ( qw< before after around override augment > )
+    {
+        my $method = "test_$_";
+        throws_ok { $foo->$method('bmoogle') } badval_error($foo, num => Num => 'bmoogle' => $method),
+                "MXD using MS for method ($_)";
+        throws_ok { $foobar->$method(.5) } badval_error($foobar, num => Int => .5 => $method),
+                "MXD using MSM for modifier ($_)";
+    }
 
 }
 
