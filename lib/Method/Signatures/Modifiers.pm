@@ -38,8 +38,6 @@ sub import
             my ($orig, $self, $ctx) = @_;
 
             my $ms = bless $ctx->_dd_context, __PACKAGE__;
-            # have to note that this is a method modifier
-            $ms->{method_modifier} = 1;
             # have to sneak the default invocant in there
             $ms->{invocant} = '$self';
             # and have to get the $orig in there if it's an around
