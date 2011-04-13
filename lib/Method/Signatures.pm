@@ -1036,6 +1036,13 @@ Florian Ragwitz's and Rhesa Rozendaal's L<Devel::Declare> work.
 The prototype syntax is a slight adaptation of all the
 excellent work the Perl 6 folks have already done.
 
+The type checking and method modifier work was supplied by Buddy
+Burden (barefootcoder).  Thanks to this, you can now use
+Method::Signatures (or, more properly,
+L<Method::Signatures::Modifiers>) instead of
+L<MooseX::Method::Signatures>, which fixes many of the problems
+commonly attributed to L<MooseX::Declare>.
+
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
 makes the subroutine names come out right in caller().
