@@ -12,6 +12,8 @@ sub split_proto {
     my $proto = shift;
     return unless $proto =~ /\S/;
 
+    local $@ = undef;
+
     require PPI;
     my $ppi = PPI::Document->new(\$proto);
     $ppi->prune('PPI::Token::Comment');
