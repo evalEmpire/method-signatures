@@ -621,6 +621,7 @@ sub inject_from_signature {
     my $signature = shift;
 
     my @code;
+    push @code, "my $signature->{pre_invocant} = shift;" if $signature->{pre_invocant};
     push @code, "my $signature->{invocant} = shift;" if $signature->{invocant};
 
     for my $sig (@{$signature->{positional}}) {
