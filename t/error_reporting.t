@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use GenErrorRegex qw< badval_error >;
+use GenErrorRegex qw< badtype_error badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -30,13 +30,16 @@ use Test::Exception;
 
 # unrecognized type (run-time error)
 lives_ok { require UnknownType } 'unrecognized type loads correctly';
-throws_ok{ UnknownType::bar() } qr{type.*unrecognized.*at .*/UnknownType.pm line 1133\.$}m,
+throws_ok{ UnknownType::bar() }
+        badtype_error('InnerUnknownType', 'Foo::Bar' => 'perhaps you forgot to load it?', 'foo',
+                FILE => 't/lib/UnknownType.pm', LINE => 1133),
         'unrecognized type reports correctly';
 
 
 # incorrect type for value (run-time error)
 lives_ok { require BadType } 'incorrect type loads correctly';
-throws_ok{ BadType::bar() } qr{not of type.*at .*/BadType.pm line 1133\.$}m,
+throws_ok{ BadType::bar() }
+        badval_error('InnerBadType', bar => Int => 'thing', 'foo', FILE => 't/lib/BadType.pm', LINE => 1133),
         'incorrect type reports correctly';
 
 
@@ -46,9 +49,9 @@ SKIP:
     eval { require MooseX::Declare } or skip "MooseX::Declare required for this test", 1;
 
     lives_ok { require ModifierBadType } 'incorrect type loads correctly';
-    my $err = badval_error('Foo::Bar', num => Int => 'thing', 'test_around');
-    throws_ok{ ModifierBadType::bar() } qr{$err at .*/ModifierBadType.pm line 1133\.$}m,
-            'incorrect type reports correctly';
+    throws_ok{ ModifierBadType::bar() }
+            badval_error('Foo::Bar', num => Int => 'thing', 'test_around', FILE => 't/lib/ModifierBadType.pm', LINE => 1133),
+            'incorrect type for modifier reports correctly';
 }
 
 
