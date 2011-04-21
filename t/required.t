@@ -21,7 +21,7 @@ use Test::More 'no_plan';
 
 #line 23
     ok !eval { Stuff->whatever(); 1 };
-    is $@, "Stuff::whatever() missing required argument \$this at $0 line 23.\n";
+    is $@, "In call to Stuff::whatever(), missing required argument \$this at $0 line 23.\n";
 
     method some_optional($that!, $this = 22) {
         return $that + $this
@@ -31,5 +31,5 @@ use Test::More 'no_plan';
 
 #line 33
     ok !eval { Stuff->some_optional() };
-    is $@, "Stuff::some_optional() missing required argument \$that at $0 line 33.\n";
+    is $@, "In call to Stuff::some_optional(), missing required argument \$that at $0 line 33.\n";
 }

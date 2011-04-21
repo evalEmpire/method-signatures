@@ -24,7 +24,7 @@ use Test::More 'no_plan';
     ok !eval {
         Foo->formalize( "stuff", wibble => 23 );
     };
-    is $@, "Foo::formalize() does not take wibble as named argument(s) at $0 line 25.\n";
+    is $@, "In call to Foo::formalize(), does not take wibble as named argument(s) at $0 line 25.\n";
 
 #line 25
     method foo( :$arg! ) {
@@ -33,7 +33,7 @@ use Test::More 'no_plan';
 
     ::is( Foo->foo( arg => 42 ), 42 );
     ::ok !eval { foo() };
-    ::is $@, "Foo::foo() missing required argument \$arg at $0 line 30.\n";
+    ::is $@, "In call to Foo::foo(), missing required argument \$arg at $0 line 30.\n";
 
 
     # Compile time errors need internal refactoring before I can get file, line and method

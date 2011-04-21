@@ -720,12 +720,24 @@ sub inject_for_type_check
     return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') $check_exists;";
 }
 
+# This is a common function to throw errors so that they appear to be from the point of the calling
+# sub, not any of the Method::Signatures subs.
 sub signature_error {
     my $msg = shift;
-    my $height = shift || 1;
 
-    my($pack, $file, $line, $method) = caller($height + 1);
-    die "$method() $msg at $file line $line.\n";
+    # using @CARP_NOT here even though we're not using Carp
+    # who knows? maybe someday Carp will be capable of doing what we want
+    # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
+    local @CARP_NOT = ( __PACKAGE__, qw< Class::MOP Moose Mouse > );
+    my $skip = qr/^${\(join('|', @CARP_NOT))}::/;
+
+    my $level = 0;
+    my ($pack, $file, $line, $method);
+    do {
+        ($pack, $file, $line, $method) = caller(++$level);
+    } while $method =~ /$skip/;
+
+    die "In call to $method(), $msg at $file line $line.\n";
 }
 
 sub required_arg {
@@ -779,7 +791,7 @@ sub _make_constraint
     my $constr = eval { $mutc{findit}->($type) };
     if ($@)
     {
-        _type_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+        signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
     }
     return $constr if $constr;
 
@@ -790,30 +802,7 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-    _type_error("the type $type is unrecognized (perhaps you forgot to load it?)");
-}
-
-# This is a helper function to throw errors from type checking so that they appear to be from the
-# point of the calling sub, not any of the Method::Signatures subs.
-sub _type_error
-{
-    my ($msg) = @_;
-
-    local @CARP_NOT = ( __PACKAGE__ );
-    my $skip = qr/^${\(join('|', @CARP_NOT))}/;
-
-    my $caller;
-    my $level = 0;
-    do {
-        $caller = (caller(++$level))[3];
-    } while $caller =~ /$skip/;
-
-    # we don't need __PACKAGE__ in @CARP_NOT, but we do need the package of the sub with the error
-    (my $pkg = $caller) =~ s/::(\w+)?$//;
-    $CARP_NOT[0] = $pkg;
-
-    require Carp;
-    Carp::croak "In call to $caller : $msg";
+    signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -833,7 +822,7 @@ sub type_check
     unless ($mutc{cache}->{$type}->check($value))
     {
         $value = defined $value ? qq{"$value"} : 'undef';
-        _type_error(qq{the '$name' parameter ($value) is not of type $type});
+        signature_error(qq{the '$name' parameter ($value) is not of type $type});
     }
 }
 

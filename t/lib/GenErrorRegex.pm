@@ -9,7 +9,7 @@ sub _regexify
     my ($obj, $method, $msg) = @_;
     my $class = ref $obj || $obj || 'main';
 
-    my $error = quotemeta "In call to ${class}::$method : $msg";
+    my $error = quotemeta "In call to ${class}::$method(), $msg";
     return qr/$error/;
 }
 
