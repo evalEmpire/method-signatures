@@ -618,6 +618,7 @@ sub check_signature {
 # Turn the parsed signature into Perl code
 sub inject_from_signature {
     my $self      = shift;
+    my $class     = ref $self || $self;
     my $signature = shift;
 
     my @code;
@@ -637,7 +638,7 @@ sub inject_from_signature {
         push @code, $self->inject_for_sig($sig);
     }
 
-    push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
+    push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
 
     # All on one line.
     return join ' ', @code;
@@ -645,7 +646,7 @@ sub inject_from_signature {
 
 
 sub named_param_error {
-    my $args = shift;
+    my ($class, $args) = @_;
     my @keys = keys %$args;
 
     signature_error("does not take @keys as named argument(s)");
@@ -654,6 +655,7 @@ sub named_param_error {
 
 sub inject_for_sig {
     my $self = shift;
+    my $class = ref $self || $self;
     my $sig = shift;
 
     return if $sig->{is_at_underscore};
@@ -686,7 +688,7 @@ sub inject_for_sig {
     }
 
     if( !$sig->{is_optional} ) {
-        push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
+        push @code, qq[${class}->required_arg('$sig->{var}') unless $check_exists; ];
     }
 
     if( $sig->{type} ) {
@@ -741,7 +743,7 @@ sub signature_error {
 }
 
 sub required_arg {
-    my $var = shift;
+    my ($class, $var) = @_;
 
     signature_error("missing required argument $var");
 }
