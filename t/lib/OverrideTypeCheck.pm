@@ -1,4 +1,4 @@
-# package for t/override.t
+# package for t/override_typecheck.t
 
 package OverrideTypeCheck;
 use base qw< Method::Signatures >;

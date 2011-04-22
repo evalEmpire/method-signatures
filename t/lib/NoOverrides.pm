@@ -1,4 +1,4 @@
-# package for t/override.t
+# package for t/override_nothing.t
 
 package NoOverrides;
 use base qw< Method::Signatures >;
