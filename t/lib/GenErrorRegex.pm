@@ -13,7 +13,7 @@ sub _regexify
     if ($extra{LINE})
     {
         $extra{FILE} ||= $0;
-        $error .= "file $extra{FILE} line $extra{LINE}.\n";
+        $error .= "$extra{FILE} line $extra{LINE}.\n";
     }
 
     $error = quotemeta $error;
@@ -26,14 +26,14 @@ sub badval_error
     my ($obj, $varname, $type, $val, $method, %extra) = @_;
 
     $val = defined $val ? qq{"$val"} : 'undef';
-    return _regexify($obj, $method, "the '$varname' parameter ($val) is not of type $type");
+    return _regexify($obj, $method, "the '$varname' parameter ($val) is not of type $type", %extra);
 }
 
 sub badtype_error
 {
     my ($obj, $type, $submsg, $method, %extra) = @_;
 
-    return _regexify($obj, $method, "the type $type is unrecognized ($submsg)");
+    return _regexify($obj, $method, "the type $type is unrecognized ($submsg)", %extra);
 }
 
 
