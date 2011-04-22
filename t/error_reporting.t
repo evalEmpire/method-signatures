@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use GenErrorRegex qw< badtype_error badval_error >;
+use GenErrorRegex qw< required_error named_param_error badtype_error badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -29,6 +29,26 @@ use Test::Exception;
 
 my %run_time_errors =
 (
+    MissingRequired =>  {
+                            method      =>  'bar',
+                            error_gen   =>  'required_error',
+                            error_args  =>  [
+                                                'InnerMissingRequired',
+                                                '$bar',
+                                                'foo',
+                                            ],
+                            test_name   =>  'missing required param reports correctly',
+                        },
+    NoSuchNamed     =>  {
+                            method      =>  'bar',
+                            error_gen   =>  'named_param_error',
+                            error_args  =>  [
+                                                'InnerNoSuchNamed',
+                                                'bmoogle',
+                                                'foo',
+                                            ],
+                            test_name   =>  'no such named param reports correctly',
+                        },
     UnknownType     =>  {
                             method      =>  'bar',
                             error_gen   =>  'badtype_error',
