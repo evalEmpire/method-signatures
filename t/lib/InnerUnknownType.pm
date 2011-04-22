@@ -8,7 +8,7 @@ use Method::Signatures;
 
 sub new { bless {}, __PACKAGE__ }
 
-method foo ( Foo::Bar $bar ) {}
+method foo ( Foo::Bmoogle $bar ) {}
 
 
 1;

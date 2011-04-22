@@ -729,13 +729,13 @@ sub signature_error {
     # who knows? maybe someday Carp will be capable of doing what we want
     # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
     local @CARP_NOT = ( __PACKAGE__, qw< Class::MOP Moose Mouse > );
-    my $skip = qr/^${\(join('|', @CARP_NOT))}::/;
+    my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
 
     my $level = 0;
     my ($pack, $file, $line, $method);
     do {
         ($pack, $file, $line, $method) = caller(++$level);
-    } while $method =~ /$skip/;
+    } while $method =~ /$skip/ or $pack =~ /$skip/;
 
     die "In call to $method(), $msg at $file line $line.\n";
 }

@@ -1,3 +1,6 @@
+# used by t/mxd-replace.t
+# also used by t/error_reporting.t
+
 use MooseX::Declare;
 use Method::Signatures::Modifiers;
 
