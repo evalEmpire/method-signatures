@@ -649,7 +649,7 @@ sub named_param_error {
     my ($class, $args) = @_;
     my @keys = keys %$args;
 
-    signature_error("does not take @keys as named argument(s)");
+    $class->signature_error("does not take @keys as named argument(s)");
 }
 
 
@@ -725,7 +725,7 @@ sub inject_for_type_check
 # This is a common function to throw errors so that they appear to be from the point of the calling
 # sub, not any of the Method::Signatures subs.
 sub signature_error {
-    my $msg = shift;
+    my ($class, $msg) = @_;
 
     # using @CARP_NOT here even though we're not using Carp
     # who knows? maybe someday Carp will be capable of doing what we want
@@ -745,7 +745,7 @@ sub signature_error {
 sub required_arg {
     my ($class, $var) = @_;
 
-    signature_error("missing required argument $var");
+    $class->signature_error("missing required argument $var");
 }
 
 
@@ -784,7 +784,7 @@ sub _init_mutc
 # be called when the type is not found in our cache.
 sub _make_constraint
 {
-    my ($type) = @_;
+    my ($class, $type) = @_;
 
     _init_mutc() unless $mutc{class};
 
@@ -793,7 +793,7 @@ sub _make_constraint
     my $constr = eval { $mutc{findit}->($type) };
     if ($@)
     {
-        signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+        $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
     }
     return $constr if $constr;
 
@@ -804,7 +804,7 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-    signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
+    $class->signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -818,13 +818,13 @@ sub type_check
     my ($class, $type, $value, $name) = @_;
 
     # find it if isn't cached
-    $mutc{cache}->{$type} ||= _make_constraint($type);
+    $mutc{cache}->{$type} ||= $class->_make_constraint($type);
 
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
         $value = defined $value ? qq{"$value"} : 'undef';
-        signature_error(qq{the '$name' parameter ($value) is not of type $type});
+        $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
     }
 }
 
