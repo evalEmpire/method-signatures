@@ -10,11 +10,13 @@ use Test::Exception;
 
 use OverrideErrors;
 
-func foo  ( $bar) {}
-func fizz (:$bar) {}
+func biff (    $bar) {}
+func bamm (   :$bar) {}
+func boom (Int $bar) {}
 
-throws_ok { foo()                } qr/you suck!/,                    'required param missing from overridden errors';
-throws_ok { fizz( bmoogle => 1 ) } qr/and your mother is ugly, too/, 'no such named param from overridden errors';
+throws_ok { biff( )            } qr/you suck!/,                             'required param missing from overridden errors';
+throws_ok { bamm( snork => 1 ) } qr/and yo mama's ugly, too/,               'no such named param from overridden errors';
+throws_ok { boom( .5 )         } qr/she got a wooden leg with a kickstand/, 'value of wrong type from overridden errors';
 
 
 done_testing;

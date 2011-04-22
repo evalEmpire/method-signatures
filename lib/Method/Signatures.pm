@@ -824,8 +824,16 @@ sub type_check
     unless ($mutc{cache}->{$type}->check($value))
     {
         $value = defined $value ? qq{"$value"} : 'undef';
-        $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
+        $class->type_error($type, $value, $name);
     }
+}
+
+# If you just want to change what the type failure errors look like, just override this.
+# Note that you can call signature_error yourself to handle the croak-like aspects.
+sub type_error
+{
+    my ($class, $type, $value, $name) = @_;
+    $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
 
