@@ -1,13 +1,18 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More 'no_plan';
+use Test::More;
+
 
 {
     package Foo;
 
-    use Method::Signatures;
+    use lib 't/lib';
+    use GenErrorRegex qw< required_error named_param_error >;
+
     use Test::More;
+    use Test::Exception;
+    use Method::Signatures;
 
     method formalize($text! is ro, :$justify = "left" is ro, :$case) {
         my %params;
@@ -21,19 +26,17 @@ use Test::More 'no_plan';
     ::is_deeply( Foo->formalize( "stuff" ), { text => "stuff", justify => "left" } );
 
 #line 24
-    ok !eval {
-        Foo->formalize( "stuff", wibble => 23 );
-    };
-    is $@, "In call to Foo::formalize(), does not take wibble as named argument(s) at $0 line 25.\n";
+    throws_ok { Foo->formalize( "stuff", wibble => 23 ) } named_param_error('Foo', wibble => 'formalize', LINE => 24),
+            'simple named parameter error okay';
 
-#line 25
     method foo( :$arg! ) {
         return $arg;
     }
 
-    ::is( Foo->foo( arg => 42 ), 42 );
-    ::ok !eval { foo() };
-    ::is $@, "In call to Foo::foo(), missing required argument \$arg at $0 line 30.\n";
+    is( Foo->foo( arg => 42 ), 42 );
+#line 30
+    throws_ok { foo() } required_error('Foo', '$arg', 'foo', LINE => 30),
+            'simple named parameter error okay';
 
 
     # Compile time errors need internal refactoring before I can get file, line and method
@@ -53,3 +56,6 @@ use Test::More 'no_plan';
     };
     like $@, qr/named parameter \$named mixed with optional positional \$bar/;
 }
+
+
+done_testing();

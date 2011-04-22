@@ -1,7 +1,7 @@
 package GenErrorRegex;
 
 use base qw< Exporter >;
-our @EXPORT_OK = qw< badval_error badtype_error >;
+our @EXPORT_OK = qw< required_error named_param_error badval_error badtype_error >;
 
 
 sub _regexify
@@ -18,6 +18,22 @@ sub _regexify
 
     $error = quotemeta $error;
     return $extra{LINE} ? qr/\A$error\Z/ : qr/\A$error/;
+}
+
+
+sub required_error
+{
+    my ($obj, $varname, $method, %extra) = @_;
+
+    return _regexify($obj, $method, "missing required argument $varname", %extra);
+}
+
+
+sub named_param_error
+{
+    my ($obj, $varname, $method, %extra) = @_;
+
+    return _regexify($obj, $method, "does not take $varname as named argument(s)", %extra);
 }
 
 
