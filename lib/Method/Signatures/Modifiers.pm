@@ -11,6 +11,155 @@ use base BASE;
 use MooseX::Declare ();
 
 
+=head1 NAME
+
+Method::Signatures::Modifiers - use Method::Signatures from within MooseX::Declare
+
+=head1 SYNOPSIS
+
+    use MooseX::Declare;
+    use Method::Signatures::Modifiers;
+
+    class Foo
+    {
+        method bar (Int $thing) {
+            # this method is declared with Method::Signatures instead of MooseX::Method::Signatures
+        }
+    }
+
+    # -- OR --
+
+    use MooseX::Declare;
+
+    class My::Declare
+    {
+        use Method::Signatures::Modifiers;
+    }
+
+    # ... later ...
+
+    use My::Declare;
+
+    class Fizz
+    {
+        method baz (Int $thing) {
+            # this method also declared with Method::Signatures instead of MooseX::Method::Signatures
+        }
+    }
+
+=head1 DESCRIPTION
+
+Allows you to use L<Method::Signatures> from within
+L<MooseX::Declare>, both for the C<method> keyword and also for any
+method modifiers (C<before>, C<after>, C<around>, C<override>, and
+C<augment>).  Typically method signatures within L<MooseX::Declare>
+are provided by L<MooseX::Method::Signatures>.  Using
+L<Method::Signatures> instead provides several advantages:
+
+=over 4
+
+=item * L<MooseX::Method::Signatures> has a known bug with Perl 5.12.x
+which does not plague L<Method::Signatures>.
+
+=item * L<Method::Signatures> may provide substantially better
+performance when calling methods, depending on your circumstances.
+
+=item * L<Method::Signatures> error messages are somewhat easier to
+read (and can be overridden more easily).
+
+=back
+
+However, L<Method::Signatures> cannot be considered a drop-in
+replacement for L<MooseX::Method::Signatures>.  Specifically, the
+following features of L<MooseX::Method::Signatures> are not available
+to you (or work differently) if you substitute L<Method::Signatures>:
+
+
+=head3 Types for Invocants
+
+L<MooseX::Method::Signatures> allows code such as this:
+
+    method foo (ClassName $class: Int $bar) {
+    }
+
+L<Method::Signatures> does not allow you to specify a type for the
+invocant, so your code would change to:
+
+    method foo ($class: Int $bar) {
+    }
+
+
+=head3 "where" Constraints
+
+L<MooseX::Method::Signatures> allows code like this:
+
+    # only allow even integers
+    method foo (Int $bar where { $_ % 2 == 0 }) {
+    }
+
+L<Method::Signatures> does not currently allow this, although it is a
+planned feature for a future release.
+
+
+=head3 Parameter Aliasing (Labels)
+
+L<MooseX::Method::Signatures> allows code like this:
+
+    # call this as $obj->foo(bar => $baz)
+    method foo (Int :bar($baz)) {
+    }
+
+This feature is not currently planned for L<Method::Signatures>.
+
+
+=head3 Placeholders
+
+L<MooseX::Method::Signatures> allows code like this:
+
+    method foo (Int $bar, $, Int $baz)) {
+        # second parameter not available as a variable here
+    }
+
+This feature is not currently planned for L<Method::Signatures>.
+
+
+=head3 Traits
+
+In L<MooseX::Method::Signatures>, C<does> is a synonym for C<is>.
+L<Method::Signatures> does not honor this.
+
+L<Method::Signatures> supports several traits that
+L<MooseX::Method::Signatures> does not.
+
+L<MooseX::Method::Signatures> supports the C<coerce> trait.
+L<Method::Signatures> does not currently support this, although it is
+a planned feature for a future release, potentially using the C<does
+coerce> syntax.
+
+
+=head3 Slurpy Parameters are not Optional by Default
+
+There is a subtle difference in the way L<MooseX::Method::Signatures>
+and L<Method::Signatures> handle slurpy parameters.  Given this code:
+
+    method foo (@args) {
+    }
+
+if you call C<foo()> like so:
+
+    $obj->foo();
+
+in L<MooseX::Method::Signatures> you will not get an error.  However,
+using L<Method::Signatures> you will get a "required parameter
+missing" error.  The solution is to change your declaration like so:
+
+    method foo (@args?) {
+    }
+
+
+=cut
+
+
 sub import
 {
     my $meta = MooseX::Declare::Syntax::Keyword::Method->meta;
@@ -115,6 +264,41 @@ sub code_for
 
     return $code;
 }
+
+
+=head1 BUGS, CAVEATS and NOTES
+
+Note that although this module causes all calls to
+L<MooseX::Method::Signatures> from within L<MooseX::Declare> to be
+completely I<replaced> by calls to L<Method::Signatures> (or calls to
+L<Method::Signatures::Modifiers>), L<MooseX::Method::Signatures> is
+still I<loaded> by L<MooseX::Declare>.  It's just never used.
+
+
+=head1 THANKS
+
+This code was written by Buddy Burden (barefootcoder).
+
+The import code for replacing L<MooseX::Method::Signatures> is based
+on a suggestion from Nick Perez.
+
+
+=head1 LICENSE
+
+Copyright 2011 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+See F<http://www.perl.com/perl/misc/Artistic.html>
+
+
+=head1 SEE ALSO
+
+L<MooseX::Declare>, L<Method::Signatures>, L<MooseX::Method::Signatures>.
+
+
+=cut
 
 
 1;
