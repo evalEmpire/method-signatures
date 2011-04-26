@@ -1057,7 +1057,7 @@ at compile time.
 
 The original code was taken from Matt S. Trout's tests for L<Devel::Declare>.
 
-Copyright 2007-2008 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+Copyright 2007-2011 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
