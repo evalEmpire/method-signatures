@@ -909,12 +909,45 @@ beginning of that method.
 
 If you would like to try to provide your own type checking, subclass
 L<Method::Signatures> and either override C<type_check> or
-C<inject_for_type_check>.  The former is probably fine for most
-applications; you might need the latter if you want to modify what
-parameters are passed into the type checking method.
+C<inject_for_type_check>.  See L</EXTENDING>, below.
 
 This interface is experimental, unstable and will change between
 versions.
+
+
+=head1 EXTENDING
+
+If you wish to subclass Method::Signatures, the following methods are
+good places to start.
+
+=head2 named_param_error, required_arg, type_error
+
+These are class methods which report the various run-time errors
+(unknown named parameter, required parameter missing, and parameter
+fails type check, respectively).  Note that each one calls
+C<signature_error>, which your versions should do as well.
+
+=head2 signature_error
+
+This is a class method which calls C<die> and reports the error as
+being from the caller's perspective.  Most likely you will not need to
+override this.  If you'd like to have Method::Signatures errors give
+full stack traces (similar to C<$Carp::Verbose>), have a look at
+L<Carp::Always>.
+
+=head2 type_check
+
+This is a class method which is called to verify that parameters have
+the proper type.  If you want to change the way that
+Method::Signatures does its type checking, this is most likely what
+you want to override.  It calls C<type_error> (see above).
+
+=head2 inject_for_type_check
+
+This is the object method that actually inserts the call to
+L</type_check> into your Perl code.  Most likely you will not need to
+override this, but if you wanted different parameters passed into
+C<type_check>, this would be the place to do it.
 
 
 =head1 BUGS, CAVEATS and NOTES
