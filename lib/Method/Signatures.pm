@@ -558,13 +558,13 @@ sub parse_func {
         }
         $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
 
-        my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named});
+        my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
+        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
+        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named} or $sig->{is_slurpy});
         $sig->{is_optional} = 0 if $name =~ s{\!$}{};
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
-        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
 
         check_signature($sig, $signature);
 
