@@ -730,7 +730,10 @@ sub signature_error {
     # using @CARP_NOT here even though we're not using Carp
     # who knows? maybe someday Carp will be capable of doing what we want
     # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
-    local @CARP_NOT = ( __PACKAGE__, qw< Class::MOP Moose Mouse > );
+    local @CARP_NOT;
+    push @CARP_NOT, __PACKAGE__;
+    push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
+    push @CARP_NOT, qw< Class::MOP Moose Mouse >;
     my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
 
     my $level = 0;
