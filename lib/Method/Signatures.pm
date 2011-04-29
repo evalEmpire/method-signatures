@@ -11,6 +11,8 @@ our $VERSION = '20110324.1600_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
+our @CARP_NOT;
+
 # set up some regexen using for parsing types
 my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
 my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
@@ -49,7 +51,7 @@ Method::Signatures - method and function declarations with signatures and no sou
     # Can also get type checking if you like:
 
     method set (Str $key, Int $val) {
-        return $self->{$key} = $val;        # now you know $key is always an integer
+        return $self->{$key} = $val;        # now you know $val is always an integer
     }
 
     func hello($greeting, $place) {
@@ -339,14 +341,18 @@ Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 To declare a parameter optional, use the C<$arg?> syntax.
 
-Currently nothing is done with this.  It's for forward compatibility.
+Since named parameters are optional by default, this only has an effect on
+positional parameters.
 
 
 =head3 Required parameters
 
 To declare a parameter as required, use the C<$arg!> syntax.
 
-All parameters without defaults are required by default.
+Since positional parameters are required by default, this only has an effect on
+named parameters.  Using this syntax for a parameter with a default (e.g.
+C<$arg! = 0>) is non-sensical, but not an error: the parameter would be
+considered required, so the default could never be used.
 
 
 =head3 The C<@_> signature
@@ -465,7 +471,7 @@ sub _strip_ws {
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
-    return $self->parse_signature( proto => shift, invocant => $self->{invocant} );
+    return $self->parse_signature( proto => shift, invocant => $self->{invocant}, pre_invocant => $self->{pre_invocant} );
 }
 
 
@@ -475,6 +481,10 @@ sub parse_signature {
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
     my $signature = $args{signature} || {};
+
+    # JIC there's anything we need to pull out before the invocant
+    # (primary example would be the $orig for around modifiers in Moose/Mouse
+    $signature->{pre_invocant} = $args{pre_invocant};
 
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
@@ -548,13 +558,13 @@ sub parse_func {
         }
         $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
 
-        my($sigil, $name) = $proto =~ m{^ (.)(.*) }x;
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named});
+        my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
+        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
+        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named} or $sig->{is_slurpy});
         $sig->{is_optional} = 0 if $name =~ s{\!$}{};
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
-        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
 
         check_signature($sig, $signature);
 
@@ -608,9 +618,11 @@ sub check_signature {
 # Turn the parsed signature into Perl code
 sub inject_from_signature {
     my $self      = shift;
+    my $class     = ref $self || $self;
     my $signature = shift;
 
     my @code;
+    push @code, "my $signature->{pre_invocant} = shift;" if $signature->{pre_invocant};
     push @code, "my $signature->{invocant} = shift;" if $signature->{invocant};
 
     for my $sig (@{$signature->{positional}}) {
@@ -626,7 +638,7 @@ sub inject_from_signature {
         push @code, $self->inject_for_sig($sig);
     }
 
-    push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
+    push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
 
     # All on one line.
     return join ' ', @code;
@@ -634,15 +646,16 @@ sub inject_from_signature {
 
 
 sub named_param_error {
-    my $args = shift;
+    my ($class, $args) = @_;
     my @keys = keys %$args;
 
-    signature_error("does not take @keys as named argument(s)");
+    $class->signature_error("does not take @keys as named argument(s)");
 }
 
 
 sub inject_for_sig {
     my $self = shift;
+    my $class = ref $self || $self;
     my $sig = shift;
 
     return if $sig->{is_at_underscore};
@@ -658,22 +671,28 @@ sub inject_for_sig {
     my $rhs;
 
     if( $sig->{named} ) {
-        $rhs = "delete \$args{$sig->{name}}";
+        $sig->{passed_in} = "\$args{$sig->{name}}";
+        $rhs = "delete $sig->{passed_in}";
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
                $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
                                             "\$_[$idx]"           ;
+        $sig->{passed_in} = $rhs;
     }
 
-    my $check_exists = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+    my $check_exists = $sig->{exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
     if( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
     if( !$sig->{is_optional} ) {
-        push @code, qq[Method::Signatures::required_arg('$sig->{var}') unless $check_exists; ];
+        push @code, qq[${class}->required_arg('$sig->{var}') unless $check_exists; ];
+    }
+
+    if( $sig->{type} ) {
+        push @code, $self->inject_for_type_check($sig);
     }
 
     # Handle \@foo
@@ -688,10 +707,6 @@ sub inject_for_sig {
         push @code, "$lhs = $rhs;";
     }
 
-    if( $sig->{type} ) {
-        push @code, $self->inject_for_type_check($sig);
-    }
-
     return @code;
 }
 
@@ -703,21 +718,37 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    return "${class}->type_check('$sig->{type}', $sig->{var}, '$sig->{name}');";
+    my $check_exists = $sig->{is_optional} ? "if $sig->{exists}" : '';
+    return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') $check_exists;";
 }
 
+# This is a common function to throw errors so that they appear to be from the point of the calling
+# sub, not any of the Method::Signatures subs.
 sub signature_error {
-    my $msg = shift;
-    my $height = shift || 1;
+    my ($class, $msg) = @_;
 
-    my($pack, $file, $line, $method) = caller($height + 1);
-    die "$method() $msg at $file line $line.\n";
+    # using @CARP_NOT here even though we're not using Carp
+    # who knows? maybe someday Carp will be capable of doing what we want
+    # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
+    local @CARP_NOT;
+    push @CARP_NOT, __PACKAGE__;
+    push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
+    push @CARP_NOT, qw< Class::MOP Moose Mouse >;
+    my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
+
+    my $level = 0;
+    my ($pack, $file, $line, $method);
+    do {
+        ($pack, $file, $line, $method) = caller(++$level);
+    } while $method =~ /$skip/ or $pack =~ /$skip/;
+
+    die "In call to $method(), $msg at $file line $line.\n";
 }
 
 sub required_arg {
-    my $var = shift;
+    my ($class, $var) = @_;
 
-    signature_error("missing required argument $var");
+    $class->signature_error("missing required argument $var");
 }
 
 
@@ -756,7 +787,7 @@ sub _init_mutc
 # be called when the type is not found in our cache.
 sub _make_constraint
 {
-    my ($type) = @_;
+    my ($class, $type) = @_;
 
     _init_mutc() unless $mutc{class};
 
@@ -765,7 +796,7 @@ sub _make_constraint
     my $constr = eval { $mutc{findit}->($type) };
     if ($@)
     {
-        _type_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+        $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
     }
     return $constr if $constr;
 
@@ -776,25 +807,7 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
-    _type_error("the type $type is unrecognized (perhaps you forgot to load it?)");
-}
-
-# This is a helper function to throw errors from type checking so that they appear to be from the
-# point of the calling sub, not any of the Method::Signatures subs.
-sub _type_error
-{
-    my ($msg) = @_;
-
-    my $caller;
-    my $pkg = __PACKAGE__;
-    my $level = 1;
-    do {
-        $caller = (caller($level++))[3];
-    } while $caller =~ /^$pkg/;
-
-    require Carp;
-    local $Carp::CarpLevel = 1;
-    Carp::croak "In call to $caller : $msg";
+    $class->signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
@@ -808,14 +821,22 @@ sub type_check
     my ($class, $type, $value, $name) = @_;
 
     # find it if isn't cached
-    $mutc{cache}->{$type} ||= _make_constraint($type);
+    $mutc{cache}->{$type} ||= $class->_make_constraint($type);
 
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
         $value = defined $value ? qq{"$value"} : 'undef';
-        _type_error(qq{the '$name' parameter ($value) is not of type $type});
+        $class->type_error($type, $value, $name);
     }
+}
+
+# If you just want to change what the type failure errors look like, just override this.
+# Note that you can call signature_error yourself to handle the croak-like aspects.
+sub type_error
+{
+    my ($class, $type, $value, $name) = @_;
+    $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
 
@@ -891,12 +912,45 @@ beginning of that method.
 
 If you would like to try to provide your own type checking, subclass
 L<Method::Signatures> and either override C<type_check> or
-C<inject_for_type_check>.  The former is probably fine for most
-applications; you might need the latter if you want to modify what
-parameters are passed into the type checking method.
+C<inject_for_type_check>.  See L</EXTENDING>, below.
 
 This interface is experimental, unstable and will change between
 versions.
+
+
+=head1 EXTENDING
+
+If you wish to subclass Method::Signatures, the following methods are
+good places to start.
+
+=head2 named_param_error, required_arg, type_error
+
+These are class methods which report the various run-time errors
+(unknown named parameter, required parameter missing, and parameter
+fails type check, respectively).  Note that each one calls
+C<signature_error>, which your versions should do as well.
+
+=head2 signature_error
+
+This is a class method which calls C<die> and reports the error as
+being from the caller's perspective.  Most likely you will not need to
+override this.  If you'd like to have Method::Signatures errors give
+full stack traces (similar to C<$Carp::Verbose>), have a look at
+L<Carp::Always>.
+
+=head2 type_check
+
+This is a class method which is called to verify that parameters have
+the proper type.  If you want to change the way that
+Method::Signatures does its type checking, this is most likely what
+you want to override.  It calls C<type_error> (see above).
+
+=head2 inject_for_type_check
+
+This is the object method that actually inserts the call to
+L</type_check> into your Perl code.  Most likely you will not need to
+override this, but if you wanted different parameters passed into
+C<type_check>, this would be the place to do it.
 
 
 =head1 BUGS, CAVEATS and NOTES
@@ -1018,6 +1072,13 @@ Florian Ragwitz's and Rhesa Rozendaal's L<Devel::Declare> work.
 The prototype syntax is a slight adaptation of all the
 excellent work the Perl 6 folks have already done.
 
+The type checking and method modifier work was supplied by Buddy
+Burden (barefootcoder).  Thanks to this, you can now use
+Method::Signatures (or, more properly,
+L<Method::Signatures::Modifiers>) instead of
+L<MooseX::Method::Signatures>, which fixes many of the problems
+commonly attributed to L<MooseX::Declare>.
+
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
 makes the subroutine names come out right in caller().
@@ -1032,7 +1093,7 @@ at compile time.
 
 The original code was taken from Matt S. Trout's tests for L<Devel::Declare>.
 
-Copyright 2007-2008 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+Copyright 2007-2011 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

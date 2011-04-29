@@ -12,8 +12,12 @@ sub split_proto {
     my $proto = shift;
     return unless $proto =~ /\S/;
 
+    local $@ = undef;
+
     require PPI;
     my $ppi = PPI::Document->new(\$proto);
+    $ppi->prune('PPI::Token::Comment');
+
     my $statement = $ppi->find_first("PPI::Statement");
     confess("PPI failed to find statement for '$proto'") unless $statement;
     my $token = $statement->first_token;

@@ -1,4 +1,4 @@
-package InnerUnknownType;
+package InnerNoSuchNamed;
 
 use strict;
 use warnings;
@@ -8,7 +8,7 @@ use Method::Signatures;
 
 sub new { bless {}, __PACKAGE__ }
 
-method foo ( Foo::Bmoogle $bar ) {}
+method foo ( :$bar, :$baz ) {}
 
 
 1;

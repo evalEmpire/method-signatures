@@ -1,19 +1,19 @@
-package UnknownType;
+package MissingRequired;
 
 use strict;
 use warnings;
 
-use InnerUnknownType;
+use InnerMissingRequired;
 
 
 sub bar
 {
-    my $iut = InnerUnknownType->new;
+    my $imr = InnerMissingRequired->new;
 
 # the #line directive helps us guarantee that we'll always know what line number to expect the error
 # on, regardless of how much this test module changes
 #line 1133
-    $iut->foo(42);
+    $imr->foo();
 }
 
 

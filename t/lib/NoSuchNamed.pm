@@ -1,19 +1,19 @@
-package UnknownType;
+package NoSuchNamed;
 
 use strict;
 use warnings;
 
-use InnerUnknownType;
+use InnerNoSuchNamed;
 
 
 sub bar
 {
-    my $iut = InnerUnknownType->new;
+    my $insn = InnerNoSuchNamed->new;
 
 # the #line directive helps us guarantee that we'll always know what line number to expect the error
 # on, regardless of how much this test module changes
 #line 1133
-    $iut->foo(42);
+    $insn->foo( bmoogle => 1 );
 }
 
 
