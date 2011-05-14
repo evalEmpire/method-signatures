@@ -31,7 +31,7 @@ Method::Signatures::Modifiers - use Method::Signatures from within MooseX::Decla
 
     use MooseX::Declare;
 
-    class My::Declare
+    class My::Declare extends MooseX::Declare
     {
         use Method::Signatures::Modifiers;
     }
