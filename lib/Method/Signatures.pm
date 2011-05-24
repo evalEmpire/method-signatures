@@ -337,12 +337,24 @@ trait first and the default second.
 Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 
+=head3 Slurpy parameters
+
+A "slurpy" parameter is a parameter that begins with either the C<@> or C<%>
+sigil.  Since a slurpy parameter "slurps up" all remaining arguments, any
+following parameters can't receive values, so you should declare at most one
+slurpy parameter, and you must put it at the end of your signature.
+
+Slurpy parameters are optional by default.  If you mark them required (see
+below), then your caller will get an exception if they try to pass an empty
+array or hash.
+
+
 =head3 Optional parameters
 
 To declare a parameter optional, use the C<$arg?> syntax.
 
-Since named parameters are optional by default, this only has an effect on
-positional parameters.
+Since named parameters (and slurpy parameters) are optional by default, this
+only has an effect on (non-slurpy) positional parameters.
 
 
 =head3 Required parameters
@@ -350,9 +362,9 @@ positional parameters.
 To declare a parameter as required, use the C<$arg!> syntax.
 
 Since positional parameters are required by default, this only has an effect on
-named parameters.  Using this syntax for a parameter with a default (e.g.
-C<$arg! = 0>) is non-sensical, but not an error: the parameter would be
-considered required, so the default could never be used.
+named parameters (or slurpy positional parameters).  Using this syntax for a
+parameter with a default (e.g.  C<$arg! = 0>) is non-sensical, but not an error:
+the parameter would be considered required, so the default could never be used.
 
 
 =head3 The C<@_> signature
