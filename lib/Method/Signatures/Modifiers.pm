@@ -137,26 +137,6 @@ a planned feature for a future release, potentially using the C<does
 coerce> syntax.
 
 
-=head3 Slurpy Parameters are not Optional by Default
-
-There is a subtle difference in the way L<MooseX::Method::Signatures>
-and L<Method::Signatures> handle slurpy parameters.  Given this code:
-
-    method foo (@args) {
-    }
-
-if you call C<foo()> like so:
-
-    $obj->foo();
-
-in L<MooseX::Method::Signatures> you will not get an error.  However,
-using L<Method::Signatures> you will get a "required parameter
-missing" error.  The solution is to change your declaration like so:
-
-    method foo (@args?) {
-    }
-
-
 =cut
 
 
