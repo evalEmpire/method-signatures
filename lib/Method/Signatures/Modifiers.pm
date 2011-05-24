@@ -150,7 +150,7 @@ sub import
         {
             my ($orig, $self, $ctx) = @_;
 
-            my $ms = bless $ctx->_dd_context, BASE;
+            my $ms = bless $ctx->_dd_context, __PACKAGE__;
             # have to sneak the default invocant in there
             $ms->{invocant} = '$self';
             $ms->parser($ms->declarator, $ms->offset);
@@ -169,6 +169,8 @@ sub import
             my $ms = bless $ctx->_dd_context, __PACKAGE__;
             # have to sneak the default invocant in there
             $ms->{invocant} = '$self';
+            # and have to let code_for() know this is a modifier
+            $ms->{is_modifier} = 1;
             # and have to get the $orig in there if it's an around
             $ms->{pre_invocant} = '$orig' if $ms->declarator eq 'around';
             $ms->parser($ms->declarator, $ms->offset);
@@ -193,7 +195,7 @@ sub inject_if_block
 
 # The code_for routine for Method::Signatures just takes the code from
 # Devel::Declare::MethodInstaller::Simple (by calling SUPER::code_for) and uses BeginLift to promote
-# that to a compile-time call.  However, we can't do that at all:
+# that to a compile-time call.  However, for modifiers, we can't do that at all:
 #
 #   *   The code from DDMIS::code_for creates a sub, which is entirely different from creating a
 #       method modifier.  We need all different code.
@@ -218,31 +220,41 @@ sub inject_if_block
 #
 #   *   No BeginLift.
 #
+#   *   If it's _not_ for a modifier, just fall through to code_for() in Method::Signatures.
+#
 # And that's all this code does.
 sub code_for
 {
     my($self, $name) = @_;
-    die("can't create an aonymous method modifier") unless $name;
 
-    my $class = $self->{outer_package};
-    my $modtype = $self->declarator;
-    my $add = "add_${modtype}_method_modifier";
-
-    my $code = sub
+    if ($self->{is_modifier})
     {
-        my $meta = $class->meta;
+        die("can't create an aonymous method modifier") unless $name;
 
-        require Carp;
-        Carp::confess("cannot create method modifier for $modtype") unless $meta->can($add);
-        Carp::confess("cannot create $modtype modifier in package $class for non-existent method $name")
-                unless $class->can($name);
+        my $class = $self->{outer_package};
+        my $modtype = $self->declarator;
+        my $add = "add_${modtype}_method_modifier";
 
-        no strict 'refs';
-        my $code = subname "${class}::$name" => shift;
-        $meta->$add($name => $code);
-    };
+        my $code = sub
+        {
+            my $meta = $class->meta;
 
-    return $code;
+                require Carp;
+            Carp::confess("cannot create method modifier for $modtype") unless $meta->can($add);
+            Carp::confess("cannot create $modtype modifier in package $class for non-existent method $name")
+                    unless $class->can($name);
+
+            no strict 'refs';
+            my $code = subname "${class}::$name" => shift;
+            $meta->$add($name => $code);
+        };
+
+        return $code;
+    }
+    else
+    {
+        return $self->SUPER::code_for($name);
+    }
 }
 
 
