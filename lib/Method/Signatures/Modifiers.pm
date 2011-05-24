@@ -142,6 +142,8 @@ coerce> syntax.
 
 sub import
 {
+    my ($class) = @_;
+
     my $meta = MooseX::Declare::Syntax::Keyword::Method->meta;
     $meta->make_mutable();
     $meta->add_around_method_modifier
@@ -150,7 +152,7 @@ sub import
         {
             my ($orig, $self, $ctx) = @_;
 
-            my $ms = bless $ctx->_dd_context, __PACKAGE__;
+            my $ms = bless $ctx->_dd_context, $class;
             # have to sneak the default invocant in there
             $ms->{invocant} = '$self';
             $ms->parser($ms->declarator, $ms->offset);
@@ -166,7 +168,7 @@ sub import
         {
             my ($orig, $self, $ctx) = @_;
 
-            my $ms = bless $ctx->_dd_context, __PACKAGE__;
+            my $ms = bless $ctx->_dd_context, $class;
             # have to sneak the default invocant in there
             $ms->{invocant} = '$self';
             # and have to let code_for() know this is a modifier
