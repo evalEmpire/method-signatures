@@ -30,10 +30,11 @@ my $build = Module::Build->new(
         PPI                 => '1.203',
         'Data::Alias'       => '1.08',
         'Any::Moose'        => '0.11',
+        Mouse               => '0.64',
     },
-    
+
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
-    
+
     meta_merge      => {
         resources => {
             license     => 'http://dev.perl.org/licenses/',
