@@ -460,6 +460,20 @@ sub import {
 }
 
 
+# Generally, the code that calls inject_if_block decides what to put in front of the actual
+# subroutine body.  For instance, if it's an anonymous sub, the $before parameter would contain
+# "sub ".  In our case, we want the "sub " all the time: it fixes a weird error on Perl 5.10,
+# and doesn't cause any problems anywhere else.
+sub inject_if_block
+{
+    my ($self, $inject, $before) = @_;
+
+    $before = 'sub ' unless $before;
+
+    $self->SUPER::inject_if_block($inject, $before);
+}
+
+
 sub code_for {
     my($self, $name) = @_;
 

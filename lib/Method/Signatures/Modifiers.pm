@@ -182,19 +182,6 @@ sub import
 }
 
 
-# Generally, the code that calls inject_if_block decides what to put in front of the actual
-# subroutine body.  For instance, if it's an anonymous sub, the $before parameter would contain
-# "sub ".
-sub inject_if_block
-{
-    my ($self, $inject, $before) = @_;
-
-    $before = 'sub ' unless $before;
-
-    $self->SUPER::inject_if_block($inject, $before);
-}
-
-
 # The code_for routine for Method::Signatures just takes the code from
 # Devel::Declare::MethodInstaller::Simple (by calling SUPER::code_for) and uses BeginLift to promote
 # that to a compile-time call.  However, for modifiers, we can't do that at all:
