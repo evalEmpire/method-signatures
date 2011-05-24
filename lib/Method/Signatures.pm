@@ -401,9 +401,9 @@ Perl 5 lacks all the fancy named parameter syntax for the caller.
 
 =head3 Parameters are copies.
 
-In Perl 6, parameters are aliases.  This makes sense in Perl 6 because
-Perl 6 is an "everything is an object" language.  In Perl 5 is not, so
-parameters are much more naturally passed as copies.
+In Perl 6, parameters are aliases.  This makes sense in Perl 6 because Perl 6 is
+an "everything is an object" language.  Perl 5 is not, so parameters are much
+more naturally passed as copies.
 
 You can alias using the "alias" trait.
 
