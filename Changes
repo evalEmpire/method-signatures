@@ -1,3 +1,10 @@
+Next
+    New Features
+    * Now checking if there are too many arguments. [github #23]
+    * No signature now implies the empty signature.
+    * The empty signature is now clearly defined.
+
+
 20110324.1600_001  Thu, 24 Mar 2011 16:00:38 +1100
     Bug Fix
     * Declare dependency on Any::Moose [github #9]

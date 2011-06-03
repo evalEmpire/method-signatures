@@ -109,6 +109,9 @@ is equivalent to:
         $self->wibble($bar, $baz);
     }
 
+again with checks to make sure the arguments passed in match the
+signature.
+
 
 =head3 C<@_>
 
@@ -356,6 +359,12 @@ leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
 
 
+=head3 The empty signature
+
+If a method is given the signature of C<< () >> or no signature at
+all, it takes no arguments.
+
+
 =head2 Anonymous Methods
 
 An anonymous method can be declared just like an anonymous sub.
@@ -515,10 +524,10 @@ sub parse_func {
     $signature->{named}      = [];
     $signature->{positional} = [];
     $signature->{overall}    = {
-        has_optional            => 0,
-        has_optional_positional => 0,
-        has_named               => 0,
-        has_positional          => 0,
+        num_optional            => 0,
+        num_optional_positional => 0,
+        num_named               => 0,
+        num_positional          => 0,
         has_invocant            => $signature->{invocant} ? 1 : 0,
         num_slurpy              => 0
     };
@@ -566,10 +575,10 @@ sub parse_func {
         }
 
         my $overall = $signature->{overall};
-        $overall->{has_optional}++              if $sig->{is_optional};
-        $overall->{has_named}++                 if $sig->{named};
-        $overall->{has_positional}++            if !$sig->{named};
-        $overall->{has_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
+        $overall->{num_optional}++              if $sig->{is_optional};
+        $overall->{num_named}++                 if $sig->{named};
+        $overall->{num_positional}++            if !$sig->{named};
+        $overall->{num_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
         $overall->{num_slurpy}++                if $sig->{is_slurpy};
 
         DEBUG( "sig: ", $sig );
@@ -577,10 +586,34 @@ sub parse_func {
 
     $self->{signature} = $signature;
 
+    $self->_calculate_max_args;
+
     # Then turn it into Perl code
     my $inject = $self->inject_from_signature($signature);
     DEBUG( "inject: $inject\n" );
     return $inject;
+}
+
+
+sub _calculate_max_args {
+    my $self = shift;
+    my $overall = $self->{signature}{overall};
+
+    # If there's a slurpy argument, the max is infinity.
+    if( $overall->{num_slurpy} ) {
+        $overall->{max_argv_size} = 'inf';
+        $overall->{max_args}      = 'inf';
+
+        return;
+    }
+
+    # How big can @_ be?
+    $overall->{max_argv_size} = ($overall->{num_named} * 2) + $overall->{num_positional};
+
+    # The maxmimum logical arguments (name => value counts as one argument)
+    $overall->{max_args} = $overall->{num_named} + $overall->{num_positional};
+
+    return;
 }
 
 
@@ -591,13 +624,13 @@ sub check_signature {
       $sig->{is_slurpy} and $signature->{overall}{num_slurpy} >= 1;
 
     if( $sig->{named} ) {
-        if( $signature->{overall}{has_optional_positional} ) {
+        if( $signature->{overall}{num_optional_positional} ) {
             my $pos_var = $signature->{positional}[-1]{var};
             die("named parameter $sig->{var} mixed with optional positional $pos_var\n");
         }
     }
     else {
-        if( $signature->{overall}{has_named} ) {
+        if( $signature->{overall}{num_named} ) {
             my $named_var = $signature->{named}[-1]{var};
             die("positional parameter $sig->{var} after named param $named_var\n");
         }
@@ -617,19 +650,31 @@ sub inject_from_signature {
         push @code, $self->inject_for_sig($sig);
     }
 
-    return join ' ', @code unless @{$signature->{named}};
+    if( @{$signature->{named}} ) {
+        my $first_named_idx = @{$signature->{positional}};
+        push @code, "my \%args = \@_[$first_named_idx..\$#_];";
 
-    my $first_named_idx = @{$signature->{positional}};
-    push @code, "my \%args = \@_[$first_named_idx..\$#_];";
+        for my $sig (@{$signature->{named}}) {
+            push @code, $self->inject_for_sig($sig);
+        }
 
-    for my $sig (@{$signature->{named}}) {
-        push @code, $self->inject_for_sig($sig);
+        push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{num_named};
     }
 
-    push @code, 'Method::Signatures::named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
+    my $max_argv = $signature->{overall}{max_argv_size};
+    my $max_args = $signature->{overall}{max_args};
+    push @code, qq[Method::Signatures::too_many_args_error($max_args) if \@_ > $max_argv; ]
+        unless $max_argv == "inf";
 
     # All on one line.
     return join ' ', @code;
+}
+
+
+sub too_many_args_error {
+    my($max_args) = @_;
+
+    signature_error("was given too many arguments, it expects $max_args");
 }
 
 
@@ -816,6 +861,8 @@ sub type_check
         $value = defined $value ? qq{"$value"} : 'undef';
         _type_error(qq{the '$name' parameter ($value) is not of type $type});
     }
+
+    # $mutc{cache} = {};
 }
 
 

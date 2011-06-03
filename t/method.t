@@ -20,15 +20,15 @@ use Test::More 'no_plan';
     }
     
     method no_proto {
-        return $self, @_;
+        return($self, @_);
     }
     
     method empty_proto() {
-        return $self, @_;
+        return($self, @_);
     }
     
     method echo(@_) {
-        return $self, @_;
+        return($self, @_);
     }
     
     method caller($height = 0) {
@@ -58,9 +58,13 @@ is $obj->get("bar"), 23;
 $obj->set(foo => 99);
 is $obj->get("foo"), 99;
 
-for my $method (qw(no_proto empty_proto echo)) {
-    is_deeply [$obj->$method(1,2,3)], [$obj,1,2,3];
+for my $method (qw(no_proto empty_proto)) {
+    is_deeply [$obj->$method], [$obj];
+    ok !eval { $obj->$method(23); 1 };
+    like $@, qr{\Q$method() was given too many arguments, it expects 0};
 }
+
+is_deeply [$obj->echo(1,2,3)], [$obj,1,2,3], "echo";
 
 is_deeply [$obj->caller], [__PACKAGE__, $0, __LINE__], 'caller works';
 
