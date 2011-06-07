@@ -62,13 +62,13 @@ Method::Signatures - method and function declarations with signatures and no sou
 
 =head1 DESCRIPTION
 
-Provides two new keywords, C<func> and C<method> so you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
+Provides two new keywords, C<func> and C<method>, so that you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
 
 C<func> is like C<sub> but takes a signature where the prototype would
 normally go.  This takes the place of C<my($foo, $bar) = @_> and does
 a whole lot more.
 
-C<method> is like C<func> but specificly for making methods.  It will
+C<method> is like C<func> but specifically for making methods.  It will
 automatically provide the invocant as C<$self>.  No more C<my $self =
 shift>.
 
@@ -129,7 +129,7 @@ Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
 
     Class->foo( arg => 42 );
 
-Named parameters by default are optional.
+Named parameters are optional by default.
 
 Required positional parameters and named parameters can be mixed, but
 the named params must come last.
@@ -145,7 +145,7 @@ Named parameters are passed in as a hash after all positional arguments.
     # $text = "Some stuff", $justify = "right", $enchef = 0
     $obj->display( "Some stuff", justify => "right" );
 
-You cannot mix optional positional params with named params as that
+You cannot mix optional positional params with named params, as that
 leads to ambiguities.
 
     method foo( $a, $b?, :$c )  # illegal
@@ -158,7 +158,7 @@ leads to ambiguities.
 
 A signature of C<\@arg> will take an array reference but allow it to
 be used as C<@arg> inside the method.  C<@arg> is an alias to the
-original reference.  Any changes to C<@arg> will effect the original
+original reference.  Any changes to C<@arg> will affect the original
 reference.
 
     package Stuff;
@@ -221,7 +221,7 @@ Earlier parameters may be used in later defaults.
         return $that;
     }
 
-All variables with defaults are considered optional.
+Any variable that has a default is considered optional.
 
 
 =head3 Type Constraints
@@ -251,7 +251,7 @@ they are generally the same, but there may be small differences).
         return $this + $that;
     }
 
-L<Mouse> (and L<Moose>) also understand some parameterized types; see
+L<Mouse> and L<Moose> also understand some parameterized types; see
 their documentation for more details.
 
     method add(Int $this = 23, Maybe[Int] $that) {
@@ -342,14 +342,14 @@ Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 To declare a parameter optional, use the C<$arg?> syntax.
 
-Currently nothing is done with this.  It's for forward compatibility.
+By default, named parameters are optional.
 
 
 =head3 Required parameters
 
-To declare a parameter as required, use the C<$arg!> syntax.
+To declare a parameter required, use the C<$arg!> syntax.
 
-All parameters without defaults are required by default.
+By default, any parameter that does not have a default is required.
 
 
 =head3 The C<@_> signature
@@ -393,7 +393,7 @@ Perl 5 lacks all the fancy named parameter syntax for the caller.
 =head3 Parameters are copies.
 
 In Perl 6, parameters are aliases.  This makes sense in Perl 6 because
-Perl 6 is an "everything is an object" language.  In Perl 5 is not, so
+Perl 6 is an "everything is an object" language.  Perl 5 is not, so
 parameters are much more naturally passed as copies.
 
 You can alias using the "alias" trait.
@@ -405,7 +405,7 @@ lacks the named parameter disambiguating syntax so it is not allowed.
 
 =head3 Addition of the C<\@foo> reference alias prototype
 
-Because in Perl 6 arrays and hashes don't get flattened, and their
+In Perl 6, arrays and hashes don't get flattened, and their
 referencing syntax is much improved.  Perl 5 has no such luxury, so
 Method::Signatures added a way to alias references to normal variables
 to make them easier to work with.
