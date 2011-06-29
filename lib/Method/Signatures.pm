@@ -338,18 +338,30 @@ trait first and the default second.
 Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 
-=head3 Optional parameters
+=head3 Required and optional parameters
 
-To declare a parameter optional, use the C<$arg?> syntax.
+Parameters declared using C<$arg!> are explicitly I<required>.
+Parameters declared using C<$arg?> are explicitly I<optional>.  These
+declarations override all other considerations.
 
-By default, named parameters are optional.
+A parameter is implictly I<optional> if it is a named parameter, or it
+has a default.  All other parameters are implicitly I<required>.
 
+    # $greeting is optional because it is named
+    method hello(:$greeting) { ... }
 
-=head3 Required parameters
+    # $greeting is required because it is positional
+    method hello($greeting) { ... }
 
-To declare a parameter required, use the C<$arg!> syntax.
+    # $greeting is optional because it has a default
+    method hello($greeting = "Gruezi") { ... }
 
-By default, any parameter that does not have a default is required.
+    # $greeting is required because it is explicitly declared using !
+    method hello(:$greeting!) { ... }
+
+    # $greeting is required, even with the default, because it is
+    # explicitly declared using !
+    method hello(:$greeting! = "Gruezi") { ... }
 
 
 =head3 The C<@_> signature
