@@ -31,6 +31,7 @@ my $build = Module::Build->new(
         'Data::Alias'       => '1.08',
         'Any::Moose'        => '0.11',
         Mouse               => '0.64',
+        'Sub::Name'         => '0.03',
     },
 
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
