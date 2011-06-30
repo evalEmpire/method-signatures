@@ -5,8 +5,7 @@ use warnings;
 
 use Sub::Name;
 
-use constant BASE => 'Method::Signatures';
-use base BASE;
+use base 'Method::Signatures';
 
 use MooseX::Declare ();
 
