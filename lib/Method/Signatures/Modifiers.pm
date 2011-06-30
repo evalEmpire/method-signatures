@@ -7,8 +7,6 @@ use Sub::Name;
 
 use base 'Method::Signatures';
 
-use MooseX::Declare ();
-
 
 =head1 NAME
 
@@ -143,6 +141,7 @@ sub import
 {
     my ($class) = @_;
 
+    require MooseX::Declare::Syntax::Keyword::Method;
     my $meta = MooseX::Declare::Syntax::Keyword::Method->meta;
     $meta->make_mutable();
     $meta->add_around_method_modifier
@@ -159,6 +158,7 @@ sub import
     );
     $meta->make_immutable();
 
+    require MooseX::Declare::Syntax::Keyword::MethodModifier;
     $meta = MooseX::Declare::Syntax::Keyword::MethodModifier->meta;
     $meta->make_mutable();
     $meta->add_around_method_modifier
