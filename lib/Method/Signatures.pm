@@ -995,8 +995,8 @@ The display() method is equivalent to all this code.
 
 =head1 EXPERIMENTING
 
-If you want to experiment with the prototype syntax, replace
-C<Method::Signatures::make_proto_unwrap>.  It takes a method prototype
+If you want to experiment with the prototype syntax, start with
+C<Method::Signatures::parse_func>.  It takes a method prototype
 and returns a string of Perl 5 code which will be placed at the
 beginning of that method.
 
