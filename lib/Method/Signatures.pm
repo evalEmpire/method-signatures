@@ -64,13 +64,13 @@ Method::Signatures - method and function declarations with signatures and no sou
 
 =head1 DESCRIPTION
 
-Provides two new keywords, C<func> and C<method> so you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
+Provides two new keywords, C<func> and C<method>, so that you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
 
 C<func> is like C<sub> but takes a signature where the prototype would
 normally go.  This takes the place of C<my($foo, $bar) = @_> and does
 a whole lot more.
 
-C<method> is like C<func> but specificly for making methods.  It will
+C<method> is like C<func> but specifically for making methods.  It will
 automatically provide the invocant as C<$self>.  No more C<my $self =
 shift>.
 
@@ -111,6 +111,9 @@ is equivalent to:
         $self->wibble($bar, $baz);
     }
 
+again with checks to make sure the arguments passed in match the
+signature.
+
 
 =head3 C<@_>
 
@@ -128,7 +131,7 @@ Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
 
     Class->foo( arg => 42 );
 
-Named parameters by default are optional.
+Named parameters are optional by default.
 
 Required positional parameters and named parameters can be mixed, but
 the named params must come last.
@@ -144,7 +147,7 @@ Named parameters are passed in as a hash after all positional arguments.
     # $text = "Some stuff", $justify = "right", $enchef = 0
     $obj->display( "Some stuff", justify => "right" );
 
-You cannot mix optional positional params with named params as that
+You cannot mix optional positional params with named params, as that
 leads to ambiguities.
 
     method foo( $a, $b?, :$c )  # illegal
@@ -157,7 +160,7 @@ leads to ambiguities.
 
 A signature of C<\@arg> will take an array reference but allow it to
 be used as C<@arg> inside the method.  C<@arg> is an alias to the
-original reference.  Any changes to C<@arg> will effect the original
+original reference.  Any changes to C<@arg> will affect the original
 reference.
 
     package Stuff;
@@ -220,7 +223,7 @@ Earlier parameters may be used in later defaults.
         return $that;
     }
 
-All variables with defaults are considered optional.
+Any variable that has a default is considered optional.
 
 
 =head3 Type Constraints
@@ -250,7 +253,7 @@ they are generally the same, but there may be small differences).
         return $this + $that;
     }
 
-L<Mouse> (and L<Moose>) also understand some parameterized types; see
+L<Mouse> and L<Moose> also understand some parameterized types; see
 their documentation for more details.
 
     method add(Int $this = 23, Maybe[Int] $that) {
@@ -349,22 +352,31 @@ below), then your caller will get an exception if they try to pass an empty
 array or hash.
 
 
-=head3 Optional parameters
+=head3 Required and optional parameters
 
-To declare a parameter optional, use the C<$arg?> syntax.
+Parameters declared using C<$arg!> are explicitly I<required>.
+Parameters declared using C<$arg?> are explicitly I<optional>.  These
+declarations override all other considerations.
+>>>>>>> master
 
-Since named parameters (and slurpy parameters) are optional by default, this
-only has an effect on (non-slurpy) positional parameters.
+A parameter is implictly I<optional> if it is a named parameter, or it
+has a default.  All other parameters are implicitly I<required>.
 
+    # $greeting is optional because it is named
+    method hello(:$greeting) { ... }
 
-=head3 Required parameters
+    # $greeting is required because it is positional
+    method hello($greeting) { ... }
 
-To declare a parameter as required, use the C<$arg!> syntax.
+    # $greeting is optional because it has a default
+    method hello($greeting = "Gruezi") { ... }
 
-Since positional parameters are required by default, this only has an effect on
-named parameters (or slurpy positional parameters).  Using this syntax for a
-parameter with a default (e.g.  C<$arg! = 0>) is non-sensical, but not an error:
-the parameter would be considered required, so the default could never be used.
+    # $greeting is required because it is explicitly declared using !
+    method hello(:$greeting!) { ... }
+
+    # $greeting is required, even with the default, because it is
+    # explicitly declared using !
+    method hello(:$greeting! = "Gruezi") { ... }
 
 
 =head3 The C<@_> signature
@@ -372,6 +384,12 @@ the parameter would be considered required, so the default could never be used.
 The @_ signature is a special case which only shifts C<$self>.  It
 leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
+
+
+=head3 The empty signature
+
+If a method is given the signature of C<< () >> or no signature at
+all, it takes no arguments.
 
 
 =head2 Anonymous Methods
@@ -401,9 +419,9 @@ Perl 5 lacks all the fancy named parameter syntax for the caller.
 
 =head3 Parameters are copies.
 
-In Perl 6, parameters are aliases.  This makes sense in Perl 6 because Perl 6 is
-an "everything is an object" language.  Perl 5 is not, so parameters are much
-more naturally passed as copies.
+In Perl 6, parameters are aliases.  This makes sense in Perl 6 because
+Perl 6 is an "everything is an object" language.  Perl 5 is not, so
+parameters are much more naturally passed as copies.
 
 You can alias using the "alias" trait.
 
@@ -414,7 +432,7 @@ lacks the named parameter disambiguating syntax so it is not allowed.
 
 =head3 Addition of the C<\@foo> reference alias prototype
 
-Because in Perl 6 arrays and hashes don't get flattened, and their
+In Perl 6, arrays and hashes don't get flattened, and their
 referencing syntax is much improved.  Perl 5 has no such luxury, so
 Method::Signatures added a way to alias references to normal variables
 to make them easier to work with.
@@ -551,10 +569,10 @@ sub parse_func {
     $signature->{named}      = [];
     $signature->{positional} = [];
     $signature->{overall}    = {
-        has_optional            => 0,
-        has_optional_positional => 0,
-        has_named               => 0,
-        has_positional          => 0,
+        num_optional            => 0,
+        num_optional_positional => 0,
+        num_named               => 0,
+        num_positional          => 0,
         has_invocant            => $signature->{invocant} ? 1 : 0,
         num_slurpy              => 0
     };
@@ -602,10 +620,10 @@ sub parse_func {
         }
 
         my $overall = $signature->{overall};
-        $overall->{has_optional}++              if $sig->{is_optional};
-        $overall->{has_named}++                 if $sig->{named};
-        $overall->{has_positional}++            if !$sig->{named};
-        $overall->{has_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
+        $overall->{num_optional}++              if $sig->{is_optional};
+        $overall->{num_named}++                 if $sig->{named};
+        $overall->{num_positional}++            if !$sig->{named};
+        $overall->{num_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
         $overall->{num_slurpy}++                if $sig->{is_slurpy};
 
         DEBUG( "sig: ", $sig );
@@ -613,10 +631,34 @@ sub parse_func {
 
     $self->{signature} = $signature;
 
+    $self->_calculate_max_args;
+
     # Then turn it into Perl code
     my $inject = $self->inject_from_signature($signature);
     DEBUG( "inject: $inject\n" );
     return $inject;
+}
+
+
+sub _calculate_max_args {
+    my $self = shift;
+    my $overall = $self->{signature}{overall};
+
+    # If there's a slurpy argument, the max is infinity.
+    if( $overall->{num_slurpy} ) {
+        $overall->{max_argv_size} = 'inf';
+        $overall->{max_args}      = 'inf';
+
+        return;
+    }
+
+    # How big can @_ be?
+    $overall->{max_argv_size} = ($overall->{num_named} * 2) + $overall->{num_positional};
+
+    # The maxmimum logical arguments (name => value counts as one argument)
+    $overall->{max_args} = $overall->{num_named} + $overall->{num_positional};
+
+    return;
 }
 
 
@@ -627,13 +669,13 @@ sub check_signature {
       $sig->{is_slurpy} and $signature->{overall}{num_slurpy} >= 1;
 
     if( $sig->{named} ) {
-        if( $signature->{overall}{has_optional_positional} ) {
+        if( $signature->{overall}{num_optional_positional} ) {
             my $pos_var = $signature->{positional}[-1]{var};
             die("named parameter $sig->{var} mixed with optional positional $pos_var\n");
         }
     }
     else {
-        if( $signature->{overall}{has_named} ) {
+        if( $signature->{overall}{num_named} ) {
             my $named_var = $signature->{named}[-1]{var};
             die("positional parameter $sig->{var} after named param $named_var\n");
         }
@@ -655,19 +697,33 @@ sub inject_from_signature {
         push @code, $self->inject_for_sig($sig);
     }
 
-    return join ' ', @code unless @{$signature->{named}};
+    if( @{$signature->{named}} ) {
+        my $first_named_idx = @{$signature->{positional}};
+        push @code, "my \%args = \@_[$first_named_idx..\$#_];";
 
-    my $first_named_idx = @{$signature->{positional}};
-    push @code, "my \%args = \@_[$first_named_idx..\$#_];";
+        for my $sig (@{$signature->{named}}) {
+            push @code, $self->inject_for_sig($sig);
+        }
 
-    for my $sig (@{$signature->{named}}) {
-        push @code, $self->inject_for_sig($sig);
+        push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{num_named};
     }
 
     push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
 
+    my $max_argv = $signature->{overall}{max_argv_size};
+    my $max_args = $signature->{overall}{max_args};
+    push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
+        unless $max_argv == "inf";
+
     # All on one line.
     return join ' ', @code;
+}
+
+
+sub too_many_args_error {
+    my($class, $max_args) = @_;
+
+    $class->signature_error("was given too many arguments, it expects $max_args");
 }
 
 
@@ -855,6 +911,8 @@ sub type_check
         $value = defined $value ? qq{"$value"} : 'undef';
         $class->type_error($type, $value, $name);
     }
+
+    # $mutc{cache} = {};
 }
 
 # If you just want to change what the type failure errors look like, just override this.

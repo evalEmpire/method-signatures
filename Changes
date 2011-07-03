@@ -1,3 +1,14 @@
+Next
+    New Features
+    * Now checking if there are too many arguments. [github #23]
+    * No signature now implies the empty signature.
+    * The empty signature is now clearly defined.
+
+    Bug Fixes
+    * Now depending on a version of Devel::Declare that works with
+      5.13 and up. [github #10]
+
+
 20110324.1600_001  Thu, 24 Mar 2011 16:00:38 +1100
     Bug Fix
     * Declare dependency on Any::Moose [github #9]
