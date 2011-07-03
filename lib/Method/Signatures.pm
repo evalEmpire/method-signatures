@@ -515,7 +515,13 @@ sub _strip_ws {
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
-    return $self->parse_signature( proto => shift, invocant => $self->{invocant}, pre_invocant => $self->{pre_invocant} );
+    my $proto = shift;
+
+    return $self->parse_signature(
+        proto           => $proto,
+        invocant        => $self->{invocant},
+        pre_invocant    => $self->{pre_invocant}
+    );
 }
 
 
