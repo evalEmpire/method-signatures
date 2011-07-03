@@ -616,7 +616,7 @@ sub parse_func {
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
 
-        check_signature($sig, $signature);
+        $self->check_signature($sig, $signature);
 
         if( $sig->{named} ) {
             push @{$signature->{named}}, $sig;
@@ -669,9 +669,9 @@ sub _calculate_max_args {
 
 
 sub check_signature {
-    my($sig, $signature) = @_;
+    my($self, $sig, $signature) = @_;
 
-    die("signature can only have one slurpy parameter") if
+    $self->signature_error("signature can only have one slurpy parameter") if
       $sig->{is_slurpy} and $signature->{overall}{num_slurpy} >= 1;
 
     if( $sig->{named} ) {
@@ -821,7 +821,7 @@ sub signature_error {
     local @CARP_NOT;
     push @CARP_NOT, __PACKAGE__;
     push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
-    push @CARP_NOT, qw< Class::MOP Moose Mouse >;
+    push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
     my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
 
     my $level = 0;
