@@ -315,7 +315,7 @@ This is a default trait.
 
 =item B<copy>
 
-The parameter will be a copy of the argument (just like C<<my $arg = shift>>).
+The parameter will be a copy of the argument (just like C<< my $arg = shift >>).
 
 This is a default trait except for the C<\@foo> parameter.
 
@@ -1112,14 +1112,14 @@ ambiguous or non-sense situations.
 
     method bar($a, $b?, $c)   # illegal, ambiguous
 
-Does C<<->bar(1,2)>> mean $a = 1 and $b = 2 or $a = 1, $c = 3?
+Does C<< ->bar(1,2) >> mean $a = 1 and $b = 2 or $a = 1, $c = 3?
 
 * If you're have named parameters, all your positional params must be required.
 
     method foo($a, $b, :$c);    # legal
     method bar($a?, $b?, :$c);   # illegal, ambiguous
 
-Does C<<->bar(c => 42)>> mean $a = 'c', $b = 42 or just $c = 42?
+Does C<< ->bar(c => 42) >> mean $a = 'c', $b = 42 or just $c = 42?
 
 * Positionals are resolved before named params.  They have precedence.
 
