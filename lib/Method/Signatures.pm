@@ -357,7 +357,6 @@ array or hash.
 Parameters declared using C<$arg!> are explicitly I<required>.
 Parameters declared using C<$arg?> are explicitly I<optional>.  These
 declarations override all other considerations.
->>>>>>> master
 
 A parameter is implictly I<optional> if it is a named parameter, or it
 has a default.  All other parameters are implicitly I<required>.
