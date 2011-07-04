@@ -342,14 +342,12 @@ Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 =head3 Slurpy parameters
 
-A "slurpy" parameter is a parameter that begins with either the C<@> or C<%>
-sigil.  Since a slurpy parameter "slurps up" all remaining arguments, any
-following parameters can't receive values, so you should declare at most one
-slurpy parameter, and you must put it at the end of your signature.
+A "slurpy" parameter is a list or hash parameter that "slurps up" all
+remaining arguments.  Since any following parameters can't receive values,
+there can be only one slurpy parameter.  It must come at the end of
+the signature.
 
-Slurpy parameters are optional by default.  If you mark them required (see
-below), then your caller will get an exception if they try to pass an empty
-array or hash.
+Slurpy parameters are optional by default.
 
 
 =head3 Required and optional parameters
