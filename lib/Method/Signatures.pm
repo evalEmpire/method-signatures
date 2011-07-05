@@ -614,13 +614,14 @@ sub parse_func {
         $sig->{name}        = $name;
         $sig->{var}         = $sigil . $name;
 
-        $self->check_signature($sig, $signature);
+        $self->_check_sig($sig, $signature);
 
         if( $sig->{named} ) {
             push @{$signature->{named}}, $sig;
         }
         else {
             push @{$signature->{positional}}, $sig;
+            $sig->{position} = @{$signature->{positional}};
         }
 
         my $overall = $signature->{overall};
@@ -636,6 +637,7 @@ sub parse_func {
     $self->{signature} = $signature;
 
     $self->_calculate_max_args;
+    $self->_check_signature;
 
     # Then turn it into Perl code
     my $inject = $self->inject_from_signature($signature);
@@ -666,11 +668,16 @@ sub _calculate_max_args {
 }
 
 
-sub check_signature {
+# Check the integrity of one piece of the signature
+sub _check_sig {
     my($self, $sig, $signature) = @_;
 
-    $self->signature_error("signature can only have one slurpy parameter") if
-      $sig->{is_slurpy} and $signature->{overall}{num_slurpy} >= 1;
+    if( $sig->{is_slurpy} ) {
+        $self->signature_error("signature can only have one slurpy parameter") if
+          $signature->{overall}{num_slurpy} >= 1;
+        $self->signature_error("slurpy parameter $sig->{var} cannot be named, use a reference instead") if
+          $sig->{named};
+    }
 
     if( $sig->{named} ) {
         if( $signature->{overall}{num_optional_positional} ) {
@@ -684,6 +691,32 @@ sub check_signature {
             die("positional parameter $sig->{var} after named param $named_var\n");
         }
     }
+}
+
+
+# Check the integrity of the signature as a whole
+sub _check_signature {
+    my $self = shift;
+    my $signature = $self->{signature};
+    my $overall   = $signature->{overall};
+
+    # Check that slurpy arguments come at the end
+    if(
+        $overall->{num_slurpy}                  &&
+        !$signature->{positional}[-1]{is_slurpy}
+    )
+    {
+        my($slurpy_param) = $self->_find_slurpy_params;
+        $self->signature_error("slurpy parameter $slurpy_param->{var} must come at the end");
+    }
+}
+
+
+sub _find_slurpy_params {
+    my $self = shift;
+    my $signature = $self->{signature};
+
+    return grep { $_->{is_slurpy} } @{ $signature->{named} }, @{ $signature->{positional} };
 }
 
 

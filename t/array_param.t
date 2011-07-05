@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 3;
 
 {
     package Bla;
@@ -12,14 +12,6 @@ use Test::More tests => 5;
 
     method new ($class:) {
         bless {}, $class;
-    }
-
-    method array_param_at_start (@a, $b, $c) {
-        return "@a|$b|$c";
-    }
-
-    method array_param_in_midst ($a, @b, $c) {
-        return "$a|@b|$c";
     }
 
     method array_param_at_end ($a, $b, @c) {
@@ -37,9 +29,4 @@ use Test::More tests => 5;
     like($@, qr{signature can only have one slurpy parameter}, "Two slurpy params");
 }
 
-{
-    local $TODO = "Should probably work";
-    is(Bla->new->array_param_at_start(1, 2, 3, 4), "1 2|3|4", "Array parameter at start");
-    is(Bla->new->array_param_in_midst(1, 2, 3, 4), "1|2 3|4", "Array parameter in midst");
-}
 is(Bla->new->array_param_at_end(1, 2, 3, 4), "1|2|3 4", "Array parameter at end");

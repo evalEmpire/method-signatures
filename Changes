@@ -3,6 +3,8 @@ Next
     * Now checking if there are too many arguments. [github #23]
     * No signature now implies the empty signature.
     * The empty signature is now clearly defined.
+    * Slurpy parameters (@foo and %bar) now must come at the end.
+    * Slurpy parameters cannot be named, they must be positional.
 
     Bug Fixes
     * Now depending on a version of Devel::Declare that works with

@@ -44,9 +44,8 @@ note "inject_for_type_check"; {
     }
     
     my $ms = My::MS->new;
-    my $code = $ms->parse_func( proto => 'Foo $this, :$bar, Baz :%baz, Foo::Bar :$foobar' );
+    my $code = $ms->parse_func( proto => 'Foo $this, :$bar, Foo::Bar :$foobar' );
     like $code, qr{type_check\('\$this'\)};
-    like $code, qr{type_check\('\%baz'\)};
     like $code, qr{type_check\('\$foobar'\)};
 }
 
