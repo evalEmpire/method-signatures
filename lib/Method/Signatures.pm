@@ -1102,14 +1102,6 @@ Devel::Declare only effects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
 surprisingly stable.
 
-=head2 What about regular subroutines?
-
-L<Devel::Declare> cannot yet change the way C<sub> behaves.  It's
-being worked on and when it works I'll release another module unifying
-method and sub.
-
-I might release something using C<func>.
-
 =head2 What about class methods?
 
 Right now there's nothing special about class methods.  Just use
