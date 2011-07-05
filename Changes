@@ -1,14 +1,33 @@
 Next
+    Incompatible Changes
+    * Slurpy parameters (@foo and %bar) now must come at the end.
+    * Slurpy parameters cannot be named, they must be positional.
+    * The empty signature takes no arguments.
+    * No signature implies the empty signature and takes no arguments.
+
     New Features
     * Now checking if there are too many arguments. [github #23]
     * No signature now implies the empty signature.
     * The empty signature is now clearly defined.
-    * Slurpy parameters (@foo and %bar) now must come at the end.
-    * Slurpy parameters cannot be named, they must be positional.
+    * Method::Signatures::Modifiers allows you to use Method::Signatures
+      with MooseX::Declare. [Buddy Burden] [github #14]
 
     Bug Fixes
     * Now depending on a version of Devel::Declare that works with
       5.13 and up. [github #10]
+    * Now depending on a known good version of Mouse.
+    * Improved error messages reporting from the right position in the
+      user's code. [Buddy Burden]
+    * Comments in the signature fixed. [Buddy Burden] [github #13]
+
+    Docs
+    * Many grammar fixes and prose improvements [Noirin Plunkett]
+    * Slurpy parameters are clearly documented
+    * The rules if a parameter is required or optional are more clear
+
+    Test Fixes
+    * Tests will no longer fail because 5.10.0 and down report
+      different errors on compilation failure. [github #18]
 
 
 20110324.1600_001  Thu, 24 Mar 2011 16:00:38 +1100
