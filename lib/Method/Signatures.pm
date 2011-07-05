@@ -811,7 +811,8 @@ sub inject_for_type_check
 # This is a common function to throw errors so that they appear to be from the point of the calling
 # sub, not any of the Method::Signatures subs.
 sub signature_error {
-    my ($class, $msg) = @_;
+    my ($proto, $msg) = @_;
+    my $class = ref $proto || $proto;
 
     # using @CARP_NOT here even though we're not using Carp
     # who knows? maybe someday Carp will be capable of doing what we want
