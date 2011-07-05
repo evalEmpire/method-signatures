@@ -1127,8 +1127,7 @@ A syntax for function prototypes is being considered.
 
 =head2 Error checking
 
-There currently is very little checking done on the prototype syntax.
-Here's some basic checks I would like to add, mostly to avoid
+Here's some additional checks I would like to add, mostly to avoid
 ambiguous or non-sense situations.
 
 * If one positional param is optional, everything to the right must be optional
