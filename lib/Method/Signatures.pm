@@ -344,8 +344,10 @@ Think of it as C<$message is ro> being the left-hand side of the assignment.
 
 A "slurpy" parameter is a list or hash parameter that "slurps up" all
 remaining arguments.  Since any following parameters can't receive values,
-there can be only one slurpy parameter.  It must come at the end of
-the signature.
+there can be only one slurpy parameter.
+
+Slurpy parameters must come at the end of the signature and they must
+be positional.
 
 Slurpy parameters are optional by default.
 
@@ -1147,6 +1149,13 @@ Does C<< ->bar(c => 42) >> mean $a = 'c', $b = 42 or just $c = 42?
 
 * Positionals are resolved before named params.  They have precedence.
 
+=head2 Slurpy parameter restrictions
+
+Slurpy parameters are currently more restricted than they need to be.
+It is possible to work out a slurpy parameter in the middle, or a
+named slurpy parameter.  However, there's lots of edge cases and
+possible nonsense configurations.  Until that's worked out, we've left
+it restricted.
 
 =head2 What about...
 
