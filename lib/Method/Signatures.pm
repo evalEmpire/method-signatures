@@ -1047,12 +1047,13 @@ versions.
 If you wish to subclass Method::Signatures, the following methods are
 good places to start.
 
-=head2 named_param_error, required_arg, type_error
+=head2 too_many_args_error, named_param_error, required_arg, type_error
 
 These are class methods which report the various run-time errors
-(unknown named parameter, required parameter missing, and parameter
-fails type check, respectively).  Note that each one calls
-C<signature_error>, which your versions should do as well.
+(extra parameters, unknown named parameter, required parameter
+missing, and parameter fails type check, respectively).  Note that
+each one calls C<signature_error>, which your versions should do as
+well.
 
 =head2 signature_error
 
@@ -1100,7 +1101,7 @@ access Perl's own parser, it does not depend on a source filter.  As
 such, it doesn't try to parse and rewrite your source code and there
 should be no weird side effects.
 
-Devel::Declare only effects compilation.  After that, it's a normal
+Devel::Declare only affects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
 surprisingly stable.
 
