@@ -9,6 +9,7 @@ Next
 
     New Features
     * Now checking if there are too many arguments. [github #23]
+    * Run-time errors are now class methods, so subclasses can override them.
     * Method::Signatures::Modifiers allows you to use Method::Signatures
       with MooseX::Declare and apply method modifiers like before, after
       and around. [Buddy Burden] [github #14]
@@ -75,7 +76,7 @@ Next
 
     Docs
     * Updated the SEE ALSO
-    * Removed the assertion that no checks are done on the signature    
+    * Removed the assertion that no checks are done on the signature
 
 
 20090620  Sat Jun 20 01:26:59 PDT 2009
