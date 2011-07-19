@@ -802,7 +802,7 @@ sub inject_for_sig {
         $sig->{passed_in} = $rhs;
     }
 
-    my $check_exists = $sig->{exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+    my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
     if( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
@@ -839,7 +839,7 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    my $check_exists = $sig->{is_optional} ? "if $sig->{exists}" : '';
+    my $check_exists = $sig->{is_optional} ? "if $sig->{check_exists}" : '';
     return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') $check_exists;";
 }
 
