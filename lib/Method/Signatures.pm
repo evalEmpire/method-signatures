@@ -185,7 +185,7 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
-Signatures have an implied default of C<$self:>.
+C<method> has an implied default of C<$self:>.  C<func> has no invocant.
 
 
 =head3 Defaults
