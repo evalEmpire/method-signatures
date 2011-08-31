@@ -1144,14 +1144,8 @@ ambiguous or non-sense situations.
 
 Does C<< ->bar(1,2) >> mean $a = 1 and $b = 2 or $a = 1, $c = 3?
 
-* If you're have named parameters, all your positional params must be required.
-
-    method foo($a, $b, :$c);    # legal
-    method bar($a?, $b?, :$c);   # illegal, ambiguous
-
-Does C<< ->bar(c => 42) >> mean $a = 'c', $b = 42 or just $c = 42?
-
 * Positionals are resolved before named params.  They have precedence.
+
 
 =head2 Slurpy parameter restrictions
 
