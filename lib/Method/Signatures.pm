@@ -1087,10 +1087,6 @@ Please report bugs and leave feedback at
 E<lt>bug-Method-SignaturesE<gt> at E<lt>rt.cpan.orgE<gt>.  Or use the
 web interface at L<http://rt.cpan.org>.  Report early, report often.
 
-=head2 Debugging
-
-You can see the Perl code Method::Signatures translates to by using B::Deparse.
-
 =head2 One liners
 
 If you want to write "use Method::Signatures" in a one-liner, do a
