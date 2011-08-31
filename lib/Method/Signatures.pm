@@ -990,6 +990,9 @@ Type-checking modules are not loaded until run-time, so this is fine:
 One of the best ways to figure out what Method::Signatures is doing is
 to run your code through B::Deparse (run the code with -MO=Deparse).
 
+Setting the C<METHOD_SIGNATURES_DEBUG> environment variable will cause
+Method::Signatures to display debugging information when it is
+compiling signatures.
 
 =head1 EXAMPLE
 
