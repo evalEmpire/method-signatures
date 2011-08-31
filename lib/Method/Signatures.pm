@@ -1223,7 +1223,7 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<MooseX::Method::Signatures> for a method keyword that also works with Moose.
+L<MooseX::Method::Signatures> for an alternative implementation.
 
 L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
 
