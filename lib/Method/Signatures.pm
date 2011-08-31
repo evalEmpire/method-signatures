@@ -129,7 +129,7 @@ Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
         ...
     }
 
-    Class->foo( arg => 42 );
+    $object->foo( arg => 42 );
 
 Named parameters are optional by default.
 
