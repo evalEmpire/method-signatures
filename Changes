@@ -33,6 +33,9 @@ Next
     * Many grammar fixes and prose improvements [Noirin Plunkett] [github #25]
     * Slurpy parameters are clearly documented
     * The rules if a parameter is required or optional are more clear
+    * Clarify that func() has no invocant [github #32]
+    * Mention METHOD_SIGNATURES_DEBUG environment variable for debugging.
+      [github #32]
 
     Test Fixes
     * Tests will no longer fail because 5.10.0 and down report

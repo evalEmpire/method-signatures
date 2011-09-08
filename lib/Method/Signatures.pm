@@ -129,7 +129,7 @@ Parameters can be passed in named, as a hash, using the C<:$arg> syntax.
         ...
     }
 
-    Class->foo( arg => 42 );
+    $object->foo( arg => 42 );
 
 Named parameters are optional by default.
 
@@ -185,7 +185,7 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
-Signatures have an implied default of C<$self:>.
+C<method> has an implied default of C<$self:>.  C<func> has no invocant.
 
 
 =head3 Defaults
@@ -990,6 +990,9 @@ Type-checking modules are not loaded until run-time, so this is fine:
 One of the best ways to figure out what Method::Signatures is doing is
 to run your code through B::Deparse (run the code with -MO=Deparse).
 
+Setting the C<METHOD_SIGNATURES_DEBUG> environment variable will cause
+Method::Signatures to display debugging information when it is
+compiling signatures.
 
 =head1 EXAMPLE
 
@@ -1084,10 +1087,6 @@ Please report bugs and leave feedback at
 E<lt>bug-Method-SignaturesE<gt> at E<lt>rt.cpan.orgE<gt>.  Or use the
 web interface at L<http://rt.cpan.org>.  Report early, report often.
 
-=head2 Debugging
-
-You can see the Perl code Method::Signatures translates to by using B::Deparse.
-
 =head2 One liners
 
 If you want to write "use Method::Signatures" in a one-liner, do a
@@ -1141,14 +1140,8 @@ ambiguous or non-sense situations.
 
 Does C<< ->bar(1,2) >> mean $a = 1 and $b = 2 or $a = 1, $c = 3?
 
-* If you're have named parameters, all your positional params must be required.
-
-    method foo($a, $b, :$c);    # legal
-    method bar($a?, $b?, :$c);   # illegal, ambiguous
-
-Does C<< ->bar(c => 42) >> mean $a = 'c', $b = 42 or just $c = 42?
-
 * Positionals are resolved before named params.  They have precedence.
+
 
 =head2 Slurpy parameter restrictions
 
@@ -1226,7 +1219,7 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 
 =head1 SEE ALSO
 
-L<MooseX::Method::Signatures> for a method keyword that also works with Moose.
+L<MooseX::Method::Signatures> for an alternative implementation.
 
 L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
 
