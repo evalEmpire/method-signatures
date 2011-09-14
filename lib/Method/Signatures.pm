@@ -512,10 +512,24 @@ sub _strip_ws {
 }
 
 
+# Sometimes a compilation error will happen but not throw an error causing the
+# code to continue compiling and producing an unrelated error down the road.
+#
+# A symptom of this is that eval STRING no longer works.  So we detect if the
+# parser is a dead man walking.
+sub _parser_is_fucked {
+    local $@;
+    return eval 42 ? 0 : 1;
+}
+
+
 # Overriden method from D::D::MS
 sub parse_proto {
     my $self = shift;
     my $proto = shift;
+
+    # Before we try to compile signatures, make sure there isn't a hidden compilation error.
+    die $@ if _parser_is_fucked;
 
     return $self->parse_signature(
         proto           => $proto,
