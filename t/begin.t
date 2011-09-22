@@ -1,27 +1,64 @@
-#!/usr/bin/perl -w
-
-# The method keyword should be evaluated at BEGIN time
+#!/usr/bin/perl
 
 package Foo;
 
-use Test::More 'no_plan';
+use strict;
+use warnings;
+
+use Test::More;
+use Test::Exception;
 
 use Method::Signatures;
 
-note "Testing compile at BEGIN time";
-is( Foo->a_sub(42), 42,         "sub" );
-is( Foo->a_method(42), 42,      "method" );
-is( a_func(42), 42,             "func" );
 
-sub a_sub {
-    my($self, $arg) = @_;
-    return $arg;
+our $phase;
+BEGIN { $phase = 'compile-time' }
+INIT  { $phase = 'run-time'     }
+
+
+sub method_defined
+{
+    my ($method) = @_;
+
+    lives_ok { Foo->$method } "method $method is defined at $phase";
 }
 
-method a_method($arg) {
-    return $arg;
+sub method_undefined
+{
+    my ($method) = @_;
+
+    throws_ok { Foo->$method } qr/Can't locate object method/, "method $method is undefined at $phase";
 }
 
-func a_func($arg) {
-    return $arg;
+
+method top_level_default() {}
+
+#no compile_at_BEGIN;
+method top_level_off() {}
+
+#use compile_at_BEGIN;
+method top_level_on() {}
+
+{
+    #no compile_at_BEGIN;
+    method inner_scope_off() {}
 }
+
+method outer_scope_on() {}
+
+
+# at compile-time, some should be defined and others shouldn't be
+BEGIN { method_defined('top_level_default') }
+BEGIN { method_undefined('top_level_off') }
+BEGIN { method_defined('top_level_on') }
+BEGIN { method_undefined('inner_scope_off') }
+BEGIN { method_defined('outer_scope_on') }
+
+# by run-time, they should _all_ be defined) }
+method_defined('top_level_off');
+method_defined('top_level_on');
+method_defined('inner_scope_off');
+method_defined('outer_scope_on');
+
+
+done_testing;
