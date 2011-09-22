@@ -457,7 +457,8 @@ sub import {
         if (ref $arg) {
             $DEBUG  = $arg->{debug}  if exists $arg->{debug};
             $caller = $arg->{into}   if exists $arg->{into};
-            $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN};
+            $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN}
+                                     if exists $arg->{compile_at_BEGIN};
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
@@ -504,12 +505,23 @@ sub code_for {
 
     # Make method and func act at compile time, if they're named and if we're
     # configured to do that.
-    if( defined $name && my_hints->{METHOD_SIGNATURES_compile_at_BEGIN} ) {
+    if( defined $name && $self->_do_compile_at_BEGIN ) {
         require Devel::BeginLift;
         Devel::BeginLift->setup_for_cv($code);
     }
 
     return $code;
+}
+
+
+# Check if compile_at_BEGIN is set in this scope.
+sub _do_compile_at_BEGIN {
+    my $hints = my_hints;
+
+    # Default to on.
+    return 1 if !exists $hints->{METHOD_SIGNATURES_compile_at_BEGIN};
+
+    return $hints->{METHOD_SIGNATURES_compile_at_BEGIN};
 }
 
 
