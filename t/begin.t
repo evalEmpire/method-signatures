@@ -48,13 +48,16 @@ method outer_scope_on() {}
 
 
 # at compile-time, some should be defined and others shouldn't be
-BEGIN { method_defined('top_level_default') }
-BEGIN { method_undefined('top_level_off') }
-BEGIN { method_defined('top_level_on') }
-BEGIN { method_undefined('inner_scope_off') }
-BEGIN { method_defined('outer_scope_on') }
+BEGIN {
+    method_defined('top_level_default');
+    method_undefined('top_level_off');
+    method_defined('top_level_on');
+    method_undefined('inner_scope_off');
+    method_defined('outer_scope_on');
+}
 
-# by run-time, they should _all_ be defined) }
+# by run-time, they should _all_ be defined
+method_defined('top_level_default');
 method_defined('top_level_off');
 method_defined('top_level_on');
 method_defined('inner_scope_off');
