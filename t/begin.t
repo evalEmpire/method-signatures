@@ -31,19 +31,24 @@ sub method_undefined
 }
 
 
+# The default configuration with compile at BEGIN on.
 method top_level_default() {}
 
-#no compile_at_BEGIN;
+# Turn it off.
+use Method::Signatures { compile_at_BEGIN => 0 };
 method top_level_off() {}
 
-#use compile_at_BEGIN;
+# And on again.
+use Method::Signatures { compile_at_BEGIN => 1 };
 method top_level_on() {}
 
+# Now turn it off inside a lexical scope
 {
-    #no compile_at_BEGIN;
+    use Method::Signatures { compile_at_BEGIN => 0 };
     method inner_scope_off() {}
 }
 
+# And it's restored.
 method outer_scope_on() {}
 
 

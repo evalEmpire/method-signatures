@@ -6,6 +6,7 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Data::Alias;
+use Devel::Pragma qw(:all);
 
 our $VERSION = '20110629.0000_0001';
 
@@ -448,11 +449,15 @@ sub import {
     my $caller = caller;
     # default values
 
+    my $hints = my_hints;
+    $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = 1;  # default to on
+
     my $arg = shift;
     if (defined $arg) {
         if (ref $arg) {
             $DEBUG  = $arg->{debug}  if exists $arg->{debug};
             $caller = $arg->{into}   if exists $arg->{into};
+            $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN};
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
@@ -497,7 +502,9 @@ sub code_for {
 
     my $code = $self->SUPER::code_for($name);
 
-    if( defined $name ) {
+    # Make method and func act at compile time, if they're named and if we're
+    # configured to do that.
+    if( defined $name && my_hints->{METHOD_SIGNATURES_compile_at_BEGIN} ) {
         require Devel::BeginLift;
         Devel::BeginLift->setup_for_cv($code);
     }
