@@ -13,6 +13,8 @@ Next
     * Method::Signatures::Modifiers allows you to use Method::Signatures
       with MooseX::Declare and apply method modifiers like before, after
       and around. [Buddy Burden] [github #14]
+    * compile_at_BEGIN option controls if "method" and "func" are compiled
+      like normal statements or early like "sub". [github #8]
 
     Bug Fixes
     * Now depending on a version of Devel::Declare that works with
@@ -28,6 +30,8 @@ Next
       passed in. [github #12]
     * Depending on a new version of Devel::Declare that works with perl
       5.13 and up. [github #10]
+    * Fix some cases where a compile time error will show up as an error
+      inside PPI.
 
     Docs
     * Many grammar fixes and prose improvements [Noirin Plunkett] [github #25]
@@ -36,10 +40,13 @@ Next
     * Clarify that func() has no invocant [github #32]
     * Mention METHOD_SIGNATURES_DEBUG environment variable for debugging.
       [github #32]
+    * Documented the "debug" option.
+    * Documented issues with 5.8 and compile_at_BEGIN. [github #8] [github #22]
 
     Test Fixes
     * Tests will no longer fail because 5.10.0 and down report
       different errors on compilation failure. [github #18]
+    * Tests will no longer fail on 5.8. [github #22]
 
 
 20110324.1600_001  Thu, 24 Mar 2011 16:00:38 +1100
