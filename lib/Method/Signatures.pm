@@ -423,7 +423,7 @@ You can turn this off lexically by setting compile_at_BEGIN to a false value.
     use Method::Signatures { compile_at_BEGIN => 0 };
 
 compile_at_BEGIN currently causes some issues when used with Perl 5.8.
-See L<BUGS, CAVEATS and NOTES>.
+See L<Earlier Perl versions>.
 
 =head3 debug
 
