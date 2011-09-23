@@ -1187,6 +1187,14 @@ C<$class> as your invocant like the normal Perl 5 convention.
 There may be special syntax to separate class from object methods in
 the future.
 
+=head2 Mixing C<compile_at_BEGIN> with C<into>
+
+You cannot turn off C<compile_at_BEGIN> for methods inserted into
+another package.
+
+    # sorry, this doesn't work
+    use Method::Signatures { into => 'Some::Other::Package', compile_at_BEGIN => 0 };
+
 =head2 What about the return value?
 
 Currently there is no support for declaring the type of the return
