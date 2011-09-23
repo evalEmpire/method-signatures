@@ -10,7 +10,7 @@ build_requires:
 configure_requires:
   Module::Build: 0.26
 dynamic_config: 1
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.110580'
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -19,7 +19,10 @@ name: Method-Signatures
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 20110324.1600_001
+    version: 20110923
+  Method::Signatures::Modifiers:
+    file: lib/Method/Signatures/Modifiers.pm
+    version: 0
   Method::Signatures::Parser:
     file: lib/Method/Signatures/Parser.pm
     version: 0
@@ -28,11 +31,15 @@ requires:
   Const::Fast: 0.006
   Data::Alias: 1.08
   Devel::BeginLift: 0.001001
-  Devel::Declare::MethodInstaller::Simple: 0.003003
+  Devel::Declare: 0.006002
+  Devel::Declare::MethodInstaller::Simple: 0.006002
+  Devel::Pragma: 0.40
+  Mouse: 0.64
   PPI: 1.203
+  Sub::Name: 0.03
   perl: v5.8.1
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
   license: http://dev.perl.org/licenses/
   repository: https://github.com/schwern/method-signatures/tree
-version: 20110324.1600_001
+version: 20110923
