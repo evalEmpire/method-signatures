@@ -59,9 +59,6 @@ Method::Signatures - method and function declarations with signatures and no sou
         print "$greeting, $place!\n";
     }
 
-    # Or, to install into another package (e.g. when bunding pragmas):
-
-    use Method::Signatures { into => 'Some::Other::Package' };
 
 =head1 DESCRIPTION
 
@@ -402,6 +399,41 @@ An anonymous method can be declared just like an anonymous sub.
     };
 
     $obj->$method(42);
+
+
+=head2 Options
+
+Method::Signatures takes some options at `use` time of the form
+
+    use Method::Signatures { option => "value", ... };
+
+=head3 compile_at_BEGIN
+
+By default, named methods and funcs are evaluated at compile time, as
+if they were in a BEGIN block, just like normal Perl named subs.  That
+means this will work:
+
+    echo("something");
+
+    # This function is compiled first
+    func echo($msg) { print $msg }
+
+You can turn this off lexically by setting compile_at_BEGIN to a false value.
+
+    use Method::Signatures { compile_at_BEGIN => 0 };
+
+compile_at_BEGIN currently causes some issues when used with Perl 5.8.
+
+=head3 debug
+
+When true, turns on debugging messages about compiling methods and
+funcs.  See L<DEBUGGING>.  The flag is currently global, but this may
+change.
+
+=head3 into
+
+    package My::Bundle::Of::Features;
+    use Method::Signatures { into => 'Some::Other::Package' };
 
 
 =head2 Differences from Perl 6
@@ -1159,6 +1191,16 @@ A syntax for function prototypes is being considered.
 
     func($foo, $bar?) is proto($;$)
 
+=head2 Devel::BeginLift problems with 5.8
+
+L<Devel::BeginLift> can cause some bizarre problems with Perl 5.8.
+The most noticable is if an error occurs at compile time, such as a
+strict error, perl might not notice until it tries to compile
+something else via an C<eval> or C<require> at which point perl will
+appear to fail where there is no reason to fail.
+
+Therefore, if your code is to bea compatible with 5.8, we recommend
+turning L<compile_at_BEGIN> off.
 
 =head2 Error checking
 
