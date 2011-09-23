@@ -8,7 +8,7 @@ use Test::More;
 use Test::Exception;
 
 
-use OverrideErrors;
+use OverrideErrors { compile_at_BEGIN => 0 };
 
 func biff (    $bar) {}
 func bamm (   :$bar) {}

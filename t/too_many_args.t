@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More;
 
-use Method::Signatures;
+use Method::Signatures { compile_at_BEGIN => 0 };
 
 func no_sig { return @_ }
 func no_args() { return @_ }
