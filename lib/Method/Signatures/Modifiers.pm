@@ -251,8 +251,14 @@ sub code_for
 Note that although this module causes all calls to
 L<MooseX::Method::Signatures> from within L<MooseX::Declare> to be
 completely I<replaced> by calls to L<Method::Signatures> (or calls to
-L<Method::Signatures::Modifiers>), L<MooseX::Method::Signatures> is
-still I<loaded> by L<MooseX::Declare>.  It's just never used.
+Method::Signatures::Modifiers), L<MooseX::Method::Signatures> is still
+I<loaded> by L<MooseX::Declare>.  It's just never used.
+
+The C<compile_at_BEGIN> flag to L<Method::Signatures> is ignored by
+Method::Signatures::Modifiers.  This is because parsing at
+compile-time can cause method modifiers to be added before the methods
+they are modifying are composed into the Moose classes.  Parsing of
+methods at run-time is compatible with L<MooseX::Method::Signatures>.
 
 
 =head1 THANKS

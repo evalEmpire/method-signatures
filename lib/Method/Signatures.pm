@@ -6,6 +6,7 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Data::Alias;
+use Devel::Pragma qw(:all);
 
 our $VERSION = '20110629.0000_0001';
 
@@ -58,9 +59,6 @@ Method::Signatures - method and function declarations with signatures and no sou
         print "$greeting, $place!\n";
     }
 
-    # Or, to install into another package (e.g. when bunding pragmas):
-
-    use Method::Signatures { into => 'Some::Other::Package' };
 
 =head1 DESCRIPTION
 
@@ -403,6 +401,42 @@ An anonymous method can be declared just like an anonymous sub.
     $obj->$method(42);
 
 
+=head2 Options
+
+Method::Signatures takes some options at `use` time of the form
+
+    use Method::Signatures { option => "value", ... };
+
+=head3 compile_at_BEGIN
+
+By default, named methods and funcs are evaluated at compile time, as
+if they were in a BEGIN block, just like normal Perl named subs.  That
+means this will work:
+
+    echo("something");
+
+    # This function is compiled first
+    func echo($msg) { print $msg }
+
+You can turn this off lexically by setting compile_at_BEGIN to a false value.
+
+    use Method::Signatures { compile_at_BEGIN => 0 };
+
+compile_at_BEGIN currently causes some issues when used with Perl 5.8.
+See L<Earlier Perl versions>.
+
+=head3 debug
+
+When true, turns on debugging messages about compiling methods and
+funcs.  See L<DEBUGGING>.  The flag is currently global, but this may
+change.
+
+=head3 into
+
+    package My::Bundle::Of::Features;
+    use Method::Signatures { into => 'Some::Other::Package' };
+
+
 =head2 Differences from Perl 6
 
 Method::Signatures is mostly a straight subset of Perl 6 signatures.
@@ -448,11 +482,16 @@ sub import {
     my $caller = caller;
     # default values
 
+    my $hints = my_hints;
+    $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = 1;  # default to on
+
     my $arg = shift;
     if (defined $arg) {
         if (ref $arg) {
             $DEBUG  = $arg->{debug}  if exists $arg->{debug};
             $caller = $arg->{into}   if exists $arg->{into};
+            $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN}
+                                     if exists $arg->{compile_at_BEGIN};
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
@@ -497,12 +536,25 @@ sub code_for {
 
     my $code = $self->SUPER::code_for($name);
 
-    if( defined $name ) {
+    # Make method and func act at compile time, if they're named and if we're
+    # configured to do that.
+    if( defined $name && $self->_do_compile_at_BEGIN ) {
         require Devel::BeginLift;
         Devel::BeginLift->setup_for_cv($code);
     }
 
     return $code;
+}
+
+
+# Check if compile_at_BEGIN is set in this scope.
+sub _do_compile_at_BEGIN {
+    my $hints = my_hints;
+
+    # Default to on.
+    return 1 if !exists $hints->{METHOD_SIGNATURES_compile_at_BEGIN};
+
+    return $hints->{METHOD_SIGNATURES_compile_at_BEGIN};
 }
 
 
@@ -1118,6 +1170,24 @@ Devel::Declare only affects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
 surprisingly stable.
 
+=head2 Earlier Perl versions
+
+In Perl 5.8.x, parsing of methods at compile-time has intermittent
+issues, at least for versions of L<Devel::BeginLift> 0.001003 and
+before.  It's possible it will be fixed in future versions of
+Devel::BeginLift.
+
+The most noticable is if an error occurs at compile time, such as a
+strict error, perl might not notice until it tries to compile
+something else via an C<eval> or C<require> at which point perl will
+appear to fail where there is no reason to fail.
+
+We recommend you use the L<compile_at_BEGIN> flag to turn off
+compile-time parsing.
+
+Method::Signatures cannot be used with Perl versions prior to 5.8
+because L<Devel::Declare> does not work with those earlier versions.
+
 =head2 What about class methods?
 
 Right now there's nothing special about class methods.  Just use
@@ -1125,6 +1195,14 @@ C<$class> as your invocant like the normal Perl 5 convention.
 
 There may be special syntax to separate class from object methods in
 the future.
+
+=head2 Mixing C<compile_at_BEGIN> with C<into>
+
+You cannot turn off C<compile_at_BEGIN> for methods inserted into
+another package.
+
+    # sorry, this doesn't work
+    use Method::Signatures { into => 'Some::Other::Package', compile_at_BEGIN => 0 };
 
 =head2 What about the return value?
 
@@ -1139,7 +1217,6 @@ subroutine signatures.  They don't work on methods anyway.
 A syntax for function prototypes is being considered.
 
     func($foo, $bar?) is proto($;$)
-
 
 =head2 Error checking
 
