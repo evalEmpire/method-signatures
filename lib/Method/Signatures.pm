@@ -1218,7 +1218,7 @@ strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
 appear to fail where there is no reason to fail.
 
-Therefore, if your code is to bea compatible with 5.8, we recommend
+Therefore, if your code is to be compatible with 5.8, we recommend
 turning L<compile_at_BEGIN> off.
 
 =head2 Error checking
