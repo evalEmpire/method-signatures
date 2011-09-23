@@ -431,12 +431,6 @@ When true, turns on debugging messages about compiling methods and
 funcs.  See L<DEBUGGING>.  The flag is currently global, but this may
 change.
 
-=head3 into
-
-    package My::Bundle::Of::Features;
-    use Method::Signatures { into => 'Some::Other::Package' };
-
-
 =head2 Differences from Perl 6
 
 Method::Signatures is mostly a straight subset of Perl 6 signatures.
@@ -1195,14 +1189,6 @@ C<$class> as your invocant like the normal Perl 5 convention.
 
 There may be special syntax to separate class from object methods in
 the future.
-
-=head2 Mixing C<compile_at_BEGIN> with C<into>
-
-You cannot turn off C<compile_at_BEGIN> for methods inserted into
-another package.
-
-    # sorry, this doesn't work
-    use Method::Signatures { into => 'Some::Other::Package', compile_at_BEGIN => 0 };
 
 =head2 What about the return value?
 
