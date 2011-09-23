@@ -1170,11 +1170,19 @@ Devel::Declare only affects compilation.  After that, it's a normal
 subroutine.  As such, for all that hairy magic, this module is
 surprisingly stable.
 
-=head2 Early Perl versions
+=head2 Earlier Perl versions
 
 In Perl 5.8.x, parsing of methods at compile-time has intermittent
 issues, at least for versions of L<Devel::BeginLift> 0.001003 and
-before.  We recommend you use the C<compile_at_BEGIN> flag to turn off
+before.  It's possible it will be fixed in future versions of
+Devel::BeginLift.
+
+The most noticable is if an error occurs at compile time, such as a
+strict error, perl might not notice until it tries to compile
+something else via an C<eval> or C<require> at which point perl will
+appear to fail where there is no reason to fail.
+
+We recommend you use the L<compile_at_BEGIN> flag to turn off
 compile-time parsing.
 
 Method::Signatures cannot be used with Perl versions prior to 5.8
@@ -1209,17 +1217,6 @@ subroutine signatures.  They don't work on methods anyway.
 A syntax for function prototypes is being considered.
 
     func($foo, $bar?) is proto($;$)
-
-=head2 Devel::BeginLift problems with 5.8
-
-L<Devel::BeginLift> can cause some bizarre problems with Perl 5.8.
-The most noticable is if an error occurs at compile time, such as a
-strict error, perl might not notice until it tries to compile
-something else via an C<eval> or C<require> at which point perl will
-appear to fail where there is no reason to fail.
-
-Therefore, if your code is to be compatible with 5.8, we recommend
-turning L<compile_at_BEGIN> off.
 
 =head2 Error checking
 
