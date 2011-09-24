@@ -1,3 +1,9 @@
+20110923.1726  Fri Sep 23 17:27:47 PDT 2011
+    Distribution Fixes
+    * 20110923 had a bad signature file because gpg is broken on my laptop.
+      Releasing without a signature.  1 aM n0t A hax0r!!!1!1!
+
+
 20110923  Fri Sep 23 16:13:46 PDT 2011  [It Takes All Types]
     Incompatible Changes
     * Slurpy parameters (@foo and %bar) now must come at the end.
