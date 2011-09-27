@@ -98,7 +98,7 @@ SKIP:
         before      =>  'Int',
         around      =>  'Int',
         after       =>  'Num',
-        override    =>  'Num',
+        override    =>  'Int',
         augment     =>  'Num',
     );
 

@@ -29,7 +29,7 @@ class Foo::Bar extends Foo
 
     after test_after (Int $num) {}
 
-    after test_override (Int $num)
+    override test_override (Int $num)
     {
         return super;
     }
