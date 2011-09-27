@@ -202,7 +202,7 @@ sub import
 #   *   Figures out which modifier we're adding (e.g., before, after, around, etc) and then figures
 #       out which method to call to add that modifier.
 #
-#   *   Checks for a few basic errors (unknown type of modifier, modifier to an unknown method).
+#   *   Checks for basic errors (such as unknown type of modifier).
 #
 #   *   Adds the modifier.
 #
@@ -229,8 +229,6 @@ sub code_for
 
                 require Carp;
             Carp::confess("cannot create method modifier for $modtype") unless $meta->can($add);
-            Carp::confess("cannot create $modtype modifier in package $class for non-existent method $name")
-                    unless $class->can($name);
 
             no strict 'refs';
             my $code = subname "${class}::$name" => shift;
