@@ -1,3 +1,8 @@
+20110927.2305_001  Tue Sep 27 23:05:02 PDT 2011
+    Bug Fix
+    * Remove spurious error for modifiers in roles [github #36]
+
+
 20110923.1726  Fri Sep 23 17:27:47 PDT 2011
     Distribution Fixes
     * 20110923 had a bad signature file because gpg is broken on my laptop.

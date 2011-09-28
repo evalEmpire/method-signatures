@@ -5,7 +5,7 @@ examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
 lib/Method/Signatures/Parser.pm
-MANIFEST			This list of files
+MANIFEST            This list of files
 MANIFEST.SKIP
 META.json
 META.yml
@@ -43,6 +43,7 @@ t/lib/MooseLoadTest.pm
 t/lib/MooseRoleTest.pm
 t/lib/MouseRoleTest.pm
 t/lib/MS_MXD_Replace.pm
+t/lib/MS_MXD_Role.pm
 t/lib/MS_MXD_Sub.pm
 t/lib/My/Declare.pm
 t/lib/NoOverrides.pm
@@ -53,6 +54,7 @@ t/lib/OverrideTypeCheck.pm
 t/lib/UnknownType.pm
 t/method.t
 t/mxd-replace.t
+t/mxd-role.t
 t/mxd-sub.t
 t/named.t
 t/odd_number.t
