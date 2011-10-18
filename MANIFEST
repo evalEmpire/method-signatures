@@ -5,7 +5,7 @@ examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
 lib/Method/Signatures/Parser.pm
-MANIFEST            This list of files
+MANIFEST			This list of files
 MANIFEST.SKIP
 META.json
 META.yml
@@ -27,6 +27,7 @@ t/examples/strip_ws.t
 t/func.t
 t/into.t
 t/invocant.t
+t/larna.t
 t/lib/Bad.pm
 t/lib/BadType.pm
 t/lib/BarfyDie.pm
