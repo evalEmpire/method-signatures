@@ -252,6 +252,19 @@ sub code_for
 }
 
 
+# Generally, the code that calls inject_if_block decides what to put in front of the actual
+# subroutine body.  For instance, if it's an anonymous sub, the $before parameter would contain
+# "sub ".  In our case, we need the "sub " all the time.
+sub inject_if_block
+{
+    my ($self, $inject, $before) = @_;
+
+    $before = 'sub ' unless $before;
+
+    $self->SUPER::inject_if_block($inject, $before);
+}
+
+
 =head1 BUGS, CAVEATS and NOTES
 
 Note that although this module causes all calls to
