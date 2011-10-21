@@ -8,7 +8,7 @@ use Method::Signatures::Parser;
 use Data::Alias;
 use Devel::Pragma qw(:all);
 
-our $VERSION = '20111017.2055_002';
+our $VERSION = '20111020';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 

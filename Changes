@@ -1,6 +1,9 @@
+20111020  Thu Oct 20 17:00:29 PDT 2011
+    Promoted to full release
+
 20111017.2055_002  Mon Oct 17 20:55:09 PDT 2011
-	Bug Fix
-	* Move inject_if_block code back to MSM [github #40]
+    Bug Fix
+    * Move inject_if_block code back to MSM [github #40]
 
 20110927.2305_001  Tue Sep 27 23:05:02 PDT 2011
     Bug Fix
