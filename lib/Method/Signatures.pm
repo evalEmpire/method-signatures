@@ -994,7 +994,6 @@ sub type_check
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
-        $value = defined $value ? qq{"$value"} : 'undef';
         $class->type_error($type, $value, $name);
     }
 
@@ -1006,6 +1005,7 @@ sub type_check
 sub type_error
 {
     my ($class, $type, $value, $name) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
