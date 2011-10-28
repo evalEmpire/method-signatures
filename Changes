@@ -1,3 +1,9 @@
+20111028
+    Optimizations
+    * Type checks significantly faster.  40% faster with Mouse.
+      20% faster with Moose. [github #42]
+
+
 20111020  Thu Oct 20 17:00:29 PDT 2011
     Promoted to full release
 
