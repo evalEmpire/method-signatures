@@ -6,7 +6,7 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Data::Alias;
-use Devel::Pragma qw(:all);
+use Devel::Pragma qw(my_hints);
 
 our $VERSION = '20111020';
 
@@ -891,7 +891,7 @@ sub inject_for_type_check
     # It only happens when type_check() has not been overridden.
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
-          $class, $sig->{type}, $class, $sig->{type}, $sig->{passed_in};
+          __PACKAGE__, $sig->{type}, $class, $sig->{type}, $sig->{passed_in};
         my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
           $class, $sig->{type}, $sig->{passed_in}, $sig->{name};
         my $code = "$error if ";
