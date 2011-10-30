@@ -6,7 +6,7 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Data::Alias;
-use Devel::Pragma qw(:all);
+use Devel::Pragma qw(my_hints);
 
 our $VERSION = '20111020';
 
@@ -885,8 +885,26 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    my $check_exists = $sig->{is_optional} ? "if $sig->{check_exists}" : '';
-    return "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}') $check_exists;";
+    my $check_exists = $sig->{is_optional} ? "$sig->{check_exists}" : '';
+
+    # This is an optimization to unroll typecheck which makes Mouse types about 40% faster.
+    # It only happens when type_check() has not been overridden.
+    if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
+        my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
+          __PACKAGE__, $sig->{type}, $class, $sig->{type}, $sig->{passed_in};
+        my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
+          $class, $sig->{type}, $sig->{passed_in}, $sig->{name};
+        my $code = "$error if ";
+        $code .= "$check_exists && " if $check_exists;
+        $code .= "!$check";
+        return "$code;";
+    }
+    # If a subclass has overridden type_check(), we must use that.
+    else {
+        my $code = "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}')";
+        $code .= "if $check_exists" if $check_exists;
+        return "$code;";
+    }
 }
 
 # This is a common function to throw errors so that they appear to be from the point of the calling
@@ -930,7 +948,7 @@ sub required_arg {
 # that we only have to run down any given constraint once, the first time it's seen, and then after
 # that it's simple enough to pluck back out.  This is very similar to how MooseX::Params::Validate
 # does it.
-my %mutc;
+our %mutc;
 
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
@@ -994,7 +1012,6 @@ sub type_check
     # throw an error if the type check fails
     unless ($mutc{cache}->{$type}->check($value))
     {
-        $value = defined $value ? qq{"$value"} : 'undef';
         $class->type_error($type, $value, $name);
     }
 
@@ -1006,6 +1023,7 @@ sub type_check
 sub type_error
 {
     my ($class, $type, $value, $name) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
