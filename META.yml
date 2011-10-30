@@ -26,6 +26,8 @@ provides:
   Method::Signatures::Parser:
     file: lib/Method/Signatures/Parser.pm
     version: 0
+recommends:
+  Moose: 0.96
 requires:
   Any::Moose: 0.11
   Const::Fast: 0.006

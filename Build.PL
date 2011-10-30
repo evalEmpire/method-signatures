@@ -36,6 +36,10 @@ my $build = Module::Build->new(
         'Sub::Name'         => '0.03',
     },
 
+    recommends      => {
+        'Moose'             => '0.96',
+    },
+
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
 
     meta_merge      => {
