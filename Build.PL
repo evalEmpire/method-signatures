@@ -19,6 +19,7 @@ my $build = Module::Build->new(
         'Test::More'        => '0.82',
         'Test::Builder'     => '0.82',
         'Test::Warn'        => '0.10',
+        'Test::Exception'   => '0.31',
     },
 
     requires        => {
