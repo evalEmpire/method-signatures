@@ -5,6 +5,7 @@ author:
 build_requires:
   Module::Build: 0.26
   Test::Builder: 0.82
+  Test::Exception: 0.31
   Test::More: 0.82
   Test::Warn: 0.10
 configure_requires:
