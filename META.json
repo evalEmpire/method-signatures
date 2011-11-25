@@ -4,7 +4,7 @@
       "Michael G Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.112621",
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110930",
    "license" : [
       "perl_5"
    ],
@@ -18,7 +18,7 @@
          "requires" : {
             "Module::Build" : "0.26",
             "Test::Builder" : "0.82",
-            "Test::Exception" : "0.31",
+            "Test::Exception" : "0.29",
             "Test::More" : "0.82",
             "Test::Warn" : "0.10"
          }
@@ -50,7 +50,7 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20111020"
+         "version" : "20111125"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
@@ -73,5 +73,5 @@
          "url" : "https://github.com/schwern/method-signatures/tree"
       }
    },
-   "version" : "20111020"
+   "version" : "20111125"
 }
