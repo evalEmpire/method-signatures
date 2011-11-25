@@ -1,7 +1,11 @@
-20111028
+20111125    Fri Nov 25 01:15:50 PST 2011
     Optimizations
     * Type checks significantly faster.  40% faster with Mouse.
       20% faster with Moose. [github #42]
+
+    Distribution Fixes
+    * Added Test::Exception as a build requirement [github #43]
+    * Added Moose as a recommended module (with version number)
 
 
 20111020  Thu Oct 20 17:00:29 PDT 2011
