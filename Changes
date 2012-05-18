@@ -1,6 +1,9 @@
-20120514.0117_001	Mon May 14 01:17:38 PDT 2012
+20120517    Thu May 17 20:14:34 PDT 2012
+    Promoted to full release
+
+20120514.0117_001   Mon May 14 01:17:38 PDT 2012
     Distribution Fixes
-	* Added version number to Method::Signatures::Modifiers.
+    * Added version number to Method::Signatures::Modifiers.
 
 
 20111125    Fri Nov 25 01:15:50 PST 2011
