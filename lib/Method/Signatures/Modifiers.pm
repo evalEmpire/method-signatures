@@ -7,7 +7,7 @@ use Sub::Name;
 
 use base 'Method::Signatures';
 
-our $VERSION = '20120517';
+our $VERSION = '20120523';
 
 
 =head1 NAME
