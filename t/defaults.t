@@ -28,14 +28,35 @@ use Test::More 'no_plan';
     is( Stuff->minus(2, 3),     2 - 3 );
 
 
-    # Test that undef overrides defaults
-    method echo($message = "what?") {
-        return $message
-    }
-
-    is( Stuff->echo(),          "what?" );
+    # Test that undef, 0 and '' override defaults
+    method echo($message = 'what?') { return $message }
+    is( Stuff->echo(),          'what?' );
     is( Stuff->echo(undef),     undef   );
-    is( Stuff->echo("who?"),    'who?'  );
+    is( Stuff->echo(''),        ''      );
+    is( Stuff->echo(0),         0       );
+    is( Stuff->echo('who?'),    'who?'  );
+
+    # Test defaults modifiers
+    method echo_or ($message ||= 'what?') { return $message }
+    is( Stuff->echo_or(),          'what?' );
+    is( Stuff->echo_or(undef),     'what?' );
+    is( Stuff->echo_or(''),        'what?' );
+    is( Stuff->echo_or(0),         'what?' );
+    is( Stuff->echo_or('who?'),    'who?'  );
+
+    method echo_dor($message //= 'what?') { return $message }
+    is( Stuff->echo_dor(),          'what?' );
+    is( Stuff->echo_dor(undef),     'what?' );
+    is( Stuff->echo_dor(''),        ''      );
+    is( Stuff->echo_dor(0),         0       );
+    is( Stuff->echo_dor('who?'),    'who?'  );
+
+    method echo_eor($message ''= 'what?') { return $message }
+    is( Stuff->echo_eor(),          'what?' );
+    is( Stuff->echo_eor(undef),     'what?' );
+    is( Stuff->echo_eor(''),        'what?' );
+    is( Stuff->echo_eor(0),         0       );
+    is( Stuff->echo_eor('who?'),    'who?'  );
 
 
     # Test that you can reference earlier args in a default

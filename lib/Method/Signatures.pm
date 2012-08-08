@@ -188,7 +188,7 @@ C<method> has an implied default of C<$self:>.  C<func> has no invocant.
 
 =head3 Defaults
 
-Each parameter can be given a default with the C<$arg = EXPR> syntax.
+Each parameter can be given a default with the C<$arg [MOD]= EXPR> syntax.
 For example,
 
     method add($this = 23, $that = 42) {
@@ -208,12 +208,23 @@ Almost any expression can be used as a default.
         ...
     }
 
-Defaults will only be used if the argument is not passed in at all.
-Passing in C<undef> will override the default.  That means...
+Without modifier defaults will only be used if the argument is not
+passed in at all. Passing in C<undef> will override the default.
+That means...
 
     Class->add();            # $this = 23, $that = 42
     Class->add(99);          # $this = 99, $that = 42
     Class->add(99, undef);   # $this = 99, $that = undef
+
+Modifier can be used in front of equal sign to change when
+default is used. With C<//=> default used when argument is undefined.
+With C<''=> - when argument is empty string or undefined.
+With C<||=> any false value is replaced with default.
+Behaviour is not yet defined for slurpy arguments.
+
+    method defined_or_default   ($this //= 'that') {...}
+    method not_empty_or_default ($this ''= 'that') {...}
+    method or_default           ($this ||= 'that') {...}
 
 Earlier parameters may be used in later defaults.
 
@@ -652,7 +663,8 @@ sub parse_func {
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
         }
-        $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
+        @{$sig}{'default', 'default_mod'} = ($2, $1)
+            if $proto =~ s{ \s* (|\|\||//|'')= \s* (.*) }{}x;
 
         my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
         $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
@@ -850,8 +862,22 @@ sub inject_for_sig {
 
     my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
-    if( defined $sig->{default} ) {
+    if( defined $sig->{default} && !$sig->{default_mod} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
+    }
+    elsif ( defined $sig->{default} ) {
+        my $value = $sig->{named} ? "\$args{$sig->{name}}" : "\$_[$idx]";
+        my $check;
+        if ( $sig->{default_mod} eq '||' ) {
+            $check = $value;
+        }
+        elsif ( $sig->{default_mod} eq '//' ) {
+            $check = "defined($value)";
+        }
+        elsif ( $sig->{default_mod} eq "''" ) {
+            $check = "defined($value) && length($value)";
+        }
+        $rhs = "$check ? ($rhs) : ($sig->{default})";
     }
 
     if( !$sig->{is_optional} ) {
