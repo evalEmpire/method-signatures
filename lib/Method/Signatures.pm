@@ -5,6 +5,7 @@ use warnings;
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
+use B::Hooks::EndOfScope;
 use Data::Alias;
 use Devel::Pragma qw(my_hints);
 
@@ -511,19 +512,44 @@ sub import {
 }
 
 
-sub code_for {
-    my($self, $name) = @_;
+# Generally, the code that calls inject_if_block decides what to put in front of the actual
+# subroutine body.  For instance, if it's an anonymous sub, the $before parameter would contain
+# "sub ".  In our case, we want the "sub " all the time: it fixes a weird error on Perl 5.10,
+# and doesn't cause any problems anywhere else.
+sub inject_if_block
+{
+    my ($self, $inject, $before) = @_;
 
-    my $code = $self->SUPER::code_for($name);
+    my $name = $self->{function_name};
 
-    # Make method and func act at compile time, if they're named and if we're
-    # configured to do that.
+    # Named function compiled at BEGIN time
     if( defined $name && $self->_do_compile_at_BEGIN ) {
-        require Devel::BeginLift;
-        Devel::BeginLift->setup_for_cv($code);
+        # Devel::Declare needs the code ref which has been generated.
+        # Forunately, "sub foo {...}" happens at compile time, so we
+        # can use \&foo at runtime even if it comes before the sub
+        # declaration in the code!
+        $before .= qq[\\&$name; sub $name ];
+    }
+    # Anonymous function or compiled at runtime.
+    else {
+        $before .= qq[sub ];
     }
 
-    return $code;
+    DEBUG( "inject: $before$inject\n" );
+    $self->SUPER::inject_if_block($inject, $before);
+}
+
+
+sub inject_scope {
+  my $class = shift;
+  my $inject = shift;
+  on_scope_end {
+      my $linestr = Devel::Declare::get_linestr;
+      return unless defined $linestr;
+      my $offset  = Devel::Declare::get_linestr_offset;
+      substr( $linestr, $offset, 0 ) = ';' . $inject;
+      Devel::Declare::set_linestr($linestr);
+  };
 }
 
 
@@ -552,6 +578,16 @@ sub _strip_ws {
 sub _parser_is_fucked {
     local $@;
     return eval 42 ? 0 : 1;
+}
+
+
+sub strip_name {
+    my $self = shift;
+
+    my $name = $self->SUPER::strip_name(@_);
+    $self->{function_name} = $name;
+
+    return $name;
 }
 
 
@@ -689,7 +725,6 @@ sub parse_func {
 
     # Then turn it into Perl code
     my $inject = $self->inject_from_signature($signature);
-    DEBUG( "inject: $inject\n" );
     return $inject;
 }
 
