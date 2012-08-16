@@ -216,8 +216,6 @@ sub import
 #
 #   *   Adds the modifier.
 #
-#   *   No BeginLift.
-#
 #   *   If it's _not_ for a modifier, just fall through to code_for() in Method::Signatures.
 #
 # And that's all this code does.
@@ -265,6 +263,10 @@ sub inject_if_block
 
     $self->SUPER::inject_if_block($inject, $before);
 }
+
+
+# Always compile at runtime
+sub _do_compile_at_BEGIN { 0 }
 
 
 =head1 BUGS, CAVEATS and NOTES
