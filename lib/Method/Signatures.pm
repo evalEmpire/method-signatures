@@ -5,7 +5,6 @@ use warnings;
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
-use B::Hooks::EndOfScope;
 use Data::Alias;
 use Devel::Pragma qw(my_hints);
 
@@ -542,19 +541,6 @@ sub inject_if_block
 
     DEBUG( "inject: $before$inject\n" );
     $self->SUPER::inject_if_block($inject, $before);
-}
-
-
-sub inject_scope {
-  my $class = shift;
-  my $inject = shift;
-  on_scope_end {
-      my $linestr = Devel::Declare::get_linestr;
-      return unless defined $linestr;
-      my $offset  = Devel::Declare::get_linestr_offset;
-      substr( $linestr, $offset, 0 ) = ';' . $inject;
-      Devel::Declare::set_linestr($linestr);
-  };
 }
 
 
