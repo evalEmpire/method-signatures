@@ -1222,11 +1222,6 @@ surprisingly stable.
 
 =head2 Earlier Perl versions
 
-In Perl 5.8.x, parsing of methods at compile-time has intermittent
-issues, at least for versions of L<Devel::BeginLift> 0.001003 and
-before.  It's possible it will be fixed in future versions of
-Devel::BeginLift.
-
 The most noticable is if an error occurs at compile time, such as a
 strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
@@ -1334,8 +1329,7 @@ makes the subroutine names come out right in caller().
 
 And thanks to Florian Ragwitz for his parallel
 L<MooseX::Method::Signatures> module from which I borrow ideas and
-code and L<Devel::BeginLift> which lets the methods be declared
-at compile time.
+code.
 
 
 =head1 LICENSE
