@@ -520,7 +520,10 @@ sub inject_if_block
 {
     my ($self, $inject, $before) = @_;
 
-    my $name = $self->{function_name};
+    my $name  = $self->{function_name};
+    my $attrs = $self->{attributes};
+
+    DEBUG( "attributes: $attrs\n" );
 
     # Named function compiled at BEGIN time
     if( defined $name && $self->_do_compile_at_BEGIN ) {
@@ -528,12 +531,14 @@ sub inject_if_block
         # Forunately, "sub foo {...}" happens at compile time, so we
         # can use \&foo at runtime even if it comes before the sub
         # declaration in the code!
-        $before .= qq[\\&$name; sub $name ];
+        $before = qq[\\&$name; sub $name ];
     }
     # Anonymous function or compiled at runtime.
     else {
-        $before .= qq[sub ];
+        $before = qq[sub ];
     }
+
+    $before .= $attrs if $attrs;
 
     DEBUG( "inject: $before$inject\n" );
     $self->SUPER::inject_if_block($inject, $before);
@@ -581,6 +586,7 @@ sub _parser_is_fucked {
 }
 
 
+# Capture the function name
 sub strip_name {
     my $self = shift;
 
@@ -588,6 +594,17 @@ sub strip_name {
     $self->{function_name} = $name;
 
     return $name;
+}
+
+
+# Capture the attributes
+sub strip_attrs {
+    my $self = shift;
+
+    my $attrs = $self->SUPER::strip_attrs(@_);
+    $self->{attributes} = $attrs;
+
+    return $attrs;
 }
 
 
