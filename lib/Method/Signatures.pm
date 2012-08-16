@@ -520,7 +520,7 @@ sub inject_if_block
     my ($self, $inject, $before) = @_;
 
     my $name  = $self->{function_name};
-    my $attrs = $self->{attributes};
+    my $attrs = $self->{attributes} || '';
 
     DEBUG( "attributes: $attrs\n" );
 
@@ -530,16 +530,14 @@ sub inject_if_block
         # Forunately, "sub foo {...}" happens at compile time, so we
         # can use \&foo at runtime even if it comes before the sub
         # declaration in the code!
-        $before = qq[\\&$name; sub $name ];
+        $before = qq[\\&$name; sub $name $attrs ];
     }
     # Anonymous function or compiled at runtime.
-    else {
-        $before = qq[sub ];
+    elsif( defined $name ) {
+        $before = qq[sub $attrs ];
     }
 
-    $before .= $attrs if $attrs;
-
-    DEBUG( "inject: $before$inject\n" );
+    DEBUG( "inject: $inject\n" );
     $self->SUPER::inject_if_block($inject, $before);
 }
 
