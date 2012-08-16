@@ -521,31 +521,24 @@ sub inject_if_block
     my ($self, $inject, $before) = @_;
 
     my $name = $self->{function_name};
+
     # Named function compiled at BEGIN time
     if( defined $name && $self->_do_compile_at_BEGIN ) {
-        $before .= qq[sub {}; BEGIN { no warnings "once"; \*${name} = sub ];
+        # Devel::Declare needs the code ref which has been generated.
+        # Forunately, "sub foo {...}" happens at compile time, so we
+        # can use \&foo at runtime even if it comes before the sub
+        # declaration in the code!
+        $before .= qq[\\&$name; sub $name ];
     }
-    # Named function, compiled at run time
-    elsif( defined $name ) {
-        # The do block is simply to balance out the braces since we don't have
-        # a BEGIN block.
-        $before .= qq[sub {}; do { no warnings "once"; \*${name} = sub ];
-    }
-    # Anonymous function
+    # Anonymous function or compiled at runtime.
     else {
-        $before .= qq[do { sub ];
+        $before .= qq[sub ];
     }
 
     DEBUG( "inject: $before$inject\n" );
     $self->SUPER::inject_if_block($inject, $before);
 }
 
-sub code_for {
-    my $self = shift;
-    my $name = shift;
-
-    return sub {};
-}
 
 sub inject_scope {
   my $class = shift;
@@ -554,7 +547,7 @@ sub inject_scope {
       my $linestr = Devel::Declare::get_linestr;
       return unless defined $linestr;
       my $offset  = Devel::Declare::get_linestr_offset;
-      substr( $linestr, $offset, 0 ) = '};' . $inject;
+      substr( $linestr, $offset, 0 ) = ';' . $inject;
       Devel::Declare::set_linestr($linestr);
   };
 }
