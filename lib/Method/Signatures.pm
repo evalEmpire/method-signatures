@@ -907,6 +907,11 @@ sub inject_for_type_check
     }
 }
 
+# This is the base level of the call stack at which to start looking
+# for the name of the package to report in the error message.
+#
+sub signature_error_caller_level { 0 };
+
 # This is a common function to throw errors so that they appear to be from the point of the calling
 # sub, not any of the Method::Signatures subs.
 sub signature_error {
@@ -922,7 +927,7 @@ sub signature_error {
     push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
     my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
 
-    my $level = 0;
+    my $level = $class->signature_error_caller_level;
     my ($pack, $file, $line, $method);
     do {
         ($pack, $file, $line, $method) = caller(++$level);
@@ -1130,6 +1135,29 @@ override this.  If you'd like to have Method::Signatures errors give
 full stack traces (similar to C<$Carp::Verbose>), have a look at
 L<Carp::Always>.
 
+=head2 signature_error_caller_level
+
+When C<signature_error> is called, it looks at the call stack to
+determine the name of the package and method to report in the error
+message.  C<signature_error_caller_level> is a class method that
+returns the level of the call stack at which to start looking
+(default: 0).  Change it if you need to subclass C<signature_error>
+in a way that adds extra levels to the call stack.  For example:
+
+    package My::Method::Signatures;
+
+    use Moose;
+    extends 'Method::Signatures';
+
+    sub signature_error_caller_level { 2 }
+
+    override signature_error => sub {
+        eval { super() };
+        if ($@) {
+            die bless { message => $@ }, 'My::ExceptionClass';
+        }
+    };      
+        
 =head2 type_check
 
 This is a class method which is called to verify that parameters have
