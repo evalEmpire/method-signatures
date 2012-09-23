@@ -652,11 +652,16 @@ sub parse_func {
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
         }
-        $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
+        if ($proto =~ s{ \s* //= \s* (.*) }{}x) {
+            $sig->{undef_default} = $1
+        }
+        elsif ($proto =~ s{ \s* = \s* (.*) }{}x) {
+            $sig->{default} = $1
+        }
 
         my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
         $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named} or $sig->{is_slurpy});
+        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or exists $sig->{undef_default} or $sig->{named} or $sig->{is_slurpy});
         $sig->{is_optional} = 0 if $name =~ s{\!$}{};
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
@@ -852,6 +857,9 @@ sub inject_for_sig {
     # Handle a default value
     if( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
+    }
+    elsif( defined $sig->{undef_default} ) {
+        $rhs = "($rhs) // ($sig->{undef_default})";
     }
 
     if( !$sig->{is_optional} ) {
