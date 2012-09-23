@@ -661,7 +661,12 @@ sub parse_func {
 
         my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
         $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or exists $sig->{undef_default} or $sig->{named} or $sig->{is_slurpy});
+        $sig->{is_optional} = (     $name =~ s{\?$}{}
+                                    or exists $sig->{default}
+                                    or exists $sig->{undef_default}
+                                    or $sig->{named}
+                                    or $sig->{is_slurpy}
+                              );
         $sig->{is_optional} = 0 if $name =~ s{\!$}{};
         $sig->{sigil}       = $sigil;
         $sig->{name}        = $name;
