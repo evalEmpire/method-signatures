@@ -208,12 +208,52 @@ Almost any expression can be used as a default.
         ...
     }
 
-Defaults will only be used if the argument is not passed in at all.
+Normally, defaults will only be used if the argument is not passed in at all.
 Passing in C<undef> will override the default.  That means...
 
     Class->add();            # $this = 23, $that = 42
     Class->add(99);          # $this = 99, $that = 42
     Class->add(99, undef);   # $this = 99, $that = undef
+
+However, you can specify additional conditions under which a default is
+also to be used, using a trailing C<when>. For example:
+
+    # Use default if no argument passed
+    method get_results($how_many = 1) {...}
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many = 1 when undef) {...}
+
+    # Use default if no argument passed OR argument is empty string
+    method get_results($how_many = 1 when "") {...}
+
+    # Use default if no argument passed OR argument is zero
+    method get_results($how_many = 1 when 0) {...}
+
+    # Use default if no argument passed OR argument is zero or less
+    method get_results($how_many = 1 when sub{ $_[0] <= 0 }) {...}
+
+    # Use default if no argument passed OR argument is invalid
+    method get_results($how_many = 1 when sub{ !valid($_[0]) }) {...}
+
+In other words, if you include a C<when I<value>> after the default,
+the default is still used if the argument is missing, but is also
+used if the argument smart-matches the specified I<value>.
+
+Note the final two examples above use anonymous subroutines to conform
+their complex tests to the requirements of the smartmatch operator.
+Because this is useful, but syntactically clumsy, there is also a
+short-cut for this behaviour. If the test after C<when> consists of a
+block, the block is executed as the defaulting test, with the actual
+argument value aliased to C<$_> (just like in a C<grep> block).
+So the final two examples above could also be written:
+
+    # Use default if no argument passed OR argument is zero or less
+    method get_results($how_many = 1 when {$_ <= 0}) {...}
+
+    # Use default if no argument passed OR argument is invalid
+    method get_results($how_many = 1 when {!valid($_)}) } {...}
+
 
 Earlier parameters may be used in later defaults.
 
@@ -652,18 +692,15 @@ sub parse_func {
         while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
             $sig->{traits}{$1}++;
         }
-        if ($proto =~ s{ \s* //= \s* (.*) }{}x) {
-            $sig->{undef_default} = $1
-        }
-        elsif ($proto =~ s{ \s* = \s* (.*) }{}x) {
-            $sig->{default} = $1
+        if ($proto =~ s{ \s* = \s* (?: (.*) \s+ when \s* (.+) | (.*) ) }{}x) {
+            $sig->{default}      = $1 // $3;
+            $sig->{default_when} = $2;
         }
 
         my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
         $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
         $sig->{is_optional} = (     $name =~ s{\?$}{}
                                     or exists $sig->{default}
-                                    or exists $sig->{undef_default}
                                     or $sig->{named}
                                     or $sig->{is_slurpy}
                               );
@@ -860,11 +897,25 @@ sub inject_for_sig {
 
     my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
     # Handle a default value
-    if( defined $sig->{default} ) {
-        $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
+    if( defined $sig->{default_when} ) {
+        # Fail if smartmatching not available
+        if ($] < 5.010) {
+            my ($file, $line) = _carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
+            die "Invalid parameter definition for $sigil$name at $file line $line\n",
+                "('when' modifier only available under Perl 5.10 or later)\n";
+        }
+        # Handle default with 'when { block using $_ }'
+        elsif ($sig->{default_when} =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs) {
+            $rhs = "$check_exists && do{ no warnings; !grep $sig->{default_when} $rhs} ? ($rhs) : ($sig->{default})";
+        }
+        # Handle default with 'when anything_else'
+        else {
+            $rhs = "$check_exists && !do{ no warnings; $rhs ~~ $sig->{default_when}} ? ($rhs) : ($sig->{default})";
+        }
     }
-    elsif( defined $sig->{undef_default} ) {
-        $rhs = "($rhs) // ($sig->{undef_default})";
+    # Handle simple defaults
+    elsif( defined $sig->{default} ) {
+        $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
     if( !$sig->{is_optional} ) {
@@ -926,6 +977,14 @@ sub signature_error {
     my ($proto, $msg) = @_;
     my $class = ref $proto || $proto;
 
+    my ($file, $line, $method) = _carp_location_for($class);
+    die "In call to $method(), $msg at $file line $line.\n";
+}
+
+sub _carp_location_for {
+    my ($class, $target) = @_;
+    $target = qr{(?!)} if !$target;
+
     # using @CARP_NOT here even though we're not using Carp
     # who knows? maybe someday Carp will be capable of doing what we want
     # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
@@ -939,9 +998,9 @@ sub signature_error {
     my ($pack, $file, $line, $method);
     do {
         ($pack, $file, $line, $method) = caller(++$level);
-    } while $method =~ /$skip/ or $pack =~ /$skip/;
+    } while $method !~ $target and $method =~ /$skip/ or $pack =~ /$skip/;
 
-    die "In call to $method(), $msg at $file line $line.\n";
+    return ($file, $line, $method);
 }
 
 sub required_arg {

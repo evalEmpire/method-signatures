@@ -1,9 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More 'no_plan';
 
 {
     package Stuff;
@@ -11,42 +11,44 @@ use Test::More;
     use Test::More;
     use Method::Signatures;
 
-    method add($this = 23 when undef, $that = 42 when undef) {
+    method add($this = 23 when '', $that = 42 when '') {
+        no warnings 'uninitialized';
         return $this + $that;
     }
 
-    method minus($this is ro = 23 when undef, $that is ro = 42 when undef) {
+    method minus($this is ro = 23 when '', $that is ro = 42 when "") {
         return $this - $that;
     }
 
     is( Stuff->add(),      23 + 42 );
-    is( Stuff->add(undef), 23 + 42 );
+    is( Stuff->add(''),    23 + 42 );
+    is( Stuff->add(undef),      42 );
     is( Stuff->add(99),    99 + 42 );
     is( Stuff->add(2,3),   5 );
 
     is( Stuff->minus(),         23 - 42 );
-    is( Stuff->minus(undef),     23 - 42 );
+    is( Stuff->minus(''),       23 - 42 );
     is( Stuff->minus(99),       99 - 42 );
     is( Stuff->minus(2, 3),     2 - 3 );
 
 
-    # Test again that undef doesn't override defaults
-    method echo($message = "what?" when undef) {
+    # Test again that empty string doesn't override defaults
+    method echo($message = "what?" when q{}) {
         return $message
     }
 
     is( Stuff->echo(),          "what?" );
-    is( Stuff->echo(undef),     "what?" );
+    is( Stuff->echo(''),        "what?" );
     is( Stuff->echo("who?"),    'who?'  );
 
 
     # Test that you can reference earlier args in a default
-    method copy_cat($this, $that = $this when undef) {
+    method copy_cat($this, $that = $this when '') {
         return $that;
     }
 
     is( Stuff->copy_cat("wibble"), "wibble" );
-    is( Stuff->copy_cat("wibble", undef), "wibble" );
+    is( Stuff->copy_cat("wibble", ""), "wibble" );
     is( Stuff->copy_cat(23, 42),   42 );
 }
 
@@ -56,21 +58,21 @@ use Test::More;
     use Test::More;
     use Method::Signatures;
 
-    method hello($msg = "Hello, world!" when undef) {
+    method hello($msg = "Hello, world!" when '') {
         return $msg;
     }
 
     is( Bar->hello,               "Hello, world!" );
-    is( Bar->hello(undef),        "Hello, world!" );
+    is( Bar->hello(q{}),        "Hello, world!" );
     is( Bar->hello("Greetings!"), "Greetings!" );
 
 
-    method hi($msg = q,Hi, when undef) {
+    method hi($msg = q,Hi, when '') {
         return $msg;
     }
 
     is( Bar->hi,                "Hi" );
-    is( Bar->hi(undef),         "Hi" );
+    is( Bar->hi(q{}),         "Hi" );
     is( Bar->hi("Yo"),          "Yo" );
 
 
@@ -81,7 +83,7 @@ use Test::More;
     is_deeply [Bar->list()],      [1,2,3];
 
 
-    method code($num, $code = sub { $num + 2 } when undef) {
+    method code($num, $code = sub { $num + 2 } when '') {
         return $code->();
     }
 
@@ -89,4 +91,3 @@ use Test::More;
 }
 
 
-done_testing;
