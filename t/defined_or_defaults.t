@@ -1,9 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More 'no_plan';
 
 {
     package Stuff;
@@ -11,11 +11,11 @@ use Test::More;
     use Test::More;
     use Method::Signatures;
 
-    method add($this = 23 when undef, $that = 42 when undef) {
+    method add($this //= 23, $that //= 42) {
         return $this + $that;
     }
 
-    method minus(Int|Str|Any $this is ro = 23 when undef, $that is ro = 42 when undef) {
+    method minus($this is ro //= 23, $that is ro //= 42) {
         return $this - $that;
     }
 
@@ -31,7 +31,7 @@ use Test::More;
 
 
     # Test again that undef doesn't override defaults
-    method echo($message = "what?" when undef) {
+    method echo($message //= "what?") {
         return $message
     }
 
@@ -41,7 +41,7 @@ use Test::More;
 
 
     # Test that you can reference earlier args in a default
-    method copy_cat($this, $that = $this when undef) {
+    method copy_cat($this, $that //= $this) {
         return $that;
     }
 
@@ -56,7 +56,7 @@ use Test::More;
     use Test::More;
     use Method::Signatures;
 
-    method hello($msg = "Hello, world!" when undef) {
+    method hello($msg //= "Hello, world!") {
         return $msg;
     }
 
@@ -65,7 +65,7 @@ use Test::More;
     is( Bar->hello("Greetings!"), "Greetings!" );
 
 
-    method hi($msg = q,Hi, when undef) {
+    method hi($msg //= q,Hi,) {
         return $msg;
     }
 
@@ -81,7 +81,7 @@ use Test::More;
     is_deeply [Bar->list()],      [1,2,3];
 
 
-    method code($num, $code = sub { $num + 2 } when undef) {
+    method code($num, $code //= sub { $num + 2 }) {
         return $code->();
     }
 
@@ -89,4 +89,3 @@ use Test::More;
 }
 
 
-done_testing;

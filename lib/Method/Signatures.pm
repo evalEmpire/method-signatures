@@ -14,11 +14,6 @@ our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
 our @CARP_NOT;
 
-# set up some regexen using for parsing types
-my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
-my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
-my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
-
 sub DEBUG {
     return unless $DEBUG;
 
@@ -112,6 +107,22 @@ is equivalent to:
 again with checks to make sure the arguments passed in match the
 signature.
 
+The full signature syntax for each parameter is:
+
+          Int|Str \:$param! is ro = default($expr) when $default_condition
+          \_____/ ^^\____/^ \___/ \______________/ \_____________________/
+             |    ||   |  |   |          |                    |
+       Type_/     ||   |  |   |          |                    |
+       Aliased?__/ |   |  |   |          |                    |
+       Named?_____/    |  |   |          |                    |
+       Parameter var__/   |   |          |                    |
+       Required?_________/    |          |                    |
+       Parameter trait(s)____/           |                    |
+       Default value____________________/                     |
+       When default value should be applied__________________/
+
+Every component except the parameter name is optional.
+
 
 =head3 C<@_>
 
@@ -168,6 +179,8 @@ reference.
 
     my @bar = (1,2,3);
     Stuff->add_one(\@bar);  # @bar is now (2,3,4)
+
+Named parameters cannot be aliased in this way.
 
 
 =head3 Invocant parameter
@@ -238,14 +251,14 @@ also to be used, using a trailing C<when>. For example:
 
 In other words, if you include a C<when I<value>> after the default,
 the default is still used if the argument is missing, but is also
-used if the argument smart-matches the specified I<value>.
+used if the argument is provided but smart-matches the specified I<value>.
 
-Note the final two examples above use anonymous subroutines to conform
-their complex tests to the requirements of the smartmatch operator.
-Because this is useful, but syntactically clumsy, there is also a
-short-cut for this behaviour. If the test after C<when> consists of a
-block, the block is executed as the defaulting test, with the actual
-argument value aliased to C<$_> (just like in a C<grep> block).
+Note that the final two examples above use anonymous subroutines to
+conform their complex tests to the requirements of the smartmatch
+operator. Because this is useful, but syntactically clumsy, there is
+also a short-cut for this behaviour. If the test after C<when> consists
+of a block, the block is executed as the defaulting test, with the
+actual argument value aliased to C<$_> (just like in a C<grep> block).
 So the final two examples above could also be written:
 
     # Use default if no argument passed OR argument is zero or less
@@ -253,6 +266,23 @@ So the final two examples above could also be written:
 
     # Use default if no argument passed OR argument is invalid
     method get_results($how_many = 1 when {!valid($_)}) } {...}
+
+The most commonly used form of C<when> modifier is almost
+certainly C<when undef>:
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many = 1 when undef) {...}
+
+which covers the common case where an uninitialized variable is passed
+as an argument, or where supplying an explicit undefined value is
+intended to indicate: "use the default instead".
+
+This usage is sufficiently common that a short-cut is provided:
+using the C<//=> operator (instead of the regular assignment operator)
+to specify the default. Like so:
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many //= 1) {...}
 
 
 Earlier parameters may be used in later defaults.
@@ -625,7 +655,7 @@ sub parse_signature {
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
         if( @protos ) {
-            $signature->{invocant} = $1 if $protos[0] =~ s{^ ([^:\s]+) : (?! :) \s* }{}x;
+            $signature->{invocant} = $_ for extract_invocant(\$protos[0]);
             shift @protos unless $protos[0] =~ /\S/;
         }
     }
@@ -673,41 +703,7 @@ sub parse_func {
     for my $proto (@protos) {
         DEBUG( "proto: $proto\n" );
 
-        my $sig   = {};
-        $sig->{proto} = $proto;
-
-        # $TYPENAME, $PARAMETERIZED, and $DISJUNCTION defined up at top, for performance reasons
-        $sig->{type} = $1 if $proto =~ s{^ ($TYPENAME | $PARAMETERIZED | $DISJUNCTION) \s+ }{}iox;
-
-        $sig->{named} = $proto =~ s{^:}{};
-
-        if( !$sig->{named} ) {
-            $sig->{idx} = $idx;
-            $idx++;
-        }
-
-        $sig->{is_at_underscore}    = $proto eq '@_';
-        $sig->{is_ref_alias}        = $proto =~ s{^\\}{};
-
-        while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
-            $sig->{traits}{$1}++;
-        }
-        if ($proto =~ s{ \s* = \s* (?: (.*) \s+ when \s* (.+) | (.*) ) }{}x) {
-            $sig->{default}      = $1 // $3;
-            $sig->{default_when} = $2;
-        }
-
-        my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
-        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
-        $sig->{is_optional} = (     $name =~ s{\?$}{}
-                                    or exists $sig->{default}
-                                    or $sig->{named}
-                                    or $sig->{is_slurpy}
-                              );
-        $sig->{is_optional} = 0 if $name =~ s{\!$}{};
-        $sig->{sigil}       = $sigil;
-        $sig->{name}        = $name;
-        $sig->{var}         = $sigil . $name;
+        my $sig = split_parameter($proto, \$idx);
 
         $self->_check_sig($sig, $signature);
 
@@ -896,23 +892,20 @@ sub inject_for_sig {
     }
 
     my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+
     # Handle a default value
     if( defined $sig->{default_when} ) {
-        # Fail if smartmatching not available
-        if ($] < 5.010) {
-            my ($file, $line) = _carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
-            die "Invalid parameter definition for $sigil$name at $file line $line\n",
-                "('when' modifier only available under Perl 5.10 or later)\n";
-        }
         # Handle default with 'when { block using $_ }'
-        elsif ($sig->{default_when} =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs) {
-            $rhs = "$check_exists && do{ no warnings; !grep $sig->{default_when} $rhs} ? ($rhs) : ($sig->{default})";
+        if ($sig->{default_when} =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs) {
+            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; (grep $sig->{default_when} \$arg) ? ($sig->{default}) : \$arg}";
         }
+
         # Handle default with 'when anything_else'
         else {
-            $rhs = "$check_exists && !do{ no warnings; $rhs ~~ $sig->{default_when}} ? ($rhs) : ($sig->{default})";
+            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; \$arg ~~ ($sig->{default_when}) ? ($sig->{default}) : \$arg }";
         }
     }
+
     # Handle simple defaults
     elsif( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
@@ -977,30 +970,8 @@ sub signature_error {
     my ($proto, $msg) = @_;
     my $class = ref $proto || $proto;
 
-    my ($file, $line, $method) = _carp_location_for($class);
+    my ($file, $line, $method) = carp_location_for($class);
     die "In call to $method(), $msg at $file line $line.\n";
-}
-
-sub _carp_location_for {
-    my ($class, $target) = @_;
-    $target = qr{(?!)} if !$target;
-
-    # using @CARP_NOT here even though we're not using Carp
-    # who knows? maybe someday Carp will be capable of doing what we want
-    # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
-    local @CARP_NOT;
-    push @CARP_NOT, __PACKAGE__;
-    push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
-    push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
-    my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
-
-    my $level = 0;
-    my ($pack, $file, $line, $method);
-    do {
-        ($pack, $file, $line, $method) = caller(++$level);
-    } while $method !~ $target and $method =~ /$skip/ or $pack =~ /$skip/;
-
-    return ($file, $line, $method);
 }
 
 sub required_arg {

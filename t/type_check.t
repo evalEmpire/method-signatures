@@ -34,10 +34,15 @@ our @TYPES =
     maybe_int       =>  'Maybe[Int]'        =>  [ 42, undef ]                   =>  'foo'                               ,
     paramized_aref  =>  'ArrayRef[Num]'     =>  [[ 6.5, 42, 1e23 ]]             =>  [[ 6.5, 42, 'thing' ]]              ,
     paramized_href  =>  'HashRef[Num]'      =>  { a => 6.5, b => 2, c => 1e23 } =>  { a => 6.5, b => 42, c => 'thing' } ,
+    paramized_nested=>  'HashRef[ArrayRef[Int]]'
+                                            =>  { foo=>[1..3], bar=>[1] }       =>  { foo=>['a'] }                               ,
 ##  ScalarRef[X] not implemented in Mouse, so this test is moved to typeload_moose.t
 ##  if Mouse starts supporting it, the test could be restored here
 #   paramized_sref  =>  'ScalarRef[Num]'    =>  \42                             =>  \'thing'                            ,
     int_or_aref     =>  'Int|ArrayRef[Int]' =>  [ 42 , [42 ] ]                  =>  'foo'                               ,
+    int_or_aref_or_undef
+                    =>  'Int|ArrayRef[Int]|Undef'
+                                            =>  [ 42 , [42 ], undef ]           =>  'foo'                               ,
 );
 
 
