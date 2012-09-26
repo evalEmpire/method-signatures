@@ -121,7 +121,8 @@ The full signature syntax for each parameter is:
        Default value____________________/                     |
        When default value should be applied__________________/
 
-Every component except the parameter name is optional.
+Every component except the parameter name is optional.  Note that you
+cannot use both \ and : in front of the variable name.
 
 
 =head3 C<@_>
