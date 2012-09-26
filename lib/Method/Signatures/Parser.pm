@@ -91,16 +91,6 @@ sub split_parameter {
     $sig{is_slurpy}        = !$sig{is_ref_alias} && $sig{sigil} =~ m{ ^ [%\@] $ }x;
     $sig{is_at_underscore} = $sig{var} eq '@_';
 
-    # Extract parameter traits...
-    while ($param =~ s{ ^ \s* is \s+ (\S+) }{}x) {
-        $sig{traits}{$1}++;
-    }
-
-    # Verify any named parameter does not have invalid trait...
-    if ($sig{named} && ($sig{is_ref_alias} || $sig{traits}{alias})) {
-        fatal("Named parameter :$sig{var} cannot also be aliased");
-    }
-
     # Extract default specifiers (if any) via PPI...
     if ($param =~ /\S/) {
         # Replace parameter var so as not to confuse PPI...
@@ -115,6 +105,21 @@ sub split_parameter {
 
         # Re-remove parameter var
         shift @$tokens;
+
+        # Extract any 'where' contraints...
+        while (extract_leading(qr{^ where $}x, $tokens)) {
+            $sig{where}{extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens)}++;
+        }
+
+        # Extract parameter traits...
+        while (extract_leading(qr{^ is $}x, $tokens)) {
+            $sig{traits}{extract_leading(qr{^ \S+ $}x, $tokens)}++;
+        }
+
+        # Verify any named parameter does not have invalid trait...
+        if ($sig{named} && ($sig{is_ref_alias} || $sig{traits}{alias})) {
+            fatal("Named parameter :$sig{var} cannot also be aliased");
+        }
 
         # Extract normal default specifier (if any)...
         if (extract_leading(qr{^ = $}x, $tokens)) {

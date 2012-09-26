@@ -109,20 +109,27 @@ signature.
 
 The full signature syntax for each parameter is:
 
-          Int|Str \:$param! is ro = default($expr) when $default_condition
-          \_____/ ^^\____/^ \___/ \______________/ \_____________________/
-             |    ||   |  |   |          |                    |
-       Type_/     ||   |  |   |          |                    |
-       Aliased?__/ |   |  |   |          |                    |
-       Named?_____/    |  |   |          |                    |
-       Parameter var__/   |   |          |                    |
-       Required?_________/    |          |                    |
-       Parameter trait(s)____/           |                    |
-       Default value____________________/                     |
-       When default value should be applied__________________/
+          Int|Str  \:$param!  where $SM_EXPR  is ro  = $AS_EXPR  when $SM_EXPR
+          \_____/  ^^\____/^  \____________/  \___/  \________/  \___________/
+             |     ||   |  |        |           |        |           |
+       Type_/      ||   |  |        |           |        |           |
+       Aliased?___/ |   |  |        |           |        |           |
+       Named?______/    |  |        |           |        |           |
+       Parameter var___/   |        |           |        |           |
+       Required?__________/         |           |        |           |
+       Parameter constraint(s)_____/            |        |           |
+       Parameter trait(s)______________________/         |           |
+       Default value____________________________________/            |
+       When default value should be applied_________________________/
 
 Every component except the parameter name is optional.  Note that you
 cannot use both \ and : in front of the variable name.
+
+C<$SM_EXPR> is any expression that is valid as the RHS of a smartmatch,
+or else a raw block of code. See L<"Value constraints">.
+
+C<$AS_EXPR> is any expression that is valid as the RHS of an
+assignment operator. See L<"Defaults">.
 
 
 =head3 C<@_>
@@ -356,6 +363,51 @@ You cannot declare the type of the invocant.
     method new(ClassName $class:) {
         ...
     }
+
+
+=head3 Value Constraints
+
+In addition to a type, each parameter can also be specified with one or
+more additional constraints, using the C<$arg where CONSTRAINT> syntax.
+
+    method set_name($name where qr{\S+ \s+ \S+}x) {
+        ...
+    }
+
+    method set_rank($rank where \%STD_RANKS) {
+        ...
+    }
+
+    method set_age(Int $age where [17..75] ) {
+        ...
+    }
+
+    method set_rating($rating where { $_ >= 0 } where { $_ <= 100 } ) {
+        ...
+    }
+
+    method set_serial_num(Int $snum where {valid_checksum($snum)} ) {
+        ...
+    }
+
+The C<where> keyword must appear immediately after the parameter name
+and before any L<trait|"Parameter traits"> or L<default|"Defaults">.
+
+Each C<where> constraint is smartmatched against the value of the
+corresponding parameter, and an exception is thrown if the value does
+not satisfy the constraint.
+
+Any of the normal smartmatch arguments (numbers, strings, regexes,
+undefs, hashrefs, arrayrefs, coderefs) can be used as a constraint.
+
+In addition, the constraint can be specified as a raw block. This block
+can then refer to the parameter variable directly by name (as in the
+definition of C<set_serial_num()> above), or else as C<$_> (as in the
+definition of C<set_rating()>.
+
+Unlike type constraints, value constraints are tested I<after> any
+default values have been resolved, and in the same order as they were
+specified within the signature.
 
 
 =head3 Parameter traits
@@ -930,6 +982,18 @@ sub inject_for_sig {
         push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
         push @code, "$lhs = $rhs;";
+    }
+
+    # Handle 'where' constraints (after defaults are resolved)
+    if ( $sig->{where} ) {
+        for my $constraint ( keys %{$sig->{where}} ) {
+            # Handle 'where { block using $_ }'
+            my $constraint_impl =
+                $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
+                    ? "sub $constraint"
+                    : $constraint;
+            push @code, qq[${class}->signature_error("\\$sig->{var} value ($sig->{var}) does not satisfy constraint: \Q$constraint\E") unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ];
+        }
     }
 
     return @code;
