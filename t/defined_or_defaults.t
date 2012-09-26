@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 {
     package Stuff;
@@ -89,3 +89,4 @@ use Test::More 'no_plan';
 }
 
 
+done_testing;
