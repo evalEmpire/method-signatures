@@ -81,7 +81,7 @@ sub split_parameter {
     $sig{is_ref_alias} = $premod =~ m{ \\ }x;
     $sig{named}        = $premod =~ m{ :  }x;
     $sig{var}          = $var;
-    my $req_flag       = $postmod // q{};
+    my $req_flag       = $postmod || '';
 
     # Analyse parameter variable...
     if (!$sig{named}) {
