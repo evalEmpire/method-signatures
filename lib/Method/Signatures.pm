@@ -472,6 +472,57 @@ be positional.
 
 Slurpy parameters are optional by default.
 
+=head3 The "yada yada" marker
+
+The restriction that slurpy parameters must be positional, and must
+appear at the end of the signature, means that they cannot be used in
+conjunction with named parameters.
+
+This is frustrating, because there are many situations (in particular:
+during object initialization, or when creating a callback) where it
+is extremely handy to be able to ignore extra named arguments that don't
+correspond to any named parameter.
+
+While it would be theoretically possible to allow a slurpy parameter to
+come after named parameters, the current implementation does not support
+this (see L<"Slurpy parameter restrictions">).
+
+Instead, there is a special syntax (colloquially known as the "yada yada")
+that tells a method or function to simply ignore any extra arguments
+that are passed to it:
+
+    # Expect name, age, gender, and simply ignore anything else
+    method BUILD (:$name, :$age, :$gender, ...) {
+        $self->{name}   = uc $name;
+        $self->{age}    = min($age, 18);
+        $self->{gender} = $gender // 'unspecified';
+    }
+
+    # Traverse tree with node-printing callback
+    # (Callback only interested in nodes, ignores any other args passed to it)
+    $tree->traverse( func($node,...) { $node->print } );
+
+The C<...> may appear as a separate "pseudo-parameter" anywhere in the
+signature, but is normally placed at the very end. It has no other
+effect except to disable the usual "die if extra arguments" test that
+the module sets up within each method or function.
+
+This means that a "yada yada" can also be used to ignore positional
+arguments (as the second example above indicates). So, instead of:
+
+    method verify ($min, $max, @etc) {
+        return $min <= $self->{val} && $self->{val} <= $max;
+    }
+
+you can just write:
+
+    method verify ($min, $max, ...) {
+        return $min <= $self->{val} && $self->{val} <= $max;
+    }
+
+This is also marginally more efficient, as it does not have to allocate,
+initialize, or deallocate the unused slurpy parameter C<@etc>.
+
 
 =head3 Required and optional parameters
 
@@ -758,6 +809,13 @@ sub parse_func {
 
         my $sig = split_parameter($proto, \$idx);
 
+        # Handle "don't care" specifier
+        if ($sig->{yadayada}) {
+            $signature->{overall}{num_slurpy}++;
+            $signature->{overall}{yadayada}++;
+            next;
+        }
+
         $self->_check_sig($sig, $signature);
 
         if( $sig->{named} ) {
@@ -847,7 +905,7 @@ sub _check_signature {
     # Check that slurpy arguments come at the end
     if(
         $overall->{num_slurpy}                  &&
-        !$signature->{positional}[-1]{is_slurpy}
+        !($overall->{yadayada} || $signature->{positional}[-1]{is_slurpy})
     )
     {
         my($slurpy_param) = $self->_find_slurpy_params;
@@ -886,7 +944,8 @@ sub inject_from_signature {
             push @code, $self->inject_for_sig($sig);
         }
 
-        push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{num_named};
+        push @code, $class . '->named_param_error(\%args) if %args;'
+            if $signature->{overall}{num_named} && !$signature->{overall}{yadayada};
     }
 
     push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};

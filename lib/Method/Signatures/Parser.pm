@@ -64,6 +64,11 @@ sub extract_invocant {
 sub split_parameter {
     my ($param, $idx_ref) = @_;
 
+    # Handle yada yada specifier...
+    if ($param =~ m{^ \s* \Q...\E \s* $}x) {
+        return { yadayada => 1 };
+    }
+
     # Storage for decoded components...
     my %sig = ( proto => $param );
 

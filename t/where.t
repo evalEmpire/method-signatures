@@ -7,7 +7,6 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 
-#BEGIN{ $ENV{METHOD_SIGNATURES_DEBUG} = 1 }
 use Method::Signatures;
 
 plan tests => 4;
