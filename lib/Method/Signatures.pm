@@ -183,7 +183,8 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
-C<method> has an implied default of C<$self:>.  C<func> has no invocant.
+C<method> has an implied default invocant of C<$self:>.  C<func> has
+no invocant.
 
 
 =head3 Defaults
@@ -1175,7 +1176,7 @@ issues, at least for versions of L<Devel::BeginLift> 0.001003 and
 before.  It's possible it will be fixed in future versions of
 Devel::BeginLift.
 
-The most noticable is if an error occurs at compile time, such as a
+The most noticeable is if an error occurs at compile time, such as a
 strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
 appear to fail where there is no reason to fail.
