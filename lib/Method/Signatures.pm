@@ -438,27 +438,41 @@ This is a default trait.
 
 The parameter will be a copy of the argument (just like C<< my $arg = shift >>).
 
-This is a default trait except for the C<\@foo> parameter.
+This is a default trait except for the C<\@foo> parameter (see L<Aliased references>).
 
 =item B<alias>
 
 The parameter will be an alias of the argument.  Any changes to the
 parameter will be reflected in the caller.
 
-This is a default trait for the C<\@foo> parameter.
+This is a default trait for the C<\@foo> parameter (see L<Aliased references>).
 
 =back
 
-=head3 Traits and defaults
+=head3 Mixing value constraints, traits, and defaults
 
-To have a parameter which has both a trait and a default, set the
-trait first and the default second.
+As explained in L<Signature syntax>, there is a defined order when including
+multiple trailing aspects of a parameter:
 
-    method echo($message is ro = "what?") {
+=over 4
+
+=item * Any value constraint must immediately follow the parameter name.
+
+=item * Any trait must follow that.
+
+=item * Any default must come last.
+
+=back
+
+For instance, to have a parameter which has all three aspects:
+
+    method echo($message where { length <= 80 } is ro = "what?") {
         return $message
     }
 
-Think of it as C<$message is ro> being the left-hand side of the assignment.
+Think of C<$message where { length <= 80 }> as being the left-hand side of the
+trait, and C<$message where { length <= 80 } is ro> as being the left-hand side
+of the default assignment.
 
 
 =head3 Slurpy parameters
@@ -1442,6 +1456,10 @@ Method::Signatures (or, more properly,
 L<Method::Signatures::Modifiers>) instead of
 L<MooseX::Method::Signatures>, which fixes many of the problems
 commonly attributed to L<MooseX::Declare>.
+
+Value constraints and default conditions (i.e. "where" and "when")
+were added by Damian Conway, who also rewrote some of the signature
+parsing to make it more robust and more extensible.
 
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
