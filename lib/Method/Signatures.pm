@@ -15,9 +15,9 @@ our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 our @CARP_NOT;
 
 # set up some regexen using for parsing types
-my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
-my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
-my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
+my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                                      }ix;
+my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                           }x;
+my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) (?: \| (?: $TYPENAME | $PARAMETERIZED ) )+   }x;
 
 sub DEBUG {
     return unless $DEBUG;
