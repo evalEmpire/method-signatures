@@ -113,6 +113,8 @@ sub split_parameter {
 
         # Extract any 'where' contraints...
         while (extract_leading(qr{^ where $}x, $tokens)) {
+            fatal("'where' constraint only available under Perl 5.10 or later. Error")
+                if $] < 5.010;
             $sig{where}{extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens)}++;
         }
 
