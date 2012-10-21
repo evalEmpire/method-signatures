@@ -48,7 +48,7 @@ our $PARAMETERIZED;
     $PARAMETERIZED = do{ use re 'eval';
                          qr{ $TYPENAME (?: \[ (??{$PARAMETERIZED}) \] )?                   }x;
                      };
-my $TYPESPEC       = qr{ ^ \s* $PARAMETERIZED (?: \s* \| \s* $PARAMETERIZED )* \s* | ^ \s* }x;
+my $TYPESPEC       = qr{ ^ \s* $PARAMETERIZED (?: \s* \| \s* $PARAMETERIZED )* \s* }x;
 
 # Extract an invocant, if one is present...
 sub extract_invocant {
