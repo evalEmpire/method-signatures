@@ -127,7 +127,7 @@ else
     eval
     q{
         subtest 'where where where' => sub {
-            plan tests => 13;
+            plan tests => 14;
 
             func is_prime ($x) {
                 return $x ~~ [2,3,5,7,11];
@@ -148,12 +148,17 @@ else
                         pass "neg_and_odd_and_prime($n) as expected";
                     }
                     else {
-                        like $error, qr{\$x value \($n\) does not satisfy constraint:}
+                        like $error, qr{\$x value \("$n"\) does not satisfy constraint:}
                             => "neg_and_odd_and_prime($n) as expected";
                         note $@;
                     }
                 };
             }
+
+            # try an undef value
+            my $result = eval{ neg_and_odd_and_prime(undef); };
+            like $@, qr{\$x value \(undef\) does not satisfy constraint:}, "neg_and_odd_and_prime(undef) as expected";
+
         };
     };
     fail "can't run tests: $@" if $@;

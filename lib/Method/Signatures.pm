@@ -1065,7 +1065,8 @@ sub inject_for_sig {
                 $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
                     ? "sub $constraint"
                     : $constraint;
-            push @code, qq[${class}->signature_error("\\$sig->{var} value ($sig->{var}) does not satisfy constraint: \Q$constraint\E") unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ];
+            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $sig->{var}, $sig->{var}, "$constraint";
+            push @code, "$error unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ";
         }
     }
 
@@ -1208,6 +1209,14 @@ sub type_error
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
+# Errors from `where' constraints are handled here.
+sub where_error
+{
+    my ($class, $value, $name, $constraint) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{$name value ($value) does not satisfy constraint: $constraint});
+}
+
 
 =head1 PERFORMANCE
 
@@ -1295,13 +1304,13 @@ versions.
 If you wish to subclass Method::Signatures, the following methods are
 good places to start.
 
-=head2 too_many_args_error, named_param_error, required_arg, type_error
+=head2 too_many_args_error, named_param_error, required_arg, type_error, where_error
 
 These are class methods which report the various run-time errors
 (extra parameters, unknown named parameter, required parameter
-missing, and parameter fails type check, respectively).  Note that
-each one calls C<signature_error>, which your versions should do as
-well.
+missing, parameter fails type check, and parameter fails where
+constraint respectively).  Note that each one calls
+C<signature_error>, which your versions should do as well.
 
 =head2 signature_error
 
