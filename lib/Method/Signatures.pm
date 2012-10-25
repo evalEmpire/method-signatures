@@ -1065,7 +1065,7 @@ sub inject_for_sig {
                 $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
                     ? "sub $constraint"
                     : $constraint;
-            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $sig->{var}, $sig->{var}, "$constraint";
+            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $sig->{var}, $sig->{var}, $constraint;
             push @code, "$error unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ";
         }
     }
