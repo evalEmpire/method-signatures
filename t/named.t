@@ -14,7 +14,7 @@ use Test::More;
     use Test::Exception;
     use Method::Signatures;
 
-    method formalize($text! is ro, :$justify = "left" is ro, :$case) {
+    method formalize($text! is ro, :$justify is ro = "left", :$case) {
         my %params;
         $params{text}           = $text;
         $params{justify}        = $justify;
