@@ -14,7 +14,7 @@ plan tests => 4;
 
 SKIP:
 {
-    skip "Perl 5.10 or higher required to test block defaults", 3 if $] < 5.010;
+    skip "Perl 5.10 or higher required to test where constraints", 3 if $] < 5.010;
 
     eval
     q{
