@@ -1,3 +1,31 @@
+20121025.2315_001	Thu Oct 25 23:15:20 PDT 2012
+	New Features
+	* can now use `when' to specify default conditions
+	  [github #48]
+	* can use `//=' as a shortcut for `when undef'
+	  [github #45]
+	* can now provide `where' constraints in addition to
+	  (or instead of) a type
+	  [github #7]
+	* can now use `...' to disable further argument checking
+	  [github #49]
+	* can now specify more than one alternative in type unions
+	  [github #55]
+	* can now nest parameterized types
+
+	Incompatible Changes
+	* can no longer use both `\' and `:'
+	  (didn't work anyway)
+
+	Optimizations
+	* better signature parsing using PPI
+	  [github #11]
+
+	Docs
+	* documented all new features
+	* new ASCI-art breakdown of signature syntax
+	* minor tweaks and corrections
+
 20120523	May 23 16:36:04 PDT 2012
     Distribution Fixes
 	* Fixed META.json
