@@ -700,10 +700,8 @@ sub import {
 }
 
 
-# Generally, the code that calls inject_if_block decides what to put in front of the actual
-# subroutine body.  For instance, if it's an anonymous sub, the $before parameter would contain
-# "sub ".  In our case, we want the "sub " all the time: it fixes a weird error on Perl 5.10,
-# and doesn't cause any problems anywhere else.
+# Inject special code to make named functions compile at BEGIN time.
+# Otherwise we leave injection to Devel::Declare.
 sub inject_if_block
 {
     my ($self, $inject, $before) = @_;
@@ -720,10 +718,6 @@ sub inject_if_block
         # can use \&foo at runtime even if it comes before the sub
         # declaration in the code!
         $before = qq[\\&$name; sub $name $attrs ];
-    }
-    # Anonymous function or compiled at runtime.
-    elsif( defined $name ) {
-        $before = qq[sub $attrs ];
     }
 
     DEBUG( "inject: $inject\n" );
