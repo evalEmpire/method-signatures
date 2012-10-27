@@ -7,7 +7,7 @@ use Sub::Name;
 
 use base 'Method::Signatures';
 
-our $VERSION = '20120523';
+our $VERSION = '20121025.2315_001';
 
 
 =head1 NAME
@@ -88,18 +88,6 @@ invocant, so your code would change to:
     }
 
 
-=head3 "where" Constraints
-
-L<MooseX::Method::Signatures> allows code like this:
-
-    # only allow even integers
-    method foo (Int $bar where { $_ % 2 == 0 }) {
-    }
-
-L<Method::Signatures> does not currently allow this, although it is a
-planned feature for a future release.
-
-
 =head3 Parameter Aliasing (Labels)
 
 L<MooseX::Method::Signatures> allows code like this:
@@ -115,11 +103,24 @@ This feature is not currently planned for L<Method::Signatures>.
 
 L<MooseX::Method::Signatures> allows code like this:
 
-    method foo (Int $bar, $, Int $baz)) {
+    method foo (Int $bar, $, Int $baz) {
         # second parameter not available as a variable here
     }
 
 This feature is not currently planned for L<Method::Signatures>.
+
+Note that, if the parameter you want to ignore is at the end:
+
+    method foo (Int $bar, Int $baz, $) {
+        # third parameter not available as a variable here
+    }
+
+then you could write that in L<Method::Signatures> using the "yada
+yada" pseudo-parameter:
+
+    method foo (Int $bar, Int $baz, ...) {
+        # third (or greater) parameter(s) not available here
+    }
 
 
 =head3 Traits

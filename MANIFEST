@@ -15,10 +15,12 @@ t/array_param.t
 t/at_underscore.t
 t/attributes.t
 t/begin.t
+t/block_defaults.t
 t/caller.t
 t/comments.t
 t/debugger.t
 t/defaults.t
+t/defined_or_defaults.t
 t/error_interruption.t
 t/error_reporting.t
 t/examples/iso_date_example.t
@@ -76,6 +78,7 @@ t/role_check_mouse.t
 t/simple.plx
 t/slurpy.t
 t/split_proto.t
+t/string_defaults.t
 t/syntax_errors.t
 t/too_many_args.t
 t/traits.t
@@ -85,3 +88,7 @@ t/typeload_moose.t
 t/typeload_nomoose.t
 t/typeload_notypes.t
 t/types.t
+t/undef_defaults.t
+t/where.t
+t/yadayada.t
+t/zero_defaults.t

@@ -8,16 +8,11 @@ use Method::Signatures::Parser;
 use Data::Alias;
 use Devel::Pragma qw(my_hints);
 
-our $VERSION = '20120523';
+our $VERSION = '20121025.2315_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
 our @CARP_NOT;
-
-# set up some regexen using for parsing types
-my $TYPENAME =      qr{   [a-z] \w* (?: \:\: \w+)*                                               }ix;
-my $PARAMETERIZED = qr{   \w+ \[ $TYPENAME \]                                                    }x;
-my $DISJUNCTION =   qr{   (?: $TYPENAME | $PARAMETERIZED ) \| (?: $TYPENAME | $PARAMETERIZED )   }x;
 
 sub DEBUG {
     return unless $DEBUG;
@@ -112,6 +107,30 @@ is equivalent to:
 again with checks to make sure the arguments passed in match the
 signature.
 
+The full signature syntax for each parameter is:
+
+          Int|Str  \:$param!  where $SM_EXPR  is ro  = $AS_EXPR  when $SM_EXPR
+          \_____/  ^^\____/^  \____________/  \___/  \________/  \___________/
+             |     ||   |  |        |           |        |           |
+       Type_/      ||   |  |        |           |        |           |
+       Aliased?___/ |   |  |        |           |        |           |
+       Named?______/    |  |        |           |        |           |
+       Parameter var___/   |        |           |        |           |
+       Required?__________/         |           |        |           |
+       Parameter constraint(s)_____/            |        |           |
+       Parameter trait(s)______________________/         |           |
+       Default value____________________________________/            |
+       When default value should be applied_________________________/
+
+Every component except the parameter name is optional.  Note that you
+cannot use both \ and : in front of the variable name.
+
+C<$SM_EXPR> is any expression that is valid as the RHS of a smartmatch,
+or else a raw block of code. See L<"Value constraints">.
+
+C<$AS_EXPR> is any expression that is valid as the RHS of an
+assignment operator. See L<"Defaults">.
+
 
 =head3 C<@_>
 
@@ -169,6 +188,8 @@ reference.
     my @bar = (1,2,3);
     Stuff->add_one(\@bar);  # @bar is now (2,3,4)
 
+Named parameters cannot be aliased in this way.
+
 
 =head3 Invocant parameter
 
@@ -183,7 +204,8 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
-C<method> has an implied default of C<$self:>.  C<func> has no invocant.
+C<method> has an implied default invocant of C<$self:>.  C<func> has
+no invocant.
 
 
 =head3 Defaults
@@ -208,12 +230,69 @@ Almost any expression can be used as a default.
         ...
     }
 
-Defaults will only be used if the argument is not passed in at all.
+Normally, defaults will only be used if the argument is not passed in at all.
 Passing in C<undef> will override the default.  That means...
 
     Class->add();            # $this = 23, $that = 42
     Class->add(99);          # $this = 99, $that = 42
     Class->add(99, undef);   # $this = 99, $that = undef
+
+However, you can specify additional conditions under which a default is
+also to be used, using a trailing C<when>. For example:
+
+    # Use default if no argument passed
+    method get_results($how_many = 1) {...}
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many = 1 when undef) {...}
+
+    # Use default if no argument passed OR argument is empty string
+    method get_results($how_many = 1 when "") {...}
+
+    # Use default if no argument passed OR argument is zero
+    method get_results($how_many = 1 when 0) {...}
+
+    # Use default if no argument passed OR argument is zero or less
+    method get_results($how_many = 1 when sub{ $_[0] <= 0 }) {...}
+
+    # Use default if no argument passed OR argument is invalid
+    method get_results($how_many = 1 when sub{ !valid($_[0]) }) {...}
+
+In other words, if you include a C<when I<value>> after the default,
+the default is still used if the argument is missing, but is also
+used if the argument is provided but smart-matches the specified I<value>.
+
+Note that the final two examples above use anonymous subroutines to
+conform their complex tests to the requirements of the smartmatch
+operator. Because this is useful, but syntactically clumsy, there is
+also a short-cut for this behaviour. If the test after C<when> consists
+of a block, the block is executed as the defaulting test, with the
+actual argument value aliased to C<$_> (just like in a C<grep> block).
+So the final two examples above could also be written:
+
+    # Use default if no argument passed OR argument is zero or less
+    method get_results($how_many = 1 when {$_ <= 0}) {...}
+
+    # Use default if no argument passed OR argument is invalid
+    method get_results($how_many = 1 when {!valid($_)}) } {...}
+
+The most commonly used form of C<when> modifier is almost
+certainly C<when undef>:
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many = 1 when undef) {...}
+
+which covers the common case where an uninitialized variable is passed
+as an argument, or where supplying an explicit undefined value is
+intended to indicate: "use the default instead".
+
+This usage is sufficiently common that a short-cut is provided:
+using the C<//=> operator (instead of the regular assignment operator)
+to specify the default. Like so:
+
+    # Use default if no argument passed OR argument is undef
+    method get_results($how_many //= 1) {...}
+
 
 Earlier parameters may be used in later defaults.
 
@@ -287,6 +366,51 @@ You cannot declare the type of the invocant.
     }
 
 
+=head3 Value Constraints
+
+In addition to a type, each parameter can also be specified with one or
+more additional constraints, using the C<$arg where CONSTRAINT> syntax.
+
+    method set_name($name where qr{\S+ \s+ \S+}x) {
+        ...
+    }
+
+    method set_rank($rank where \%STD_RANKS) {
+        ...
+    }
+
+    method set_age(Int $age where [17..75] ) {
+        ...
+    }
+
+    method set_rating($rating where { $_ >= 0 } where { $_ <= 100 } ) {
+        ...
+    }
+
+    method set_serial_num(Int $snum where {valid_checksum($snum)} ) {
+        ...
+    }
+
+The C<where> keyword must appear immediately after the parameter name
+and before any L<trait|"Parameter traits"> or L<default|"Defaults">.
+
+Each C<where> constraint is smartmatched against the value of the
+corresponding parameter, and an exception is thrown if the value does
+not satisfy the constraint.
+
+Any of the normal smartmatch arguments (numbers, strings, regexes,
+undefs, hashrefs, arrayrefs, coderefs) can be used as a constraint.
+
+In addition, the constraint can be specified as a raw block. This block
+can then refer to the parameter variable directly by name (as in the
+definition of C<set_serial_num()> above), or else as C<$_> (as in the
+definition of C<set_rating()>.
+
+Unlike type constraints, value constraints are tested I<after> any
+default values have been resolved, and in the same order as they were
+specified within the signature.
+
+
 =head3 Parameter traits
 
 Each parameter can be assigned a trait with the C<$arg is TRAIT> syntax.
@@ -315,27 +439,41 @@ This is a default trait.
 
 The parameter will be a copy of the argument (just like C<< my $arg = shift >>).
 
-This is a default trait except for the C<\@foo> parameter.
+This is a default trait except for the C<\@foo> parameter (see L<Aliased references>).
 
 =item B<alias>
 
 The parameter will be an alias of the argument.  Any changes to the
 parameter will be reflected in the caller.
 
-This is a default trait for the C<\@foo> parameter.
+This is a default trait for the C<\@foo> parameter (see L<Aliased references>).
 
 =back
 
-=head3 Traits and defaults
+=head3 Mixing value constraints, traits, and defaults
 
-To have a parameter which has both a trait and a default, set the
-trait first and the default second.
+As explained in L<Signature syntax>, there is a defined order when including
+multiple trailing aspects of a parameter:
 
-    method echo($message is ro = "what?") {
+=over 4
+
+=item * Any value constraint must immediately follow the parameter name.
+
+=item * Any trait must follow that.
+
+=item * Any default must come last.
+
+=back
+
+For instance, to have a parameter which has all three aspects:
+
+    method echo($message where { length <= 80 } is ro = "what?") {
         return $message
     }
 
-Think of it as C<$message is ro> being the left-hand side of the assignment.
+Think of C<$message where { length <= 80 }> as being the left-hand side of the
+trait, and C<$message where { length <= 80 } is ro> as being the left-hand side
+of the default assignment.
 
 
 =head3 Slurpy parameters
@@ -348,6 +486,57 @@ Slurpy parameters must come at the end of the signature and they must
 be positional.
 
 Slurpy parameters are optional by default.
+
+=head3 The "yada yada" marker
+
+The restriction that slurpy parameters must be positional, and must
+appear at the end of the signature, means that they cannot be used in
+conjunction with named parameters.
+
+This is frustrating, because there are many situations (in particular:
+during object initialization, or when creating a callback) where it
+is extremely handy to be able to ignore extra named arguments that don't
+correspond to any named parameter.
+
+While it would be theoretically possible to allow a slurpy parameter to
+come after named parameters, the current implementation does not support
+this (see L<"Slurpy parameter restrictions">).
+
+Instead, there is a special syntax (colloquially known as the "yada yada")
+that tells a method or function to simply ignore any extra arguments
+that are passed to it:
+
+    # Expect name, age, gender, and simply ignore anything else
+    method BUILD (:$name, :$age, :$gender, ...) {
+        $self->{name}   = uc $name;
+        $self->{age}    = min($age, 18);
+        $self->{gender} = $gender // 'unspecified';
+    }
+
+    # Traverse tree with node-printing callback
+    # (Callback only interested in nodes, ignores any other args passed to it)
+    $tree->traverse( func($node,...) { $node->print } );
+
+The C<...> may appear as a separate "pseudo-parameter" anywhere in the
+signature, but is normally placed at the very end. It has no other
+effect except to disable the usual "die if extra arguments" test that
+the module sets up within each method or function.
+
+This means that a "yada yada" can also be used to ignore positional
+arguments (as the second example above indicates). So, instead of:
+
+    method verify ($min, $max, @etc) {
+        return $min <= $self->{val} && $self->{val} <= $max;
+    }
+
+you can just write:
+
+    method verify ($min, $max, ...) {
+        return $min <= $self->{val} && $self->{val} <= $max;
+    }
+
+This is also marginally more efficient, as it does not have to allocate,
+initialize, or deallocate the unused slurpy parameter C<@etc>.
 
 
 =head3 Required and optional parameters
@@ -622,7 +811,7 @@ sub parse_signature {
     # Special case for methods, they will pass in an invocant to use as the default
     if( $signature->{invocant} = $args{invocant} ) {
         if( @protos ) {
-            $signature->{invocant} = $1 if $protos[0] =~ s{^ ([^:\s]+) : (?! :) \s* }{}x;
+            $signature->{invocant} = $_ for extract_invocant(\$protos[0]);
             shift @protos unless $protos[0] =~ /\S/;
         }
     }
@@ -670,34 +859,14 @@ sub parse_func {
     for my $proto (@protos) {
         DEBUG( "proto: $proto\n" );
 
-        my $sig   = {};
-        $sig->{proto} = $proto;
+        my $sig = split_parameter($proto, \$idx);
 
-        # $TYPENAME, $PARAMETERIZED, and $DISJUNCTION defined up at top, for performance reasons
-        $sig->{type} = $1 if $proto =~ s{^ ($TYPENAME | $PARAMETERIZED | $DISJUNCTION) \s+ }{}iox;
-
-        $sig->{named} = $proto =~ s{^:}{};
-
-        if( !$sig->{named} ) {
-            $sig->{idx} = $idx;
-            $idx++;
+        # Handle "don't care" specifier
+        if ($sig->{yadayada}) {
+            $signature->{overall}{num_slurpy}++;
+            $signature->{overall}{yadayada}++;
+            next;
         }
-
-        $sig->{is_at_underscore}    = $proto eq '@_';
-        $sig->{is_ref_alias}        = $proto =~ s{^\\}{};
-
-        while ($proto =~ s{ \s+ is \s+ (\S+) }{}x) {
-            $sig->{traits}{$1}++;
-        }
-        $sig->{default} = $1 if $proto =~ s{ \s* = \s* (.*) }{}x;
-
-        my ($sigil, $name)  = $proto =~ m{^ (.)(.*) }x;
-        $sig->{is_slurpy}   = ($sigil =~ /^[%@]$/ and !$sig->{is_ref_alias});
-        $sig->{is_optional} = ($name =~ s{\?$}{} or exists $sig->{default} or $sig->{named} or $sig->{is_slurpy});
-        $sig->{is_optional} = 0 if $name =~ s{\!$}{};
-        $sig->{sigil}       = $sigil;
-        $sig->{name}        = $name;
-        $sig->{var}         = $sigil . $name;
 
         $self->_check_sig($sig, $signature);
 
@@ -787,7 +956,7 @@ sub _check_signature {
     # Check that slurpy arguments come at the end
     if(
         $overall->{num_slurpy}                  &&
-        !$signature->{positional}[-1]{is_slurpy}
+        !($overall->{yadayada} || $signature->{positional}[-1]{is_slurpy})
     )
     {
         my($slurpy_param) = $self->_find_slurpy_params;
@@ -826,7 +995,8 @@ sub inject_from_signature {
             push @code, $self->inject_for_sig($sig);
         }
 
-        push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{num_named};
+        push @code, $class . '->named_param_error(\%args) if %args;'
+            if $signature->{overall}{num_named} && !$signature->{overall}{yadayada};
     }
 
     push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
@@ -885,8 +1055,22 @@ sub inject_for_sig {
     }
 
     my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+
     # Handle a default value
-    if( defined $sig->{default} ) {
+    if( defined $sig->{default_when} ) {
+        # Handle default with 'when { block using $_ }'
+        if ($sig->{default_when} =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs) {
+            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; (grep $sig->{default_when} \$arg) ? ($sig->{default}) : \$arg}";
+        }
+
+        # Handle default with 'when anything_else'
+        else {
+            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; \$arg ~~ ($sig->{default_when}) ? ($sig->{default}) : \$arg }";
+        }
+    }
+
+    # Handle simple defaults
+    elsif( defined $sig->{default} ) {
         $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
     }
 
@@ -908,6 +1092,19 @@ sub inject_for_sig {
         push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
         push @code, "$lhs = $rhs;";
+    }
+
+    # Handle 'where' constraints (after defaults are resolved)
+    if ( $sig->{where} ) {
+        for my $constraint ( keys %{$sig->{where}} ) {
+            # Handle 'where { block using $_ }'
+            my $constraint_impl =
+                $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
+                    ? "sub $constraint"
+                    : $constraint;
+            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $sig->{var}, $sig->{var}, $constraint;
+            push @code, "$error unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ";
+        }
     }
 
     return @code;
@@ -949,21 +1146,7 @@ sub signature_error {
     my ($proto, $msg) = @_;
     my $class = ref $proto || $proto;
 
-    # using @CARP_NOT here even though we're not using Carp
-    # who knows? maybe someday Carp will be capable of doing what we want
-    # until then, we're rolling our own, but @CARP_NOT is still serving roughly the same purpose
-    local @CARP_NOT;
-    push @CARP_NOT, __PACKAGE__;
-    push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
-    push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
-    my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
-
-    my $level = 0;
-    my ($pack, $file, $line, $method);
-    do {
-        ($pack, $file, $line, $method) = caller(++$level);
-    } while $method =~ /$skip/ or $pack =~ /$skip/;
-
+    my ($file, $line, $method) = carp_location_for($class);
     die "In call to $method(), $msg at $file line $line.\n";
 }
 
@@ -1063,6 +1246,14 @@ sub type_error
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
+# Errors from `where' constraints are handled here.
+sub where_error
+{
+    my ($class, $value, $name, $constraint) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{$name value ($value) does not satisfy constraint: $constraint});
+}
+
 
 =head1 PERFORMANCE
 
@@ -1150,13 +1341,13 @@ versions.
 If you wish to subclass Method::Signatures, the following methods are
 good places to start.
 
-=head2 too_many_args_error, named_param_error, required_arg, type_error
+=head2 too_many_args_error, named_param_error, required_arg, type_error, where_error
 
 These are class methods which report the various run-time errors
 (extra parameters, unknown named parameter, required parameter
-missing, and parameter fails type check, respectively).  Note that
-each one calls C<signature_error>, which your versions should do as
-well.
+missing, parameter fails type check, and parameter fails where
+constraint respectively).  Note that each one calls
+C<signature_error>, which your versions should do as well.
 
 =head2 signature_error
 
@@ -1206,7 +1397,7 @@ surprisingly stable.
 
 =head2 Earlier Perl versions
 
-The most noticable is if an error occurs at compile time, such as a
+The most noticeable is if an error occurs at compile time, such as a
 strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
 appear to fail where there is no reason to fail.
@@ -1306,6 +1497,10 @@ Method::Signatures (or, more properly,
 L<Method::Signatures::Modifiers>) instead of
 L<MooseX::Method::Signatures>, which fixes many of the problems
 commonly attributed to L<MooseX::Declare>.
+
+Value constraints and default conditions (i.e. "where" and "when")
+were added by Damian Conway, who also rewrote some of the signature
+parsing to make it more robust and more extensible.
 
 Also thanks to Matthijs van Duin for his awesome L<Data::Alias> which
 makes the C<\@foo> signature work perfectly and L<Sub::Name> which
