@@ -995,8 +995,8 @@ my $when_block_re = qr{
     \s*
     \{
       (?:
-          .* ; .* |
-          (?:(?! => ). )*
+          .* ; .*         |     # statements separated by semicolons
+          (?:(?! => ). )+       # doesn't look like a hash with fat commas
       )
     \}
     \s*
