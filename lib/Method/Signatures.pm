@@ -989,6 +989,19 @@ sub named_param_error {
     $class->signature_error("does not take @keys as named argument(s)");
 }
 
+# Regex to determine if a where clause is a block.
+my $when_block_re = qr{
+    ^
+    \s*
+    \{
+      (?:
+          .* ; .* |
+          (?:(?! => ). )*
+      )
+    \}
+    \s*
+    $
+}xs;
 
 sub inject_for_sig {
     my $self = shift;
@@ -1023,7 +1036,7 @@ sub inject_for_sig {
     # Handle a default value
     if( defined $sig->{default_when} ) {
         # Handle default with 'when { block using $_ }'
-        if ($sig->{default_when} =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs) {
+        if ($sig->{default_when} =~ $when_block_re) {
             $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; (grep $sig->{default_when} \$arg) ? ($sig->{default}) : \$arg}";
         }
 
