@@ -20,6 +20,7 @@ sub method_defined
 {
     my ($method) = @_;
 
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
     lives_ok { Foo->$method } "method $method is defined at $phase";
 }
 
@@ -27,6 +28,7 @@ sub method_undefined
 {
     my ($method) = @_;
 
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
     throws_ok { Foo->$method } qr/Can't locate object method/, "method $method is undefined at $phase";
 }
 
