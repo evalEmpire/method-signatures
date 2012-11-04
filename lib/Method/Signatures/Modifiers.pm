@@ -192,21 +192,11 @@ sub import
 }
 
 
-# The code_for routine for Method::Signatures just takes the code from
-# Devel::Declare::MethodInstaller::Simple (by calling SUPER::code_for) and uses BeginLift to promote
-# that to a compile-time call.  However, for modifiers, we can't do that at all:
+# Method::Signatures doesn't have a code_for routine; it just passes through directly to
+# Devel::Declare::MethodInstaller::Simple.  But DDMIS::code_for creates a sub, which is entirely
+# different from creating a method modifier.  We need all different code.
 #
-#   *   The code from DDMIS::code_for creates a sub, which is entirely different from creating a
-#       method modifier.  We need all different code.
-#
-#   *   We can't use BeginLift here, because what it does is cause the method modifier to be created
-#       first, before things like "extends" and "with" have had a chance to run.  That means that
-#       the method you're trying to create a modifier for might not even exist yet, because it comes
-#       from a superclass or role (in fact, that's the most likely case; you don't typically need a
-#       modifier on a method in your own class).
-#
-# So we need a whole different code_for.  We'll need to return a sub which does the following
-# things:
+# Our code_for will need to return a sub which does the following things:
 #
 #   *   Figures out the metaclass of the class we're processing.
 #

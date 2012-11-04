@@ -714,7 +714,7 @@ sub inject_if_block
     # Named function compiled at BEGIN time
     if( defined $name && $self->_do_compile_at_BEGIN ) {
         # Devel::Declare needs the code ref which has been generated.
-        # Forunately, "sub foo {...}" happens at compile time, so we
+        # Fortunately, "sub foo {...}" happens at compile time, so we
         # can use \&foo at runtime even if it comes before the sub
         # declaration in the code!
         $before = qq[\\&$name; sub $name $attrs ];
