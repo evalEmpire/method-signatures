@@ -23,6 +23,17 @@ use attributes;
 
 
 {
+    package Foo;
+
+    use Test::More;
+    use Method::Signatures;
+
+    my $code = func () : method {};
+    is_deeply( [attributes::get $code], ['method'] );
+}
+
+
+{
     package Things;
 
     use attributes;

@@ -700,19 +700,28 @@ sub import {
 }
 
 
-sub code_for {
-    my($self, $name) = @_;
+# Inject special code to make named functions compile at BEGIN time.
+# Otherwise we leave injection to Devel::Declare.
+sub inject_if_block
+{
+    my ($self, $inject, $before) = @_;
 
-    my $code = $self->SUPER::code_for($name);
+    my $name  = $self->{function_name};
+    my $attrs = $self->{attributes} || '';
 
-    # Make method and func act at compile time, if they're named and if we're
-    # configured to do that.
+    DEBUG( "attributes: $attrs\n" );
+
+    # Named function compiled at BEGIN time
     if( defined $name && $self->_do_compile_at_BEGIN ) {
-        require Devel::BeginLift;
-        Devel::BeginLift->setup_for_cv($code);
+        # Devel::Declare needs the code ref which has been generated.
+        # Fortunately, "sub foo {...}" happens at compile time, so we
+        # can use \&foo at runtime even if it comes before the sub
+        # declaration in the code!
+        $before = qq[\\&$name; sub $name $attrs ];
     }
 
-    return $code;
+    DEBUG( "inject: $inject\n" );
+    $self->SUPER::inject_if_block($inject, $before);
 }
 
 
@@ -741,6 +750,28 @@ sub _strip_ws {
 sub _parser_is_fucked {
     local $@;
     return eval 42 ? 0 : 1;
+}
+
+
+# Capture the function name
+sub strip_name {
+    my $self = shift;
+
+    my $name = $self->SUPER::strip_name(@_);
+    $self->{function_name} = $name;
+
+    return $name;
+}
+
+
+# Capture the attributes
+sub strip_attrs {
+    my $self = shift;
+
+    my $attrs = $self->SUPER::strip_attrs(@_);
+    $self->{attributes} = $attrs;
+
+    return $attrs;
 }
 
 
@@ -858,7 +889,6 @@ sub parse_func {
 
     # Then turn it into Perl code
     my $inject = $self->inject_from_signature($signature);
-    DEBUG( "inject: $inject\n" );
     return $inject;
 }
 
@@ -1374,11 +1404,6 @@ surprisingly stable.
 
 =head2 Earlier Perl versions
 
-In Perl 5.8.x, parsing of methods at compile-time has intermittent
-issues, at least for versions of L<Devel::BeginLift> 0.001003 and
-before.  It's possible it will be fixed in future versions of
-Devel::BeginLift.
-
 The most noticeable is if an error occurs at compile time, such as a
 strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
@@ -1490,8 +1515,7 @@ makes the subroutine names come out right in caller().
 
 And thanks to Florian Ragwitz for his parallel
 L<MooseX::Method::Signatures> module from which I borrow ideas and
-code and L<Devel::BeginLift> which lets the methods be declared
-at compile time.
+code.
 
 
 =head1 LICENSE
