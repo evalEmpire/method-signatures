@@ -1,3 +1,8 @@
+20121108.0047_001	Thu Nov  8 00:47:15 PST 2012
+	New Features
+	* remove dependency on Devel::BeginLift
+	  [github #39]
+
 20121025.2315_001	Thu Oct 25 23:15:20 PDT 2012
 	New Features
 	* can now use `when' to specify default conditions
