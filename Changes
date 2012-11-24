@@ -1,3 +1,8 @@
+NEXT
+    Misc
+    * Failure to parse parameters will now produce a more useful error.
+
+
 20121108.0047_001    Thu Nov  8 00:47:15 PST 2012
     New Features
     * remove dependency on Devel::BeginLift

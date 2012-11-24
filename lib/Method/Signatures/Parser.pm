@@ -14,8 +14,7 @@ sub split_proto {
 
     local $@ = undef;
 
-    require PPI;
-    my $ppi = PPI::Document->new(\$proto);
+    my $ppi = new_ppi_doc(\$proto);
     $ppi->prune('PPI::Token::Comment');
 
     my $statement = $ppi->find_first("PPI::Statement");
@@ -102,8 +101,7 @@ sub split_parameter {
         $param = "$sig{var} $param";
 
         # Tokenize...
-        require PPI;
-        my $components = PPI::Document->new(\$param);
+        my $components = new_ppi_doc(\$param);
         my $statement = $components->find_first("PPI::Statement")
             or fatal("Could not understand parameter specification: $param\n");
         my $tokens = [ $statement->children ];
@@ -222,6 +220,15 @@ sub carp_location_for {
     } while $method !~ $target and $method =~ /$skip/ or $pack =~ /$skip/;
 
     return ($file, $line, $method);
+}
+
+sub new_ppi_doc {
+    my $source = shift;
+
+    require PPI;
+    my $ppi = PPI::Document->new($source) or
+      fatal("source '$$source' cannot be parsed by PPI: ".PPI::Document->errstr);
+    return $ppi;
 }
 
 sub fatal {
