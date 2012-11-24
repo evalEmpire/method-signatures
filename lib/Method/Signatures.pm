@@ -721,7 +721,12 @@ sub inject_if_block
     }
 
     DEBUG( "inject: $inject\n" );
-    $self->SUPER::inject_if_block($inject, $before);
+    DEBUG( "before: $before\n" );
+    DEBUG( "linestr before: ".$self->get_linestr."\n" ) if $DEBUG;
+    my $ret = $self->SUPER::inject_if_block($inject, $before);
+    DEBUG( "linestr after: ". $self->get_linestr."\n" ) if $DEBUG;
+
+    return $ret;
 }
 
 
