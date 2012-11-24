@@ -59,4 +59,25 @@ SKIP:
 }
 
 
+TODO: {
+    local $TODO = "closing paren in comment: rt.cpan.org 81364";
+
+    lives_ok
+    {
+        # When this fails, it produces 'Variable "$bar" is not imported'
+        # This is expected to fail, don't bother the user.
+        no warnings;
+        eval q{
+            func special_comment (
+                $foo, # )
+                $bar
+            )
+            { 42 }
+            1;
+        } or die;
+    }
+    'closing paren in comment';
+    is eval q[special_comment("this", "that")], 42;
+}
+
 done_testing();
