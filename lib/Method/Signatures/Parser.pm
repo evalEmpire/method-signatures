@@ -34,7 +34,12 @@ sub split_proto {
         $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
     } while( $token );
 
+
     strip_ws($_) for @proto;
+
+    # Remove blank entries due to trailing comma.
+    @proto = grep { /\S/ } @proto;
+
     return @proto;
 }
 

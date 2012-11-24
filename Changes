@@ -1,4 +1,8 @@
 NEXT
+    Bug Fixes
+    * Trailing commas on parameter lists are now ok.
+      [rt.cpan.org 81364]
+
     Misc
     * Failure to parse parameters will now produce a more useful error.
 
