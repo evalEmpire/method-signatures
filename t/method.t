@@ -18,19 +18,19 @@ use Test::More 'no_plan';
     method get ($key) {
         return $self->{$key};
     }
-    
+
     method no_proto {
         return($self, @_);
     }
-    
+
     method empty_proto() {
         return($self, @_);
     }
-    
+
     method echo(@_) {
         return($self, @_);
     }
-    
+
     method caller($height = 0) {
         return (CORE::caller($height))[0..2];
     }
@@ -40,13 +40,13 @@ use Test::More 'no_plan';
         my $warning = '';
         local $SIG{__WARN__} = sub { $warning = join '', @_; };
         CORE::warn "Testing warn";
-        
+
         return $warning;
     }
 
     # Method with the same name as a loaded class.
     method strict () {
-        42 
+        42
     }
 }
 
@@ -61,7 +61,7 @@ is $obj->get("foo"), 99;
 for my $method (qw(no_proto empty_proto)) {
     is_deeply [$obj->$method], [$obj];
     ok !eval { $obj->$method(23); 1 };
-    like $@, qr{\Q$method(), was given too many arguments, it expects 0};
+    like $@, qr{\Q$method(), was given too many arguments; it expects 0};
 }
 
 is_deeply [$obj->echo(1,2,3)], [$obj,1,2,3], "echo";

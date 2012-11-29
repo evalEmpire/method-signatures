@@ -1013,7 +1013,7 @@ sub inject_from_signature {
 sub too_many_args_error {
     my($class, $max_args) = @_;
 
-    $class->signature_error("was given too many arguments, it expects $max_args");
+    $class->signature_error("was given too many arguments; it expects $max_args");
 }
 
 
