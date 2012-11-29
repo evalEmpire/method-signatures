@@ -16,6 +16,11 @@ NEXT
     * remove dependency on Devel::BeginLift
       [github #39]
 
+    Bug Fixes
+    * Default condition of `when {}' now interpreted as
+      `when { $_ ~~ {} }' (avoids parse error).
+      [github #60]
+
 20121025.2315_001    Thu Oct 25 23:15:20 PDT 2012
     New Features
     * can now use `when' to specify default conditions
