@@ -52,7 +52,7 @@ BEGIN {
     }
 
     is( Stuff->copy_cat("wibble"), "wibble" );
-    is( Stuff->copy_cat("wibble", ""), "wibble" );
+    is( Stuff->copy_cat("wibble", 0), "wibble" );
     is( Stuff->copy_cat(23, 42),   42 );
 }
 
