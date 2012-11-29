@@ -8,6 +8,7 @@ NEXT
 
     Distribution Fixes
     * Fixed test failing on 5.10.0 as per github #59.
+    * Fixed subtests failing on Test::More's prior to 0.96.
 
 
 20121108.0047_001    Thu Nov  8 00:47:15 PST 2012

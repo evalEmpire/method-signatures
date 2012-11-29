@@ -18,6 +18,7 @@ subtest 'yada after positional' => sub {
         subtest @_ . ' args' => sub {
             is $pos1, 'pos1' => '$pos1 okay';
             is $pos2, 'pos2' => '$pos2 okay';
+            done_testing;                                               # for Test::More's before 0.96
         };
         return 1;
     }
@@ -33,6 +34,7 @@ subtest 'yada after named' => sub {
         subtest @_ . ' args' => sub {
             is $named1, 'named1' => '$named1 okay';
             is $named2, 'named2' => '$named2 okay';
+            done_testing;                                               # for Test::More's before 0.96
         };
         return 1;
     }
@@ -50,6 +52,7 @@ subtest 'yada after both' => sub {
             is $pos2, 'pos2' => '$pos2 okay';
             is $named1, 'named1' => '$named1 okay';
             is $named2, 'named2' => '$named2 okay';
+            done_testing;                                               # for Test::More's before 0.96
         };
         return 1;
     }
@@ -67,6 +70,7 @@ subtest 'non-yada' => sub {
             is $pos2, 'pos2' => '$pos2 okay';
             is $named1, 'named1' => '$named1 okay';
             is $named2, 'named2' => '$named2 okay';
+            done_testing;                                               # for Test::More's before 0.96
         };
         return 1;
     }
