@@ -1,4 +1,4 @@
-NEXT
+20121128.2139_001   Wed Nov 28 21:39:16 PST 2012
     Bug Fixes
     * Trailing commas on parameter lists are now ok.
       [rt.cpan.org 81364]

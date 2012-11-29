@@ -20,10 +20,10 @@ name: Method-Signatures
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 20121108.0047_001
+    version: 20121128.2139_001
   Method::Signatures::Modifiers:
     file: lib/Method/Signatures/Modifiers.pm
-    version: 20121108.0047_001
+    version: 20121128.2139_001
   Method::Signatures::Parser:
     file: lib/Method/Signatures/Parser.pm
     version: 0
@@ -44,4 +44,4 @@ resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
   license: http://dev.perl.org/licenses/
   repository: https://github.com/schwern/method-signatures/tree
-version: 20121108.0047_001
+version: 20121128.2139_001

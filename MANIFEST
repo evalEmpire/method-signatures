@@ -82,6 +82,7 @@ t/split_proto.t
 t/string_defaults.t
 t/syntax_errors.t
 t/too_many_args.t
+t/trailing_comma.t
 t/traits.t
 t/type_check.t
 t/type_req_opt.t
