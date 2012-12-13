@@ -126,11 +126,6 @@ sub split_parameter {
             $sig{traits}{extract_leading(qr{^ \S+ $}x, $tokens)}++;
         }
 
-        # Verify any named parameter does not have invalid trait...
-        if ($sig{named} && ($sig{is_ref_alias} || $sig{traits}{alias})) {
-            fatal("Named parameter :$sig{var} cannot also be aliased");
-        }
-
         # Extract normal default specifier (if any)...
         if (extract_leading(qr{^ = $}x, $tokens)) {
             $sig{default} = extract_until(qr{^ when $}x, $tokens);

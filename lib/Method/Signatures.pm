@@ -122,8 +122,7 @@ The full signature syntax for each parameter is:
        Default value____________________________________/            |
        When default value should be applied_________________________/
 
-Every component except the parameter name is optional.  Note that you
-cannot use both \ and : in front of the variable name.
+Every component except the parameter name is optional.
 
 C<$SM_EXPR> is any expression that is valid as the RHS of a smartmatch,
 or else a raw block of code. See L<"Value constraints">.
@@ -188,7 +187,6 @@ reference.
     my @bar = (1,2,3);
     Stuff->add_one(\@bar);  # @bar is now (2,3,4)
 
-Named parameters cannot be aliased in this way.
 
 
 =head3 Invocant parameter
@@ -988,7 +986,7 @@ sub inject_from_signature {
 
     if( @{$signature->{named}} ) {
         my $first_named_idx = @{$signature->{positional}};
-        push @code, "my \%args = \@_[$first_named_idx..\$#_];";
+        push @code, "Data::Alias::alias( my (\%args) = \@_[$first_named_idx..\$#_] );";
 
         for my $sig (@{$signature->{named}}) {
             push @code, $self->inject_for_sig($sig);
@@ -1053,11 +1051,12 @@ sub inject_for_sig {
 
     # These are the defaults.
     my $lhs = "my $sig->{var}";
-    my $rhs;
+    my ($rhs, $deletion_target);
 
     if( $sig->{named} ) {
         $sig->{passed_in} = "\$args{$sig->{name}}";
-        $rhs = "delete $sig->{passed_in}";
+        $rhs = $deletion_target = $sig->{passed_in};
+        $rhs = "${sigil}{$rhs}" if $sig->{is_ref_alias};
     }
     else {
         $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
@@ -1105,6 +1104,9 @@ sub inject_for_sig {
     } else {
         push @code, "$lhs = $rhs;";
     }
+
+    # Named arg has been handled, so don't pass to error handler
+    push @code, "delete( $deletion_target );" if $deletion_target;
 
     # Handle 'where' constraints (after defaults are resolved)
     if ( $sig->{where} ) {
