@@ -122,7 +122,7 @@ The full signature syntax for each parameter is:
        Default value____________________________________/            |
        When default value should be applied_________________________/
 
-Every component except the parameter name is optional.
+Every component except the parameter name (with sigil) is optional.
 
 C<$SM_EXPR> is any expression that is valid as the RHS of a smartmatch,
 or else a raw block of code. See L<"Value constraints">.
@@ -282,7 +282,7 @@ certainly C<when undef>:
 
 which covers the common case where an uninitialized variable is passed
 as an argument, or where supplying an explicit undefined value is
-intended to indicate: "use the default instead".
+intended to indicate: "use the default instead."
 
 This usage is sufficiently common that a short-cut is provided:
 using the C<//=> operator (instead of the regular assignment operator)
@@ -569,6 +569,9 @@ I<required>.
 The @_ signature is a special case which only shifts C<$self>.  It
 leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
+
+Note that a signature of C<(@_)> is exactly equivalent to a signature
+of C<(...)>.  See L<"The yada yada marker">.
 
 
 =head3 The empty signature
@@ -1419,6 +1422,9 @@ appear to fail where there is no reason to fail.
 We recommend you use the L<compile_at_BEGIN> flag to turn off
 compile-time parsing.
 
+You can't use any feature that requires a smartmatch expression (i.e.
+conditional L<"Defaults"> and L<"Value Constraints"> in Perl 5.8.
+
 Method::Signatures cannot be used with Perl versions prior to 5.8
 because L<Devel::Declare> does not work with those earlier versions.
 
@@ -1529,7 +1535,7 @@ code.
 
 The original code was taken from Matt S. Trout's tests for L<Devel::Declare>.
 
-Copyright 2007-2011 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+Copyright 2007-2012 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
@@ -1544,6 +1550,8 @@ L<MooseX::Method::Signatures> for an alternative implementation.
 L<Perl6::Signature> for a more complete implementation of Perl 6 signatures.
 
 L<Method::Signatures::Simple> for a more basic version of what Method::Signatures provides.
+
+L<Function::Parameters> for a subset of Method::Signature's features without using L<Devel::Declare>.
 
 L<signatures> for C<sub> with signatures.
 

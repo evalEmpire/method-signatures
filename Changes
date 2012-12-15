@@ -1,3 +1,14 @@
+NEXT
+    New Features
+    * can now have aliased named parameters
+      [github #57]
+
+    Docs
+    * Minor clarifications here and there.
+    * Clarified what doesn't work in Perl 5.8.
+    * Added Function::Parameters to See Also section.
+    * Updated copyright.
+
 20121201    Sat Dec  1 01:59:44 PST 2012
     Promoted to full release
 
