@@ -1,24 +1,58 @@
 package GenErrorRegex;
 
+use strict;
+use warnings;
+
 use base qw< Exporter >;
 our @EXPORT_OK = qw< required_error named_param_error badval_error badtype_error >;
 
 
 sub _regexify
 {
-    my ($obj, $method, $msg, %extra) = @_;
-    my $class = ref $obj || $obj || 'main';
+    my ($compile_time, $class, $obj, $method, $msg, %extra);
+    $compile_time = ($_[0] || '') eq 'COMPILE_TIME';                    # really should be // there, but this works
+    if ($compile_time)
+    {
+        (undef, $msg, %extra) = @_;
+    }
+    else
+    {
+        ($obj, $method, $msg, %extra) = @_;
+        $class = ref $obj || $obj || 'main';
+    }
 
-    my $error = "In call to ${class}::$method(), $msg at ";
+    my $error = $compile_time ? "$msg in declaration at " : "In call to ${class}::$method(), $msg at ";
     if ($extra{LINE})
     {
         $extra{FILE} ||= $0;
         $error .= "$extra{FILE} line $extra{LINE}.\n";
     }
+    if ($compile_time)
+    {
+        $error .= "Compilation failed";
+    }
 
     $error = quotemeta $error;
-    return $extra{LINE} ? qr/\A$error\Z/ : qr/\A$error/;
+    return $extra{LINE} && !$compile_time ? qr/\A$error\Z/ : qr/\A$error/;
 }
+
+
+####################################################################################################
+# COMPILE-TIME ERRORS
+# These don't know what package or method they're dealing with, so they require fewer parameters,
+# and they'll call _regexify() with an initial argument of 'COMPILE_TIME'.
+####################################################################################################
+
+
+####################################################################################################
+# RUN-TIME ERRORS
+# These should know what package and method they're dealing with, so they will all take an $obj
+# parameter and a $method parameter, with possibly some other parameters in between.  The $obj
+# parameter can either be an instance of the package in question, or the name of it, or undef (which
+# will indicate the 'main' package.  _regexify() handles all of that for you.  Of course, because of
+# the way the compile-time errors are identified, it wouldn't work if you had a package named
+# COMPILE_TIME.  That seems pretty unlikely though.
+####################################################################################################
 
 
 sub required_error

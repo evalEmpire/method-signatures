@@ -29,6 +29,10 @@ use Test::Exception;
 #
 # Ready? Here we go.
 
+my %compile_time_errors =
+(
+);
+
 my %run_time_errors =
 (
     MissingRequired =>  {
@@ -76,6 +80,16 @@ my %run_time_errors =
                         },
 );
 
+
+while (my ($testclass, $test) = each %compile_time_errors)
+{
+    (my $testmod = "$testclass.pm") =~ s{::}{/}g;
+    no strict 'refs';
+
+    throws_ok  { require $testmod }
+            $test->{error_gen}->(@{$test->{error_args}}, FILE => "t/lib/$testmod", LINE => 1133),
+            $test->{test_name};
+}
 
 while (my ($testclass, $test) = each %run_time_errors)
 {
