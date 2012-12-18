@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use GenErrorRegex qw< required_error named_param_error badtype_error badval_error >;
+use GenErrorRegex qw< bad_param_error required_error named_param_error badtype_error badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -31,6 +31,13 @@ use Test::Exception;
 
 my %compile_time_errors =
 (
+    BadParameter    =>  {
+                            error_gen   =>  'bad_param_error',
+                            error_args  =>  [
+                                                '&$bar',
+                                            ],
+                            test_name   =>  'illegal param spec reports correctly',
+                        }
 );
 
 my %run_time_errors =
