@@ -18,7 +18,7 @@ sub split_proto {
     $ppi->prune('PPI::Token::Comment');
 
     my $statement = $ppi->find_first("PPI::Statement");
-    fatal("Could not understand parameter list specification: $proto\n")
+    fatal("Could not understand parameter list specification: $proto")
         unless $statement;
     my $token = $statement->first_token;
 
@@ -84,7 +84,7 @@ sub split_parameter {
 
     # Extract ref-alias & named-arg markers, param var, and required/optional marker...
     $param =~ s{ ^ \s* ([\\:]*) \s* ($VARIABLE) \s* ([!?]?) }{}ox
-        or fatal("Could not understand parameter specification: $param\n");
+        or fatal("Could not understand parameter specification: $param");
 
     my ($premod, $var, $postmod) = ($1, $2, $3);
     $sig{is_ref_alias} = $premod =~ m{ \\ }x;
@@ -108,7 +108,7 @@ sub split_parameter {
         # Tokenize...
         my $components = new_ppi_doc(\$param);
         my $statement = $components->find_first("PPI::Statement")
-            or fatal("Could not understand parameter specification: $param\n");
+            or fatal("Could not understand parameter specification: $param");
         my $tokens = [ $statement->children ];
 
         # Re-remove parameter var
@@ -151,7 +151,7 @@ sub split_parameter {
         # Anything left over is an error...
         elsif (my $trailing = extract_leading(qr{ \S }x, $tokens)) {
             fatal("Unexpected extra code after parameter specification: '",
-                  $trailing . join(q{}, @$tokens), "'\n"
+                  $trailing . join(q{}, @$tokens), "'"
             );
         }
     }
@@ -227,14 +227,14 @@ sub new_ppi_doc {
 
     require PPI;
     my $ppi = PPI::Document->new($source) or
-      fatal("source '$$source' cannot be parsed by PPI: ".PPI::Document->errstr);
+      fatal("source '$$source' cannot be parsed by PPI: " . PPI::Document->errstr);
     return $ppi;
 }
 
 sub fatal {
     my ($file, $line)
         = carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
-    die @_, " in declaration at $file line $line\n";
+    die @_, " in declaration at $file line $line.\n";
 }
 
 1;
