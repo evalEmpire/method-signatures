@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use GenErrorRegex qw< bad_param_error unexpected_after_error required_error named_param_error badtype_error badval_error >;
+use GenErrorRegex;                                                      # error-generating subs imported below
 
 use Test::More;
 use Test::Exception;
@@ -93,6 +93,9 @@ my %run_time_errors =
                             test_name   =>  'incorrect type reports correctly',
                         },
 );
+
+# this is *much* easier (and less error-prone) than having to update the import list manually up top
+GenErrorRegex->import( map { $_->{error_gen} } values %compile_time_errors, values %run_time_errors );
 
 
 while (my ($testclass, $test) = each %compile_time_errors)
