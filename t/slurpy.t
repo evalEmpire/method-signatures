@@ -18,7 +18,7 @@ use Test::Exception;
     method slurpy_last($this, @that) { return $this, \@that; }
 
     ok !eval q[func slurpy_first(@that, $this) { return $this, \@that; }];
-    like $@, qr{slurpy parameter \@that must come at the end};
+    like $@, qr{Slurpy parameter '\@that' must come at the end};
     TODO: {
         local $TODO = "error message incorrect inside an eval";
 
@@ -27,7 +27,7 @@ use Test::Exception;
     }
 
     ok !eval q[func slurpy_middle($this, @that, $other) { return $this, \@that, $other }];
-    like $@, qr{slurpy parameter \@that must come at the end};
+    like $@, qr{Slurpy parameter '\@that' must come at the end};
     TODO: {
         local $TODO = "error message incorrect inside an eval";
 

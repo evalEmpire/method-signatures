@@ -960,7 +960,7 @@ sub _check_signature {
     )
     {
         my($slurpy_param) = $self->_find_slurpy_params;
-        $self->signature_error("slurpy parameter $slurpy_param->{var} must come at the end");
+        sig_parsing_error("Slurpy parameter '$slurpy_param->{var}' must come at the end");
     }
 }
 

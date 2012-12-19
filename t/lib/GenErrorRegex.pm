@@ -4,7 +4,8 @@ use strict;
 use warnings;
 
 use base qw< Exporter >;
-our @EXPORT_OK = qw< bad_param_error unexpected_after_error required_error named_param_error badval_error badtype_error >;
+our @EXPORT_OK = (qw< bad_param_error unexpected_after_error mispositioned_slurpy_error >,          # compile-time
+        qw< required_error named_param_error badval_error badtype_error >);                         # run-time
 
 
 sub _regexify
@@ -57,6 +58,14 @@ sub unexpected_after_error
     my ($trailing, %extra) = @_;
 
     return _regexify(COMPILE_TIME => "Unexpected extra code after parameter specification: '$trailing'", %extra);
+}
+
+
+sub mispositioned_slurpy_error
+{
+    my ($param, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Slurpy parameter '$param' must come at the end", %extra);
 }
 
 
