@@ -49,18 +49,18 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20121201"
+         "version" : "20121219.0033_001"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20121201"
+         "version" : "20121219.0033_001"
       },
       "Method::Signatures::Parser" : {
          "file" : "lib/Method/Signatures/Parser.pm",
          "version" : 0
       }
    },
-   "release_status" : "stable",
+   "release_status" : "testing",
    "resources" : {
       "bugtracker" : {
          "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
@@ -72,5 +72,5 @@
          "url" : "https://github.com/schwern/method-signatures/tree"
       }
    },
-   "version" : "20121201"
+   "version" : "20121219.0033_001"
 }
