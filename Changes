@@ -1,7 +1,11 @@
-NEXT
+20121219.0033_001   Wed Dec 19 00:33:58 PST 2012
     New Features
-    * can now have aliased named parameters
+    * Can now have aliased named parameters.
       [github #57]
+
+    Bug Fixes
+    * Compile-time errors now reporting proper line numbers.
+      [github #61]
 
     Docs
     * Minor clarifications here and there.
