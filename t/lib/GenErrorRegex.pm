@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use base qw< Exporter >;
-our @EXPORT_OK = qw< bad_param_error required_error named_param_error badval_error badtype_error >;
+our @EXPORT_OK = qw< bad_param_error unexpected_after_error required_error named_param_error badval_error badtype_error >;
 
 
 sub _regexify
@@ -49,6 +49,14 @@ sub bad_param_error
     my ($param, %extra) = @_;
 
     return _regexify(COMPILE_TIME => "Could not understand parameter specification: $param", %extra);
+}
+
+
+sub unexpected_after_error
+{
+    my ($trailing, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Unexpected extra code after parameter specification: '$trailing'", %extra);
 }
 
 

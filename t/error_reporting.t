@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use GenErrorRegex qw< bad_param_error required_error named_param_error badtype_error badval_error >;
+use GenErrorRegex qw< bad_param_error unexpected_after_error required_error named_param_error badtype_error badval_error >;
 
 use Test::More;
 use Test::Exception;
@@ -37,7 +37,14 @@ my %compile_time_errors =
                                                 '&$bar',
                                             ],
                             test_name   =>  'illegal param spec reports correctly',
-                        }
+                        },
+    TrailingGarbage =>  {
+                            error_gen   =>  'unexpected_after_error',
+                            error_args  =>  [
+                                                '&',
+                                            ],
+                            test_name   =>  'trailing code after param reports correctly',
+                        },
 );
 
 my %run_time_errors =
