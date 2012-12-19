@@ -5,7 +5,7 @@ use warnings;
 use Carp;
 
 use base qw(Exporter);
-our @EXPORT = qw(split_proto split_parameter extract_invocant carp_location_for);
+our @EXPORT = qw(split_proto split_parameter extract_invocant sig_parsing_error carp_location_for);
 
 
 sub split_proto {
@@ -18,7 +18,7 @@ sub split_proto {
     $ppi->prune('PPI::Token::Comment');
 
     my $statement = $ppi->find_first("PPI::Statement");
-    fatal("Could not understand parameter list specification: $proto")
+    sig_parsing_error("Could not understand parameter list specification: $proto")
         unless $statement;
     my $token = $statement->first_token;
 
@@ -84,7 +84,7 @@ sub split_parameter {
 
     # Extract ref-alias & named-arg markers, param var, and required/optional marker...
     $param =~ s{ ^ \s* ([\\:]*) \s* ($VARIABLE) \s* ([!?]?) }{}ox
-        or fatal("Could not understand parameter specification: $param");
+        or sig_parsing_error("Could not understand parameter specification: $param");
 
     my ($premod, $var, $postmod) = ($1, $2, $3);
     $sig{is_ref_alias} = $premod =~ m{ \\ }x;
@@ -108,7 +108,7 @@ sub split_parameter {
         # Tokenize...
         my $components = new_ppi_doc(\$param);
         my $statement = $components->find_first("PPI::Statement")
-            or fatal("Could not understand parameter specification: $param");
+            or sig_parsing_error("Could not understand parameter specification: $param");
         my $tokens = [ $statement->children ];
 
         # Re-remove parameter var
@@ -116,7 +116,7 @@ sub split_parameter {
 
         # Extract any 'where' contraints...
         while (extract_leading(qr{^ where $}x, $tokens)) {
-            fatal("'where' constraint only available under Perl 5.10 or later. Error")
+            sig_parsing_error("'where' constraint only available under Perl 5.10 or later. Error")
                 if $] < 5.010;
             $sig{where}{extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens)}++;
         }
@@ -132,7 +132,7 @@ sub split_parameter {
 
             # Extract 'when' modifier (if any)...
             if (extract_leading(qr{^ when $}x, $tokens)) {
-                fatal("'when' modifier on default only available under Perl 5.10 or later. Error")
+                sig_parsing_error("'when' modifier on default only available under Perl 5.10 or later. Error")
                     if $] < 5.010;
                 $sig{default_when} = join(q{}, @$tokens);
                 $tokens = [];
@@ -141,7 +141,7 @@ sub split_parameter {
 
         # Otherwise, extract undef-default specifier (if any)...
         elsif (extract_leading(qr{^ //= $}x, $tokens)) {
-            fatal("'//=' defaults only available under Perl 5.10 or later. Error")
+            sig_parsing_error("'//=' defaults only available under Perl 5.10 or later. Error")
                 if $] < 5.010;
             $sig{default_when} = 'undef';
             $sig{default}      = join(q{}, @$tokens);
@@ -150,7 +150,7 @@ sub split_parameter {
 
         # Anything left over is an error...
         elsif (my $trailing = extract_leading(qr{ \S }x, $tokens)) {
-            fatal("Unexpected extra code after parameter specification: '",
+            sig_parsing_error("Unexpected extra code after parameter specification: '",
                   $trailing . join(q{}, @$tokens), "'"
             );
         }
@@ -227,11 +227,11 @@ sub new_ppi_doc {
 
     require PPI;
     my $ppi = PPI::Document->new($source) or
-      fatal("source '$$source' cannot be parsed by PPI: " . PPI::Document->errstr);
+      sig_parsing_error("source '$$source' cannot be parsed by PPI: " . PPI::Document->errstr);
     return $ppi;
 }
 
-sub fatal {
+sub sig_parsing_error {
     my ($file, $line)
         = carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
     die @_, " in declaration at $file line $line.\n";
