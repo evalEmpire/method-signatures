@@ -926,22 +926,22 @@ sub _check_sig {
     my($self, $sig, $signature) = @_;
 
     if( $sig->{is_slurpy} ) {
-        $self->signature_error("signature can only have one slurpy parameter") if
-          $signature->{overall}{num_slurpy} >= 1;
-        $self->signature_error("slurpy parameter $sig->{var} cannot be named, use a reference instead") if
-          $sig->{named};
+        sig_parsing_error("Signature can only have one slurpy parameter")
+                if $signature->{overall}{num_slurpy} >= 1;
+        sig_parsing_error("Slurpy parameter '$sig->{var}' cannot be named; use a reference instead")
+                if $sig->{named};
     }
 
     if( $sig->{named} ) {
         if( $signature->{overall}{num_optional_positional} ) {
             my $pos_var = $signature->{positional}[-1]{var};
-            die("named parameter $sig->{var} mixed with optional positional $pos_var\n");
+            sig_parsing_error("Named parameter '$sig->{var}' mixed with optional positional '$pos_var'");
         }
     }
     else {
         if( $signature->{overall}{num_named} ) {
             my $named_var = $signature->{named}[-1]{var};
-            die("positional parameter $sig->{var} after named param $named_var\n");
+            sig_parsing_error("Positional parameter '$sig->{var}' after named param '$named_var'");
         }
     }
 }

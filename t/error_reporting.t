@@ -45,12 +45,41 @@ my %compile_time_errors =
                                                 ],
                                 test_name   =>  'trailing code after param reports correctly',
                             },
+    NamedAfterOptPos    =>  {
+                                error_gen   =>  'named_after_optpos_error',
+                                error_args  =>  [
+                                                    '$baz',
+                                                    '$bar',
+                                                ],
+                                test_name   =>  'named param following optional positional reports correctly',
+                            },
+    PosAfterNamed       =>  {
+                                error_gen   =>  'pos_after_named_error',
+                                error_args  =>  [
+                                                    '$baz',
+                                                    '$bar',
+                                                ],
+                                test_name   =>  'positional param following named reports correctly',
+                            },
     MispositionedSlurpy =>  {
                                 error_gen   =>  'mispositioned_slurpy_error',
                                 error_args  =>  [
                                                     '@bar',
                                                 ],
                                 test_name   =>  'mispositioned slurpy param reports correctly',
+                            },
+    MultipleSlurpy =>       {
+                                error_gen   =>  'multiple_slurpy_error',
+                                error_args  =>  [
+                                                ],
+                                test_name   =>  'multiple slurpy params reports correctly',
+                            },
+    NamedSlurpy =>          {
+                                error_gen   =>  'named_slurpy_error',
+                                error_args  =>  [
+                                                    '@bar',
+                                                ],
+                                test_name   =>  'named slurpy param reports correctly',
                             },
 );
 

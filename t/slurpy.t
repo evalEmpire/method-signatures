@@ -27,7 +27,7 @@ use Test::Exception;
     }
 
     ok !eval q[func slurpy_middle($this, @that, $other) { return $this, \@that, $other }];
-    like $@, qr{Slurpy parameter '\@that' must come at the end};
+    like $@, qr{slurpy parameter .* must come at the end}i;
     TODO: {
         local $TODO = "error message incorrect inside an eval";
 
@@ -36,7 +36,7 @@ use Test::Exception;
     }
 
     ok !eval q[func slurpy_positional(:@that) { return \@that; }];
-    like $@, qr{slurpy parameter \@that cannot be named, use a reference instead};
+    like $@, qr{slurpy parameter .* cannot be named. use a reference instead}i;
 
     TODO: {
         local $TODO = "error message incorrect inside an eval";
@@ -46,7 +46,7 @@ use Test::Exception;
     }
 
     ok !eval q[func slurpy_two($this, @that, @other) { return $this, \@that, \@other }];
-    like $@, qr{can only have one slurpy parameter at \Q$0\E line @{[__LINE__ - 1]}};
+    like $@, qr{can only have one slurpy parameter};
 }
 
 

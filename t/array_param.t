@@ -21,12 +21,12 @@ use Test::More tests => 3;
     eval q{
          method two_array_params ($a, @b, @c) {}
     };
-    like($@, qr{signature can only have one slurpy parameter}, "Two array params");
+    like($@, qr{signature can only have one slurpy parameter}i, "Two array params");
 
     eval q{
          method two_slurpy_params ($a, %b, $c, @d, $e) {}
     };
-    like($@, qr{signature can only have one slurpy parameter}, "Two slurpy params");
+    like($@, qr{signature can only have one slurpy parameter}i, "Two slurpy params");
 }
 
 is(Bla->new->array_param_at_end(1, 2, 3, 4), "1|2|3 4", "Array parameter at end");

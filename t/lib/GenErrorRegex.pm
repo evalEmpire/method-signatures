@@ -4,8 +4,12 @@ use strict;
 use warnings;
 
 use base qw< Exporter >;
-our @EXPORT_OK = (qw< bad_param_error unexpected_after_error mispositioned_slurpy_error >,          # compile-time
-        qw< required_error named_param_error badval_error badtype_error >);                         # run-time
+our @EXPORT_OK =
+(
+    qw< bad_param_error unexpected_after_error named_after_optpos_error pos_after_named_error >,    # compile-time
+    qw< mispositioned_slurpy_error multiple_slurpy_error named_slurpy_error >,                      # compile-time
+    qw< required_error named_param_error badval_error badtype_error >,                              # run-time
+);
 
 
 sub _regexify
@@ -61,11 +65,43 @@ sub unexpected_after_error
 }
 
 
+sub named_after_optpos_error
+{
+    my ($named, $optpos, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Named parameter '$named' mixed with optional positional '$optpos'", %extra);
+}
+
+
+sub pos_after_named_error
+{
+    my ($pos, $named, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Positional parameter '$pos' after named param '$named'", %extra);
+}
+
+
 sub mispositioned_slurpy_error
 {
     my ($param, %extra) = @_;
 
     return _regexify(COMPILE_TIME => "Slurpy parameter '$param' must come at the end", %extra);
+}
+
+
+sub multiple_slurpy_error
+{
+    my (%extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Signature can only have one slurpy parameter", %extra);
+}
+
+
+sub named_slurpy_error
+{
+    my ($param, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Slurpy parameter '$param' cannot be named; use a reference instead", %extra);
 }
 
 

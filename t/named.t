@@ -39,22 +39,20 @@ use Test::More;
             'simple named parameter error okay';
 
 
-    # Compile time errors need internal refactoring before I can get file, line and method
-    # information.
     eval q{
         method wrong( :$named, $pos ) {}
     };
-    like $@, qr/positional parameter \$pos after named param \$named/;
+    like $@, qr/positional parameter .* after named param/i;
 
     eval q{
         method wrong( $foo, :$named, $bar ) {}
     };
-    like $@, qr/positional parameter \$bar after named param \$named/;
+    like $@, qr/positional parameter .* after named param/i;
 
     eval q{
         method wrong( $foo, $bar?, :$named ) {}
     };
-    like $@, qr/named parameter \$named mixed with optional positional \$bar/;
+    like $@, qr/named parameter .* mixed with optional positional/i;
 }
 
 
