@@ -1401,6 +1401,27 @@ If you want to write "use Method::Signatures" in a one-liner, do a
 C<-MMethod::Signatures> first.  This is due to a bug/limitation in
 Devel::Declare.
 
+=head2 Close parends in comments
+
+Because of the way L<Devel::Declare> parses things, a close parend
+inside a comment could throw off the signature parsing.  For instance:
+
+    func foo (
+        $foo,       # $foo might contain )
+        $bar
+    )
+
+is going to produce a syntax error, because the parend inside the
+comment is perceived as the end of the signature.  On the other hand,
+this:
+
+    func foo (
+        $foo,       # (this is the $foo parend)
+        $bar
+    )
+
+is fine, because the parends in the comments are balanced.
+
 =head2 No source filter
 
 While this module does rely on the black magic of L<Devel::Declare> to
