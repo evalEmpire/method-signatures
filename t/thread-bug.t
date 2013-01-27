@@ -6,8 +6,18 @@
 
 use strict;
 use warnings;
-use threads;
+
+use Config;
+
+# threads.pm must be loaded before Test::More in order for Test::More
+# to operate properly with threaded tests.
+my $has_threads;
+BEGIN {
+    $has_threads = eval { require threads };
+}
 use Test::More;
+
+plan skip_all => 'This test only relevant under threaded Perls' if !$has_threads;
 
 use Method::Signatures;
 
