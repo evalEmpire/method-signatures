@@ -5,7 +5,6 @@ use warnings;
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
-use Data::Alias;
 use Devel::Pragma qw(my_hints);
 
 our $VERSION = '20121219.0033_001';
@@ -989,6 +988,7 @@ sub inject_from_signature {
 
     if( @{$signature->{named}} ) {
         my $first_named_idx = @{$signature->{positional}};
+        require Data::Alias;
         push @code, "Data::Alias::alias( my (\%args) = \@_[$first_named_idx..\$#_] );";
 
         for my $sig (@{$signature->{named}}) {
@@ -1098,6 +1098,7 @@ sub inject_for_sig {
 
     # Handle \@foo
     if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+        require Data::Alias;
         push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
     }
     # Handle "is ro"
