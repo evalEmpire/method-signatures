@@ -995,11 +995,11 @@ sub inject_from_signature {
             push @code, $self->inject_for_sig($sig);
         }
 
-        push @code, $class . '->named_param_error(\%args) if %args;'
+        push @code, $class . '->named_param_error(\%args) if keys %args;'
             if $signature->{overall}{num_named} && !$signature->{overall}{yadayada};
     }
 
-    push @code, $class . '->named_param_error(\%args) if %args;' if $signature->{overall}{has_named};
+    push @code, $class . '->named_param_error(\%args) if keys %args;' if $signature->{overall}{has_named};
 
     my $max_argv = $signature->{overall}{max_argv_size};
     my $max_args = $signature->{overall}{max_args};
