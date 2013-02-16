@@ -15,7 +15,7 @@ note "signature_error_handler"; {
     my $exception = $@;
     isa_ok($exception, 'My::ExceptionClass');
     my $msg = $exception->{message};
-    like $msg, qr{no_sig\(\), was given too many arguments, it expects 0};
+    like $msg, qr{no_sig\(\).*given too many arguments.*it expects 0};
 }
 
 done_testing;
