@@ -5,7 +5,7 @@ examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
 lib/Method/Signatures/Parser.pm
-MANIFEST            This list of files
+MANIFEST			This list of files
 MANIFEST.SKIP
 META.json
 META.yml
@@ -107,4 +107,3 @@ t/when.t
 t/where.t
 t/yadayada.t
 t/zero_defaults.t
-tt
