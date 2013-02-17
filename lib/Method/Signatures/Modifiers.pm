@@ -216,7 +216,7 @@ sub code_for
 
     if ($self->{is_modifier})
     {
-        die("can't create an aonymous method modifier") unless $name;
+        die("can't create an anonymous method modifier") unless $name;
 
         my $class = $self->{outer_package};
         my $modtype = $self->declarator;
