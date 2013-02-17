@@ -5,7 +5,7 @@ examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
 lib/Method/Signatures/Parser.pm
-MANIFEST			This list of files
+MANIFEST            This list of files
 MANIFEST.SKIP
 META.json
 META.yml
@@ -53,6 +53,7 @@ t/lib/MS_MXD_Role.pm
 t/lib/MS_MXD_Sub.pm
 t/lib/MultipleSlurpy.pm
 t/lib/My/Declare.pm
+t/lib/My/Method/Signatures.pm
 t/lib/NamedAfterOptPos.pm
 t/lib/NamedSlurpy.pm
 t/lib/NoOverrides.pm
@@ -85,11 +86,13 @@ t/ro.t
 t/role_check_basic.t
 t/role_check_moose.t
 t/role_check_mouse.t
+t/signature_error_handler.t
 t/simple.plx
 t/slurpy.t
 t/split_proto.t
 t/string_defaults.t
 t/syntax_errors.t
+t/thread-bug.t
 t/too_many_args.t
 t/trailing_comma.t
 t/traits.t
@@ -104,3 +107,4 @@ t/when.t
 t/where.t
 t/yadayada.t
 t/zero_defaults.t
+tt

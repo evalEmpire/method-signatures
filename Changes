@@ -1,8 +1,13 @@
-NEXT
+20130216.1729_001   Sat Feb 16 17:29:45 PST 2013
+    New Features
+    * Handling of run-time errors (default: die) is now overridable by
+      subclasses via signature_error_handler().
+      [github #54]
+
     Bug Fixes
     * Data::Alias is only loaded when needed avoiding a threads + eval bug
       in most cases and improving compile time performance.
-      [rt.cpan.org 82922]
+      [rt.cpan.org 82922, github #62]
 
 
 20121219.0033_001   Wed Dec 19 00:33:58 PST 2012
