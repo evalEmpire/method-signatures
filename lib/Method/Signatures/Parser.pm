@@ -232,9 +232,9 @@ sub new_ppi_doc {
 }
 
 sub sig_parsing_error {
-    my ($file, $line)
-        = carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
-    die @_, " in declaration at $file line $line.\n";
+    my ($file, $line) = carp_location_for(__PACKAGE__, 'Devel::Declare::linestr_callback');
+    my $msg = join('', @_, " in declaration at $file line $line.\n");
+    die($msg);
 }
 
 1;
