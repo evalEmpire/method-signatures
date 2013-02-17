@@ -1377,11 +1377,11 @@ C<signature_error>, which your versions should do as well.
 
 =head2 signature_error
 
-This is a class method which calls C<die> and reports the error as
-being from the caller's perspective.  Most likely you will not need to
-override this.  If you'd like to have Method::Signatures errors give
-full stack traces (similar to C<$Carp::Verbose>), have a look at
-L<Carp::Always>.
+This is a class method which calls C<signature_error_handler> (see
+below) and reports the error as being from the caller's perspective.
+Most likely you will not need to override this.  If you'd like to have
+Method::Signatures errors give full stack traces (similar to
+C<$Carp::Verbose>), have a look at L<Carp::Always>.
 
 =head2 signature_error_handler
 
