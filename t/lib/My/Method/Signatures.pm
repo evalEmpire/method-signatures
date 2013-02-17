@@ -1,7 +1,6 @@
 package My::Method::Signatures;
 
-use Moose;
-extends 'Method::Signatures';
+use base 'Method::Signatures';
 
 sub signature_error_handler {
     my ($class, $msg) = @_;
@@ -9,4 +8,3 @@ sub signature_error_handler {
 }
 
 1;
-
