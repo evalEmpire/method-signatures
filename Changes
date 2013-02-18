@@ -1,3 +1,9 @@
+20130218.1447_001   Mon Feb 18 14:47:28 PST 2013
+    Distribution Fixes
+    * Fixed stray detritus in MANIFEST.
+    * Somehow my last-minute fix to the new error handler test didn't
+      make it in; this will fix "Can't locate Moose.pm" errors.
+
 20130216.1729_001   Sat Feb 16 17:29:45 PST 2013
     New Features
     * Handling of run-time errors (default: die) is now overridable by
