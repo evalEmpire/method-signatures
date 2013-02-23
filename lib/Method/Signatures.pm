@@ -7,7 +7,7 @@ use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Devel::Pragma qw(my_hints);
 
-our $VERSION = '20130218.1447_001';
+our $VERSION = '20130222';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
