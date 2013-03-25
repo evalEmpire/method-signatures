@@ -171,6 +171,8 @@ sub is_optional {
 sub BUILD {
     my $self = shift;
 
+    return if $self->is_yadayada;
+
     $self->_preparse_original_code_for_ppi;
     $self->_parse_with_ppi;
     $self->_init_split_variable;
