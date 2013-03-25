@@ -14,7 +14,7 @@ sub split_proto {
 
     local $@ = undef;
 
-    my $ppi = new_ppi_doc(\$proto);
+    my $ppi = __PACKAGE__->new_ppi_doc(\$proto);
     $ppi->prune('PPI::Token::Comment');
 
     my $statement = $ppi->find_first("PPI::Statement");
@@ -70,33 +70,6 @@ sub strip_ws {
     $_[0] =~ s{\s+$}{};
 }
 
-# Remove tokens up to (but excluding) the first that matches the delimiter...
-sub extract_until {
-    my ($delimiter_pat, $tokens) = @_;
-
-    my $extracted = q{};
-
-    while (@$tokens) {
-        last if $tokens->[0] =~ $delimiter_pat;
-        $extracted .= shift @$tokens;
-    }
-
-    return $extracted;
-}
-
-# Remove leading whitespace + token, if token matches the specified pattern...
-sub extract_leading {
-    my ($selector_pat, $tokens) = @_;
-
-    while (@$tokens && $tokens->[0]->class eq 'PPI::Token::Whitespace') {
-        shift @$tokens;
-    }
-
-    return @$tokens && $tokens->[0] =~ $selector_pat
-                ? "" . shift @$tokens
-                : undef;
-}
-
 # Generate cleaner error messages...
 sub carp_location_for {
     my ($class, $target) = @_;
@@ -123,6 +96,7 @@ sub carp_location_for {
 }
 
 sub new_ppi_doc {
+    my $class = shift;
     my $source = shift;
 
     require PPI;
