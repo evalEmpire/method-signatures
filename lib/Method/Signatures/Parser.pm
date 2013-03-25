@@ -44,17 +44,8 @@ sub split_proto {
 }
 
 
-# Some regexen useful for parsing signatures...
-my $IDENTIFIER     = qr{ [^\W\d] \w*                                                       }x;
-my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                                               }x;
-my $TYPENAME       = qr{ $IDENTIFIER (?: \:\: $IDENTIFIER )*                               }ix;
-our $PARAMETERIZED;
-    $PARAMETERIZED = do{ use re 'eval';
-                         qr{ $TYPENAME (?: \[ (??{$PARAMETERIZED}) \] )?                   }x;
-                     };
-my $TYPESPEC       = qr{ ^ \s* $PARAMETERIZED (?: \s* \| \s* $PARAMETERIZED )* \s* }x;
-
 # Extract an invocant, if one is present...
+my $IDENTIFIER     = qr{ [^\W\d] \w* }x;
 sub extract_invocant {
     my ($param_ref) = @_;
 
