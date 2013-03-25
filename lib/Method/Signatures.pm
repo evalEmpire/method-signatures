@@ -858,10 +858,14 @@ sub parse_func {
     for my $proto (@protos) {
         DEBUG( "proto: $proto\n" );
 
-        my $sig = split_parameter($proto, \$idx);
+        my $sig = Method::Signatures::Parameter->new(
+            original_code => $proto,
+            position      => $idx,
+        );
+        $idx++ if $sig->is_positional;
 
         # Handle "don't care" specifier
-        if ($sig->{yadayada}) {
+        if ($sig->is_yadayada) {
             $signature->{overall}{num_slurpy}++;
             $signature->{overall}{yadayada}++;
             next;
@@ -869,20 +873,19 @@ sub parse_func {
 
         $self->_check_sig($sig, $signature);
 
-        if( $sig->{named} ) {
+        if( $sig->is_named ) {
             push @{$signature->{named}}, $sig;
         }
         else {
             push @{$signature->{positional}}, $sig;
-            $sig->{position} = @{$signature->{positional}};
         }
 
         my $overall = $signature->{overall};
-        $overall->{num_optional}++              if $sig->{is_optional};
-        $overall->{num_named}++                 if $sig->{named};
-        $overall->{num_positional}++            if !$sig->{named};
-        $overall->{num_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
-        $overall->{num_slurpy}++                if $sig->{is_slurpy};
+        $overall->{num_optional}++              if $sig->is_optional;
+        $overall->{num_named}++                 if $sig->is_named;
+        $overall->{num_positional}++            if $sig->is_positional;
+        $overall->{num_optional_positional}++   if $sig->is_optional and $sig->is_positional;
+        $overall->{num_slurpy}++                if $sig->is_slurpy;
 
         DEBUG( "sig: ", $sig );
     }
