@@ -1099,7 +1099,7 @@ sub inject_for_sig {
         $rhs = "$check_exists ? ($rhs) : ($default)";
     }
 
-    if( $sig->is_positional ) {
+    if( $sig->is_required ) {
         push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
     }
 
