@@ -72,10 +72,9 @@ sub carp_location_for {
     our @CARP_NOT;
     local @CARP_NOT;
     push @CARP_NOT, 'Method::Signatures';
-    push @CARP_NOT, 'Method::Signatures::Parser';
     push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
     push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
-    my $skip = qr/^(?:${\(join('|', @CARP_NOT))})::/;
+    my $skip = qr/^ (?: ${ \(join('|', @CARP_NOT)) } ) (?: :: | $ ) /x;
 
     my $level = 0;
     my ($pack, $file, $line, $method);
