@@ -1470,7 +1470,7 @@ We recommend you use the L<compile_at_BEGIN> flag to turn off
 compile-time parsing.
 
 You can't use any feature that requires a smartmatch expression (i.e.
-conditional L<"Defaults"> and L<"Value Constraints"> in Perl 5.8.
+conditional L<"Defaults"> and L<"Value Constraints">) in Perl 5.8.
 
 Method::Signatures cannot be used with Perl versions prior to 5.8
 because L<Devel::Declare> does not work with those earlier versions.
