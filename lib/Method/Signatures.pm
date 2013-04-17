@@ -5,6 +5,7 @@ use warnings;
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
+use Method::Signatures::Parameter;
 use Devel::Pragma qw(my_hints);
 
 our $VERSION = '20130222';
@@ -858,10 +859,14 @@ sub parse_func {
     for my $proto (@protos) {
         DEBUG( "proto: $proto\n" );
 
-        my $sig = split_parameter($proto, \$idx);
+        my $sig = Method::Signatures::Parameter->new(
+            original_code => $proto,
+            position      => $idx,
+        );
+        $idx++ if $sig->is_positional;
 
         # Handle "don't care" specifier
-        if ($sig->{yadayada}) {
+        if ($sig->is_yadayada) {
             $signature->{overall}{num_slurpy}++;
             $signature->{overall}{yadayada}++;
             next;
@@ -869,20 +874,19 @@ sub parse_func {
 
         $self->_check_sig($sig, $signature);
 
-        if( $sig->{named} ) {
+        if( $sig->is_named ) {
             push @{$signature->{named}}, $sig;
         }
         else {
             push @{$signature->{positional}}, $sig;
-            $sig->{position} = @{$signature->{positional}};
         }
 
         my $overall = $signature->{overall};
-        $overall->{num_optional}++              if $sig->{is_optional};
-        $overall->{num_named}++                 if $sig->{named};
-        $overall->{num_positional}++            if !$sig->{named};
-        $overall->{num_optional_positional}++   if $sig->{is_optional} and !$sig->{named};
-        $overall->{num_slurpy}++                if $sig->{is_slurpy};
+        $overall->{num_optional}++              if $sig->is_optional;
+        $overall->{num_named}++                 if $sig->is_named;
+        $overall->{num_positional}++            if $sig->is_positional;
+        $overall->{num_optional_positional}++   if $sig->is_optional and $sig->is_positional;
+        $overall->{num_slurpy}++                if $sig->is_slurpy;
 
         DEBUG( "sig: ", $sig );
     }
@@ -924,23 +928,25 @@ sub _calculate_max_args {
 sub _check_sig {
     my($self, $sig, $signature) = @_;
 
-    if( $sig->{is_slurpy} ) {
+    if( $sig->is_slurpy ) {
         sig_parsing_error("Signature can only have one slurpy parameter")
                 if $signature->{overall}{num_slurpy} >= 1;
-        sig_parsing_error("Slurpy parameter '$sig->{var}' cannot be named; use a reference instead")
-                if $sig->{named};
+        sig_parsing_error("Slurpy parameter '@{[$sig->variable]}' cannot be named; use a reference instead")
+                if $sig->is_named;
     }
 
-    if( $sig->{named} ) {
+    if( $sig->is_named ) {
         if( $signature->{overall}{num_optional_positional} ) {
-            my $pos_var = $signature->{positional}[-1]{var};
-            sig_parsing_error("Named parameter '$sig->{var}' mixed with optional positional '$pos_var'");
+            my $pos_var = $signature->{positional}[-1]->variable;
+            my $var = $sig->variable;
+            sig_parsing_error("Named parameter '$var' mixed with optional positional '$pos_var'");
         }
     }
     else {
         if( $signature->{overall}{num_named} ) {
-            my $named_var = $signature->{named}[-1]{var};
-            sig_parsing_error("Positional parameter '$sig->{var}' after named param '$named_var'");
+            my $named_var = $signature->{named}[-1]->variable;
+            my $var = $sig->variable;
+            sig_parsing_error("Positional parameter '$var' after named param '$named_var'");
         }
     }
 }
@@ -955,11 +961,11 @@ sub _check_signature {
     # Check that slurpy arguments come at the end
     if(
         $overall->{num_slurpy}                  &&
-        !($overall->{yadayada} || $signature->{positional}[-1]{is_slurpy})
+        !($overall->{yadayada} || $signature->{positional}[-1]->is_slurpy)
     )
     {
         my($slurpy_param) = $self->_find_slurpy_params;
-        sig_parsing_error("Slurpy parameter '$slurpy_param->{var}' must come at the end");
+        sig_parsing_error("Slurpy parameter '@{[$slurpy_param->variable]}' must come at the end");
     }
 }
 
@@ -968,7 +974,7 @@ sub _find_slurpy_params {
     my $self = shift;
     my $signature = $self->{signature};
 
-    return grep { $_->{is_slurpy} } @{ $signature->{named} }, @{ $signature->{positional} };
+    return grep { $_->is_slurpy } @{ $signature->{named} }, @{ $signature->{positional} };
 }
 
 
@@ -1044,65 +1050,70 @@ sub inject_for_sig {
     my $class = ref $self || $self;
     my $sig = shift;
 
-    return if $sig->{is_at_underscore};
+    return if $sig->is_at_underscore;
 
     my @code;
 
-    my $sigil = $sig->{sigil};
-    my $name  = $sig->{name};
-    my $idx   = $sig->{idx};
+    my $sigil = $sig->sigil;
+    my $name  = $sig->variable_name;
+    my $idx   = $sig->position;
+    my $var   = $sig->variable;
 
     # These are the defaults.
-    my $lhs = "my $sig->{var}";
+    my $lhs = "my $var";
     my ($rhs, $deletion_target);
 
-    if( $sig->{named} ) {
-        $sig->{passed_in} = "\$args{$sig->{name}}";
-        $rhs = $deletion_target = $sig->{passed_in};
-        $rhs = "${sigil}{$rhs}" if $sig->{is_ref_alias};
+    if( $sig->is_named ) {
+        $sig->passed_in("\$args{$name}");
+        $rhs = $deletion_target = $sig->passed_in;
+        $rhs = "${sigil}{$rhs}" if $sig->is_ref_alias;
     }
     else {
-        $rhs = $sig->{is_ref_alias}       ? "${sigil}{\$_[$idx]}" :
-               $sig->{sigil} =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
-                                            "\$_[$idx]"           ;
-        $sig->{passed_in} = $rhs;
+        $rhs = $sig->is_ref_alias       ? "${sigil}{\$_[$idx]}" :
+               $sig->sigil =~ /^[@%]$/  ? "\@_[$idx..\$#_]"     :
+                                          "\$_[$idx]"           ;
+        $sig->passed_in($rhs);
     }
 
-    my $check_exists = $sig->{check_exists} = $sig->{named} ? "exists \$args{$sig->{name}}" : "(\@_ > $idx)";
+    my $check_exists = $sig->is_named ? "exists \$args{$name}" : "(\@_ > $idx)";
+    $sig->check_exists($check_exists);
+
+    my $default = $sig->default;
+    my $when    = $sig->default_when;
 
     # Handle a default value
-    if( defined $sig->{default_when} ) {
+    if( defined $when ) {
         # Handle default with 'when { block using $_ }'
-        if ($sig->{default_when} =~ $when_block_re) {
-            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; (grep $sig->{default_when} \$arg) ? ($sig->{default}) : \$arg}";
+        if ($when =~ $when_block_re) {
+            $rhs = "!$check_exists ? ($default) : do{ no warnings; my \$arg = $rhs; (grep $when \$arg) ? ($default) : \$arg}";
         }
 
         # Handle default with 'when anything_else'
         else {
-            $rhs = "!$check_exists ? ($sig->{default}) : do{ no warnings; my \$arg = $rhs; \$arg ~~ ($sig->{default_when}) ? ($sig->{default}) : \$arg }";
+            $rhs = "!$check_exists ? ($default) : do{ no warnings; my \$arg = $rhs; \$arg ~~ ($when) ? ($default) : \$arg }";
         }
     }
 
     # Handle simple defaults
-    elsif( defined $sig->{default} ) {
-        $rhs = "$check_exists ? ($rhs) : ($sig->{default})";
+    elsif( defined $default ) {
+        $rhs = "$check_exists ? ($rhs) : ($default)";
     }
 
-    if( !$sig->{is_optional} ) {
-        push @code, qq[${class}->required_arg('$sig->{var}') unless $check_exists; ];
+    if( $sig->is_required ) {
+        push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
     }
 
-    if( $sig->{type} ) {
+    if( $sig->type ) {
         push @code, $self->inject_for_type_check($sig);
     }
 
     # Handle \@foo
-    if ( $sig->{is_ref_alias} or $sig->{traits}{alias} ) {
+    if ( $sig->is_ref_alias or $sig->traits->{alias} ) {
         require Data::Alias;
         push @code, sprintf 'Data::Alias::alias(%s = %s);', $lhs, $rhs;
     }
     # Handle "is ro"
-    elsif ( $sig->{traits}{ro} ) {
+    elsif ( $sig->traits->{ro} ) {
         require Const::Fast;
         push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
@@ -1113,15 +1124,15 @@ sub inject_for_sig {
     push @code, "delete( $deletion_target );" if $deletion_target;
 
     # Handle 'where' constraints (after defaults are resolved)
-    if ( $sig->{where} ) {
-        for my $constraint ( keys %{$sig->{where}} ) {
+    if ( $sig->where ) {
+        for my $constraint ( keys %{$sig->where} ) {
             # Handle 'where { block using $_ }'
             my $constraint_impl =
                 $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
                     ? "sub $constraint"
                     : $constraint;
-            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $sig->{var}, $sig->{var}, $constraint;
-            push @code, "$error unless grep { \$_ ~~ $constraint_impl } $sig->{var}; ";
+            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
+            push @code, "$error unless grep { \$_ ~~ $constraint_impl } $var; ";
         }
     }
 
@@ -1136,15 +1147,15 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    my $check_exists = $sig->{is_optional} ? "$sig->{check_exists}" : '';
+    my $check_exists = $sig->is_optional ? $sig->check_exists : '';
 
     # This is an optimization to unroll typecheck which makes Mouse types about 40% faster.
     # It only happens when type_check() has not been overridden.
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
-          __PACKAGE__, $sig->{type}, $class, $sig->{type}, $sig->{passed_in};
+          __PACKAGE__, $sig->type, $class, $sig->type, $sig->passed_in;
         my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->{type}, $sig->{passed_in}, $sig->{name};
+          $class, $sig->type, $sig->passed_in, $sig->variable_name;
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
         $code .= "!$check";
@@ -1152,7 +1163,8 @@ sub inject_for_type_check
     }
     # If a subclass has overridden type_check(), we must use that.
     else {
-        my $code = "${class}->type_check('$sig->{type}', $sig->{passed_in}, '$sig->{name}')";
+        my $name = $sig->variable_name;
+        my $code = "${class}->type_check('@{[$sig->type]}', @{[$sig->passed_in]}, '$name')";
         $code .= "if $check_exists" if $check_exists;
         return "$code;";
     }

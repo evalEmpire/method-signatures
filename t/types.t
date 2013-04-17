@@ -25,7 +25,7 @@ note "types"; {
 
         my $which = shift @$want;
         for my $idx (0..$#{$want}) {
-            is $ms->{signature}{$which}[$idx]{type}, $want->[$idx];
+            is $ms->{signature}{$which}[$idx]->type, $want->[$idx] || '';
         }
     }
 }
@@ -38,8 +38,9 @@ note "inject_for_type_check"; {
 
         sub inject_for_type_check {
             my $self = shift;
-            my $sig = shift;
-            return "type_check('$sig->{var}');";
+            my $sig  = shift;
+            my $var = $sig->variable;
+            return "type_check('$var');";
         }
     }
     
