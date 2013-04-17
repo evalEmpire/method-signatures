@@ -74,7 +74,10 @@ sub carp_location_for {
     push @CARP_NOT, 'Method::Signatures';
     push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
     push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
-    my $skip = qr/^ (?: ${ \(join('|', @CARP_NOT)) } ) (?: :: | $ ) /x;
+
+    # Skip any package in the @CARP_NOT list or their sub packages.
+    my $carp_not_list_re = join '|', @CARP_NOT;
+    my $skip = qr/^ $carp_not_list_re (?: :: | $ ) /x;
 
     my $level = 0;
     my ($pack, $file, $line, $method);
