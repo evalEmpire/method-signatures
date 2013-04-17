@@ -22,9 +22,8 @@ SKIP:
 
     $foobar->check_int(42);
 
-    # now we should have loaded Moose, not Mouse, to do our type checking
+    # now we should have loaded Moose to do our type checking
 
-    is $INC{'Mouse/Util/TypeConstraints.pm'}, undef, "didn't load Mouse";
     like $INC{'Moose/Util/TypeConstraints.pm'}, qr{Moose/Util/TypeConstraints\.pm$}, 'loaded Moose';
 
 
