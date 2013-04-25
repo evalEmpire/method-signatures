@@ -14,6 +14,8 @@ our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
 our @CARP_NOT;
 
+our $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
+
 sub DEBUG {
     return unless $DEBUG;
 
@@ -908,8 +910,8 @@ sub _calculate_max_args {
 
     # If there's a slurpy argument, the max is infinity.
     if( $overall->{num_slurpy} ) {
-        $overall->{max_argv_size} = 'inf';
-        $overall->{max_args}      = 'inf';
+        $overall->{max_argv_size} = $INF;
+        $overall->{max_args}      = $INF;
 
         return;
     }
@@ -1010,7 +1012,7 @@ sub inject_from_signature {
     my $max_argv = $signature->{overall}{max_argv_size};
     my $max_args = $signature->{overall}{max_args};
     push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
-        unless $max_argv == "inf";
+        unless $max_argv == $INF;
 
     # All on one line.
     return join ' ', @code;
