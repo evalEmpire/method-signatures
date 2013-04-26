@@ -4,6 +4,7 @@ examples/iso_date_example.t
 examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
+lib/Method/Signatures/Parameter.pm
 lib/Method/Signatures/Parser.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
