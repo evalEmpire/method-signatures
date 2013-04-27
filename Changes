@@ -1,15 +1,20 @@
 20130427.0031_001   Sat Apr 27 00:31:04 PDT 2013
     Distribution Fixes
     * Add M::S::Parameter to MANIFEST
+      [github #76]
     * Change representation of Infinity to work on Win32
+      [github #75]
 
     Bug Fixes
     * Fixed obscure bug where an eval in Method::Signatures wouldn't be
       skipped when carp'ing (i.e. in carp_location_for())
+      [github #72]
 
     Misc
     * Rearranged so signature is now an object
+      [github #30]
     * Add hook for Travis CI
+      [github #78]
 
     Docs
     * Found and fixed missing parend
