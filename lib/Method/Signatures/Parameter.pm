@@ -6,7 +6,7 @@ use Method::Signatures::Parser;
 
 my $IDENTIFIER     = qr{ [^\W\d] \w*                         }x;
 my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                 }x;
-my $TYPENAME       = qr{ $IDENTIFIER (?: \:\: $IDENTIFIER )* }ix;
+my $TYPENAME       = qr{ $IDENTIFIER (?: \:\: $IDENTIFIER )* }x;
 our $PARAMETERIZED;
     $PARAMETERIZED = do{ use re 'eval';
                          qr{ $TYPENAME (?: \[ (??{$PARAMETERIZED}) \] )?                   }x;
@@ -213,7 +213,7 @@ sub _parse_with_ppi {
     my $self = shift;
 
     # Nothing to parse.
-    return if !$self->ppi_clean_code =~ /\S/;
+    return if $self->ppi_clean_code !~ /\S/;
 
     # Replace parameter var so as not to confuse PPI...
     $self->ppi_clean_code($self->variable. " " .$self->ppi_clean_code);
