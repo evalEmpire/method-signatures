@@ -1,0 +1,27 @@
+I. Intro (how vs why)
+II. What is a function signature?
+III. Unpacking
+	A. Positional parameters
+	B. Named parameters
+	C. Invocants
+	D. Default values
+		1. Difference between not passed and passed as undef
+		2. Using `when`
+	E. Alias parameters
+		1. Contrast `is copy`
+		2. Mention `is readonly`
+IV. Validating
+	A. Required parameter missing
+		1. Marking positional parameters as optional
+		2. Marking named parameters as required
+		3. Redundant or nonsensical combinations
+	B. Extra parameters
+		1. Too many parameters
+		2. Unknown named parameter
+		3. Suppressing extra parameter checks (`...`)
+	C. Value checking
+		1. Types (from Moose or Mouse)
+			a. type
+			b. class
+			c. role
+		2. Using `where`
