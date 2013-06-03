@@ -1212,20 +1212,18 @@ our %mutc;
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
-    require Any::Moose;
-    Any::Moose->import('::Util::TypeConstraints');
+    require Type::Registry;
+    Type::Registry->import();
 
-    no strict 'refs';
-    my $class = any_moose('::Util::TypeConstraints');
+#    no strict 'refs';
+    my $class = 'Type::Registry';
     $mutc{class} = $class;
 
-    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-    $mutc{make_class} = \&{ $class . '::class_type'                    };
-    $mutc{make_role}  = \&{ $class . '::role_type'                     };
+    my $registry = $class->for_me;
+   $registry->add_types(-Standard);
 
-    $mutc{isa_class}  = $mutc{pull}->("ClassName");
-    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    $mutc{findit}     = sub { $registry->lookup(@_) };
+
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
