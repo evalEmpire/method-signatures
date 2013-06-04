@@ -1,0 +1,27 @@
+#! /usr/local/bin/perl
+
+use strict;
+use warnings;
+
+use Benchmark qw< cmpthese >;
+
+use PlainMoose;
+use FancyMoose;
+use SigsOnly;
+use MXD_MSM;
+
+
+use constant COUNT => 10;
+
+my $plain_moose = PlainMoose->new;
+my $fancy_moose = FancyMoose->new;
+my $sigs_only   = SigsOnly->new;
+my $mxd_msm     = MXD_MSM->new;
+
+cmpthese(1_000_000, {
+    plain_moose =>  sub { $plain_moose->doit(count => COUNT, msg => 'testing some shite') },
+    fancy_moose =>  sub { $fancy_moose->doit(count => COUNT, msg => 'testing some shite') },
+    sigs_only   =>  sub { $sigs_only->doit(count => COUNT, msg => 'testing some shite') },
+    mxd_msm     =>  sub { $mxd_msm->doit(count => COUNT, msg => 'testing some shite') },
+});
+

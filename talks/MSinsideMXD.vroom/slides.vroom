@@ -1,0 +1,501 @@
+---- config
+title: "Method::Signatures (or: How I Learned to Stop Worrying and Love MooseX::Declare)"
+indent: 5
+height: 22
+width: 85
+skip: 0
+
+vim: vim -S ./.vimrc
+
+vimrc: |
+  set statusline=%-3f\ Method::Signatures\ (or:\ How\ I\ Learned\ to\ Stop\ Worrying\ and\ Love\ MooseX::Declare)
+  map <C-C> 3<C-^><Ctrl-Home>
+  map <C-O> 2<C-^><Ctrl-Home>
+  map <C-E> 5<C-^><Ctrl-Home>
+  map <C-P> 11<C-^><Ctrl-Home>
+  map MSM ouse Method::Signatures::Modifiers;<Esc>
+
+
+---- center
+% Title slide
+MooseX::Declare
+
+====
+I'm here today to talk about MooseX::Declare.  Hopefully everyone here knows what Moose is, but perhaps you don't know about MooseX::Declare.
+
+----
+% Plain Moose sample code
+---- include MooseExample.pm
+====
+Here's some Moose code.
+
+Now, if you've ever had to roll your own OO in Perl, this is pretty nice.  Especially if you've had to roll a lot of it.  But could it be nicer?
+----
+% MXD sample code
+---- include MXDExample.pm
+
+====
+This is the same code in MooseX::Declare.  Everything's a lot clearer and more concise.  It's more obvious here that we're declaring a Moose class and that it's a subclass, and it's obvious where the class declaration ends.  The "magical Moose incantations" of `namespace::autoclean` and `make_immutable` are gone, because MooseX::Declare does those things for you.  But possibly the most awesome thing is that we have method signatures.  Now, these signatures are based on the Perl 6 method signatures syntax: it's not 100% compatible, but it's pretty darn close.  And in trying to explain how cool method signatures are, I can't really do any better than these slides that I stole from schwern's presentation on Method::Signatures--Method::Signatures has basically the same signature syntax as MooseX::Declare, but it's designed for non-Moose code.
+
+----
+% schwern's slide: "with signature" code
+<img src="../SchwernSigEx.png">
+====
+Anyway, as schwern points out, here's some code using a method signature.
+
+----
+% schwern's slide: "without signature" code
+<img src="../SchwernNoSigEx.png">
+
+====
+And here's the same code without the signature.
+
+As you can see, the real work of the function just gets overwhelmed by the parameter validation code.  But if you still need more convincing about just how cool MooseX::Declare is, you should check out
+
+----
+% Piers' MXD talk
+<img src="../CawleyTalk.png">
+====
+this talk that Piers Cawley gave at a London Perl Mongers group; he explains better than I ever could how this is declarative programming, and why that's more readable and more maintainable.  So I highly recommend you
+
+---- center
+http://www.bofh.org.uk/2009/05/13/london-pm-presentation
+
+====
+check it out (except don't crank it up too loud at work, 'cause he drops a few F-bombs in there) and see for yourself.  Because I'm not actually here to answer the question "How cool is MooseX::Declare?"  I'm here to answer the question: "If this thing is so damn cool, how come nobody actually uses it?"
+
+
+Now, there's a perception that MooseX::Declare is still experimental.  But it's been out for nearly three years now.  Of course, it's not really just the passage of time that makes someting less experimental: it's the amount of market penetration.  In other words, it's not the case that people aren't using it because it's still experimental--it's rather that it's still experimental because not enough people are using it.  So there must be something else going on here.
+
+----
+---- include MXDExample.pm
+
+====
+So, what if I told you there _might_ be a bug in this code?  You might think I was being coy: challenging you to stare at this code and try to pick out a bug that might or might not be there.  But that's not what I'm saying at all.  There's _definitely_ a bug in this code ... but only sometimes.  If you run this code--or, more accurately, if you run some code that _calls_ this code--on, let's say, Perl 5.8.9, it works fine.  Or, possibly, Perl 5.10.0: works fine there too.  But if you run it on, let's say, Perl 5.12.3 ...
+
+---- i3
+Can't locate object method "adjusted_rate" via package "MyCompany::Bar" at ./bro
+ken.pl line 7.
+
+====
+... kaboom.  Now, I can show you how to fix this bug--or, technically, how to change this code so it no longer triggers the bug.
+
+----
+% MXD sample code
+---- include MXDExample.pm
+
+====
+So I'm going to show you that now: ready?  Pay attention now.  Shift ... J.
+----
+---- include MXDExampleFixed1.pm
+====
+Done!  Yes, that's right: this is a bug that's not only Perl-version-specific, but also whitespace-dependent.  And if you didn't just shudder ... Well, you probably should have.
+
+---- center
+1. Stability Problems
++2. Performance Problems
++3. ???
+
+====
+So it's buggy.  But MooseX::Declare was around for a year and a half before Perl 5.12 came out, and obviously no one was using it even then.  I say "obviously" because, if anyone _had_ been using it, the bug would have been fixed by now.  So there must be something else going on here.
+
+This
++ ++SKIPME++
++ ++SKIPME++
+
+----
+% Moose ML post from Shlomi
+<img src="../ShlomiFishPost.png">
+====
+is a post on the Moose mailing list from Shlomi Fish talking about the performance of MooseX::Declare.  And it's a very common complaint: you can find dozens of similar posts by people saying something like "I benchmarked method calls in MooseX::Declare against plain Moose and it's 4,000 times slower!"  And this leads to discussions of various lengths (and intensities) about the slippery nature of interpreting benchmarks.  Are you using MooseX::Params::Validate--which is the canonical answer on mailing lists to doing parameter validation outside of MooseX::Declare--in your "plain" Moose code?  No? Then you're comparing apples to oranges.  What do the methods in your benchmarks actually do? Nothing?  So that means that 100% of the work of your methods is validating their parameters. That's not even remotely realistic.  So at the end of all this back-and-forth, it's generally agreed that no, MooseX::Declare is not 4,000 times slower than plain Moose, it's only 40 times slower.  Which is much better, right?
+
+
+And this is what the people who actually _like_ MooseX::Declare will tell you.  This, they will say, is just the price you pay for syntactical sugar.  There's no way around it.
+
+---- center
+1. Stability Problems
+2. Performance Problems
++3. ???
+
+====
+So it's buggy, _and_ it's slow.  Well, that's probably enough nails in the coffin right there.  But wait! there's more!
+
++What is the point of parameter validation anyway?  Are we discriminating against certain parameters?  Non-integers need not apply?  No, of course not.  The point of parameter validation is to catch mistakes.  Because sooner or later, some value coming into that function is going to be something it shouldn't, because someone--not you, of course, but _someone_--made a mistake and stuck something in there that they shouldn't have.  And the sooner you find that out, the better chance you have of being able to fix it.  So if parameter validation doesn't help us find mistakes, there's no point in doing it at all.  In other words, what it does when you pass parameters correctly is actually less interesting than what it does when you pass them _incorrectly_.
+
+So since MooseX::Params::Validate is *the* way to do parameter validation outside of MooseX::Declare, let's see what happens when you pass, say, a floating point value to something expecting an integer.
+
+---- i2
+% MXPV error
+The 'discount' parameter ("8.5") to MyCompany::Bar::adjusted_rate did not pass th
+e 'checking type constraint for Int' callback
+ at /usr/local/share/perl5/MooseX/Params/Validate.pm line 118
+        MooseX::Params::Validate::validated_list('ARRAY(0x2d7d690)', 'type', 'HA
+SH(0x2260d80)', 'discount', 'HASH(0x227de28)') called at MooseExample.pm line 13
+        MyCompany::Bar::adjusted_rate(undef, 'type', 'sales', 'discount', 8.5) c
+alled at ./good_err.pl line 15
+        main::foo() called at ./good_err.pl line 9
+
+====
+Well, this is not too bad, as error messages go.  It tells us what method we called, what parameter we screwed up, and how we screwed it up.  Now, it could certainly be better--the full stack trace means we have to go hunting for where we actually called the problematic method, and the text of the error is not as clear as it might be--but, overall, this mostly gets the job done.
+
+How about the same thing in MooseX::Declare?
+
+---- i2
+% MXD error
+Validation failed for 'Tuple[Tuple[Object],Dict[type,Str,discount,Optional[Int]]
+]' with value [ [ MyCompany::Bar=HASH(0x107f008) ], { discount: 8.5, type: "sale
+s" } ], Internal Validation Error is:
+ [+] Validation failed for 'Dict[type,Str,discount,Optional[Int]]' with value { 
+discount: 8.5, type: "sales" }
+  [+] Validation failed for 'Optional[Int]' with value 8.5 at /usr/local/share/p
+erl5/MooseX/Method/Signatures/Meta/Method.pm line 435
+        MooseX::Method::Signatures::Meta::Method::validate('MooseX::Method::Sign
+atures::Meta::Method=HASH(0x2987c60)', 'ARRAY(0x2963178)') called at /usr/local/
+share/perl5/MooseX/Method/Signatures/Meta/Method.pm line 151
+        MyCompany::Bar::adjusted_rate('MyCompany::Bar=HASH(0x107f008)', 'type', 
+'sales', 'discount', 8.5) called at ./bad_err.pl line 15
+        main::foo() called at ./bad_err.pl line 9
+
+====
+This is a little more imposing.  Let's see if we can parse it.  "Validation failed" ... a promising beginning.  Then there's some stuff about tuples ... I thought that was a database thing?  And then the parameters, but it's all of them, so you can't tell which one was the bad one.  And then the same for the values: all of them.  Ah, perhaps this will help: "Internal Validation Error is" ... "Validation failed."  It's like we're trapped on the Mobius strip of error messages.  For purposes of helping us figure out what went wrong, this is an epic fail.  And that was the entire point of parameter validation.
+
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+
+====
+So it's buggy, it's slow, _and_ it has crappy error messages.  There's really only one thing you can do.
+
+---- center
+% Never Use
+Conclusion:
+Never use MooseX::Declare.
+
+====
+No wonder no one uses it.  You're crusing along the Internet, and you see this:
+
+----
+% MXD sample code
+---- include MXDExample.pm
+====
+and you say "Hey, that looks pretty nifty" and, being an intelligent programmer, you spend a little time Googling, maybe talk to a few people, and you find this:
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+====
+which leads you to this:
+
+---- center
+% Never Use
+Conclusion:
+Never use MooseX::Declare.
+
+====
+and you congratulate yourself on a headache averted.  That's what you do, I say, if you're intelligent programmer.  If you're, on the other hand, let's say, _me_, you see this:
+
+----
+% MXD sample code
+---- include MXDExample.pm
+
+====
+and you say "ooooh, preeetty cooooode" and you immediately start using it.  At work.  In production.
+
+Which is maybe not so bad, because perhaps production is still using Perl 5.8, so there's no bug, and it's not performance-critical code, so if it's a little slower than it might be, it's not really noticeable, and as for the crappy error messages ... well, you just train yourself to read them.  And for everyone else at work,
+
+---- center
+% Moose Tips and Traps
+<insert wiki page image here>
+====
+you make a wiki page.  And so everything is fine and dandy until one day your boss--or, hypothetically speaking, your boss's boss--decides that's it's high time you upgraded to Perl 5.12, so he fires up a sandbox, slaps 5.12 on it, starts running the test suite, and
+
+---- i3
+Can't locate object method "adjusted_rate" via package "MyCompany::Bar" at ./bro
+ken.pl line 7.
+
+====
+kaboom.  So, being an intelligent programmer, he goes out on the 'Net, and he finds this:
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+====
+which leads him to this:
+
+---- center
+% Never Use
+Conclusion:
+Never use MooseX::Declare.
+
+====
+and he comes to you and says: "Dude, WTF?"  To which you articulately reply: "but, but, but ..."
+
+----
+% MXD sample code
+---- include MXDExample.pm
+
+====
+"... preeetty cooode ..."
+
+So, yeah, that's what happened to me.  Now, maybe I'm not an intelligent programmer, but I do have one thing going for me: I'm stubborn.  Well, let's put it this way: Larry Wall tells us that one of the three great programmerly virtues is hubris.  So I'm not stubborn; I'm ... hubrisy.  Hubrisious?  Hubrisical?  Whatever; I'm that.  So I said: "No! I will not give up my pretty code."  This is Open Source World, right?  If there's a problem, we fix it!
+
+---- center
+% Brilliant Idea #1
+Brilliant Idea #1:
+Fix MooseX::Declare
+
+====
+So I started looking at the problems.
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+
+====
+First the bug.  Now, remember in this code
+
+----
+---- include MXDExampleFixed1.pm
+
+====
+where I said you had to put this curly brace on the previous line to avoid the bug?  What about this curly brace?  Do you have to "fix" that one too?
+----
+---- include MXDExampleFixed2.pm
+====
+As it turns out, yes, you do.  Well, what about _this_ curly brace?  Do you have to put that one up here?
+----
+---- include MXDExampleFixed3.pm
+====
+As it turns out, no.  You don't.
+----
+---- include MXDExampleFixed2.pm
+====
+It seems that this whitespace problem only applies to lines that have a method signature on them.
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debughree items
+
+====
+What about the performance problems?  Well, it turns out that all these posts on the Internet are about benchmarking calls to methods ... with method signatures.  And where are the crappy error messages coming from?  From failing a type check on a method ... with a method signature.
+
+I'm starting to see a pattern here.
+
+And it turns out that MooseX::Declare doesn't even *do* method signatures.  It farms out that work to another module called
+
+---- center
+% MXMS
+MooseX::Method::Signatures
+
+(a.k.a. MXMS)
+
+====
+MooseX::Method::Signatures, or MXMS for short.  So, as it turns out, there's NOTHING WRONG WITH MOOSEX::DECLARE.  All the problems are with MXMS.  So ... next brilliant idea.
+
+---- center
+% Brilliant Idea #2
+Brilliant Idea #2:
+Fix MooseX::Method::Signatures
+
+====
+Fix MXMS.  Now, I gotta tell you: I tried.  I really did.  But this code was written partially by Matt Trout, of DBIC fame, and partially by Florian Ragwitz, one of the big Moose guys, and these guys are just plain brillianter than me.  So, after beating my head against this code for the equivalent of a few days (spread out over a few weeks), I came to this conclusion: I have faith that, given enough time--say, a year, maybe two at the most--I *could* understand this code well enough to fix the bug.  But there's two problems with that.
+
+First, one of the other of the three great programmerly virtues that Larry tells us about is impatience: I just don't have that kind of time.
+
+And the second problem is, the bug showed up with Perl 5.12.  But the performance problems were there before that.  That means that fixing the bug is almost certainly not going to help the performance.  And performance problems are tricky: sure, sometimes you find that one magical line that's slowing the whole thing down, and you fix that, and then everything's fine.  But, more often, you find that the slowness is an endemic problem, baked into the design.  And that means that I might spend all this time trying to fix the bug and still be in the position of needing to completely rewrite MXMS.  And what's the last of the great programmerly virtues?  That's right: laziness.
+
+Well, if you can't fix it ...
+
+---- center
+% Brilliant Idea #3
+Brilliant Idea #3:
+Replace MooseX::Method::Signatures
+
+====
+... replace it.
+
+So now all I need is something that does everything that MXMS does.  And I already mentioned something, back at the beginning of the presentation:
+
+
+---- center
+% Method::Signatures
+Method::Signatures
+
+(by schwern)
+
+====
+Method::Signatures, by schwern.  It has almost all the features that MXMS has.  There are a few, more obscure, features that it's lacking, like parameter aliasing and where constraints, but I wasn't using any of those anyway.  There is one big difference between MXMS and Method::Signatures though: types.  MXMS was designed for Moose, so of course it understands Moose types.  Method::Signatures was designed for non-Moose code, so of course it doesn't know anything about Moose types.
+
+So I decided to write schwern an email.  Never met the man in person, but I'd exchanged posts with him on various mailing lists, and he seemed like a nice enough guy.  So I wrote him and said, basically, "Hey, dude, I'm thinking about extending Method::Signatures, perhaps with a subclass, so that it can do type checking.  And I was looking at your code, and it looks like there's a couple of places where I might need to submit some patches for Method::Signatures to make it work.  So I was wondering if you'd be into that."  And, two days later, he's writing me back saying "Screw the subclass!  Just put the type checking directly into Method::Signatures.  In fact, I've already added the type _parsing_ to the code on GitHub.  All you have to do is put the actual type checking in there."
+
+So I said: "Cool!"
+
+And we talked about how to make sure that people who don't want type checking don't have to pay for it.  The type checking would all be done at run-time, so, if your method signatures don't use any types, you don't add any extra overhead.  And we decided that, to avoid a module dependency on Moose, we'd use
+
+---- center
+Any::Moose
+
+====
+Any::Moose.  If you're not familiar with that, what it does is, when you load it up, it pokes its head up and says, "Is Moose already loaded?  If so, I'll use Moose.  If not, I'll load Mouse."
+
+---- center
+Mouse
+
+====
+And if you're not familiar with Mouse, it's like Moose light.  For a visual approximation, try this: Imagine a moose.  Now imagine a mouse.  See?  So it's actually like Moose super-light.  It doesn't do everything Moose does, but it does a lot of it, and it's faster and uses less memory.  So it's small dependency, which is great for when you don't actually need everything that Moose does.
+
+So I implemented all the type checking, and then we did a code review, using the collaboration tools on GitHub (highly recommended, by the way), and now Method::Signatures does type checking.
+
+----
+% Method::Signaturers, dev release
+<img src="../DevRelease.png">
+====
+This is available right now on CPAN, by the way, as a developer release.
+
+So the next challenge was getting MooseX::Declare to use Method::Signatures instead of MXMS.  And that was actually harder, for a couple of reasons.  First of all, MXMS is glued into MooseX::Declare pretty firmly, and second of all, MooseX::Declare has to be able to handle method modifiers: the "around", and "before", and "after", and so forth, that Moose offers.  These are declared differently, and also "around" in particular has a parameter that comes in _before_ $self, which is particularly tricky.
+
+
+----
+<img src="../MSMimport.png">
+====
+So I created a Method::Signatures::Modifiers that looks like this.
+
+Now, this code does several things that I'm not happy with.  It does a rebless, and it calls a private accessor, and, though you can't really tell, it's pulling two values out of the context and passing them to the parser() method, which promptly sticks them right back into the context, which is totally redundant.  Also, MooseX::Declare is still going to _load_ MXMS; it just never calls it.  But it does one thing that I _am_ happy with: it works.
+
+----
+% MXD sample code
+---- include MSMExample.pm
+====
+Here's how you use it:
+
+One extra line.  That's it.
+
+----
+% My::Declare
+---- include /home/buddy/proj/method-signatures/t/lib/My/Declare.pm
+
+====
+Or you can create a "policy" module, like so.
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+
+====
+So, have we solved all the problems?
+
+Well, Method::Signatures doesn't suffer from the bug in Perl 5.12, so that's a check.  To check the performance, I put together some benchmarks.  Here's the "plain" Moose version:
+
+----
+% PlainMoose benchmark code
+---- include PlainMoose.pm
+
+====
+Note that I'm using MooseX::Params::Validate, to insure that I'm comparing apples to apples.  Also note that my method is actually doing some work.  In fact, by varying the integer I pass to it, I can prove that age-old Mark Twain adage that there are lies, there are damn lies, and then there are statistics.  So, I can set it to, say, zero:
+
+----
+% bad MXD benchmark
+---- include bad_mxd_comp.log
+
+====
+and say "Look at how awful the performance of MooseX::Declare is!  Plain Moose is nearly twice as fast!" Or, I could set it to, maybe, 10 thousand:
+
+----
+% good MXD benchmark
+---- include good_mxd_comp.log
+
+====
+and say "See? only a few percent difference.  That's nothing!"  You know, depending on what sort of mood I'm in.
+
+But let's shoot for something reasonable and set it to 10, which will actually output 100 lines:
+
+----
+% benchmark: 2 opts
+---- include comp2.log
+
+====
+So we can see that MooseX::Declare is incurring a moderate performance penalty, even when the parameter validation is a pretty small percentage of what the method is doing.  Next, I tried using plain Moose without MooseX::Params::Validate, but using the old Method::Signatures.  Now, this is not truly a fair comparison, because, while Method::Signatures is doing _some_ parameter validation, it's not doing any type checking, so the other options are doing more work.  But what it does do is give me an upper bound.  It tells me that, if I could implement type checking such that it took zero time, this is how fast it would be.  Now obviously, I can't do that, but this gives me something to shoot for.
+
+----
+% benchmark: 3 opts
+---- include comp3.log
+
+====
+So that's a good deal faster.  Now, how does using Method::Signatures::Modifiers compare?
+
+----
+% benchmark: 4 opts
+---- include comp4.log
+
+====
+Pretty impressive, eh?  And, if you use the "policy" module approach, it's even a tiny bit faster,
+
+----
+% benchmark: 5 opts
+---- include comp5.log
+
+====
+for some reason that I haven't been able to figure out.  But the primary point is, this is even faster than using MooseX::Params::Validate, which is supposed to be what you do when MooseX::Declare is too slow for you.  So whenever you see someone saying that slowness is just the price you pay for syntactical sugar, you can call bullshit on that.
+
+
+---- center
+1. Stability Problems
+2. Performance Problems
+3. Hard to Debug
+
+====
+So that's performance taken care of.  How about those crappy error messages?  Well, here's what you get out of Method::Signatures::Modifiers:
+
+----
+% MSM error
+In call to MyCompany::Bar::adjusted_rate(), the 'discount' parameter ("8.5") is 
+not of type Int at ./better_err.pl line 15.
+
+====
+And if that's not cool enough for you, you can always write your own:
+
+----
+% Error override code
+---- include CustomError.pm
+
+----
+% Custom error method
+In call to MyCompany::Bar::adjusted_rate(), you really suck, you know that? at .
+/best_err.pl line 15.
+
+---- center
+% Stop Worrying
+Method::Signatures
+
+(or: How I Learned to Stop Worrying
+and Love MooseX::Declare)
+
+====
+So that's how I managed to make MooseX::Declare work for me.  Hopefully it can work for you too.
+
+Now, this code isn't on CPAN yet, but if you want to play with it and you can't wait, you can get it from my fork on GitHub:
+
+---- center
+% GitHub ref
+barefootcoder/method-signatures
+----
+THANKS:
+
+schwern, for Method::Signatures
+
+Nick Perez (nperez), for MooseX::Declare integration ideas
+====
+And of course I have to thank schwern, for being a great collaborator, and Nick Perez, one of the Moose guys, who gave me the basic idea on how to substitute Method::Signatures::Modifiers into MooseX::Declare.
+
+---- center
+Questions?
+====
+Questions?
+

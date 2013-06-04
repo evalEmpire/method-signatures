@@ -1,0 +1,6 @@
+               Rate fancy_moose plain_moose     mxd_msm      policy   sigs_only
+fancy_moose  6760/s          --        -35%        -72%        -72%        -81%
+plain_moose 10476/s         55%          --        -56%        -56%        -70%
+mxd_msm     23781/s        252%        127%          --         -0%        -32%
+policy      23895/s        253%        128%          0%          --        -32%
+sigs_only   35224/s        421%        236%         48%         47%          --

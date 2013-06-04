@@ -1,0 +1,21 @@
+#! /bin/bash
+
+# for some reason, just doing an ls of html/ doesn't get the slides in the right order
+# this seems to fix it
+vroom compile
+slides="$(ls 0* | perl -lne 'print "html/$_.html"')"
+#echo $slides
+vroom html
+
+# HTML tweaks
+perl -i -pe 's/x-large/95%/' html/002.*
+perl -i -pe 's/small/55%/' html/036.* html/038.*
+perl -i -pe 's/small/70%/' html/005.*
+perl -i -pe 's/small/110%/' html/006.* html/04[12].*
+perl -i -pe 's{<p></p>}{}' html/005.* html/036.*
+perl -i -pe 's{</?pre>}{};s{\&lt;}{<}g;s{\&gt;}{>}g;s{\&quot;}{"}g' $(fgrep -l png html/0*)
+#perl -i -pe 's/^   // if m{/s} or /Rate/' $(fgrep -l plain_moose html/0*)
+perl -i -pe 's/   // if /^(<pre>)?     /' html/0*
+slides="$(echo "$slides" | perl -lne 'print unless `fgrep "++SKIPME++" $_`')"
+
+/var/install/wkhtmltopdf-amd64 -O Landscape $slides MSinsideMXD.pdf

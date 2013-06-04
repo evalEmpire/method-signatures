@@ -1,0 +1,36 @@
+#! /usr/local/bin/perl
+
+use strict;
+use warnings;
+
+use Benchmark qw< cmpthese >;
+
+use PlainMoose;
+use FancyMoose;
+use SigsOnly;
+use MooseSigsMXPV;
+use MooseSigsMUTC;
+use NewModelMoose;
+use CompanyMoose;
+
+
+use constant COUNT => 100;
+
+my $plain_moose = PlainMoose->new;
+my $fancy_moose = FancyMoose->new;
+my $sigs_only   = SigsOnly->new;
+my $moose_sigs  = MooseSigsMXPV->new;
+my $moose_combo = MooseSigsMUTC->new;
+my $new_model   = NewModelMoose->new;
+my $company     = CompanyMoose->new;
+
+cmpthese(100_000, {
+    plain_moose =>  sub { $plain_moose->doit(count => COUNT, msg => 'testing some shite') },
+    fancy_moose =>  sub { $fancy_moose->doit(count => COUNT, msg => 'testing some shite') },
+    sigs_only   =>  sub { $sigs_only->doit(count => COUNT, msg => 'testing some shite') },
+    moose_sigs  =>  sub { $moose_sigs->doit(count => COUNT, msg => 'testing some shite') },
+    moose_combo =>  sub { $moose_combo->doit(count => COUNT, msg => 'testing some shite') },
+    new_model   =>  sub { $new_model->doit(count => COUNT, msg => 'testing some shite') },
+    company     =>  sub { $company->doit(count => COUNT, msg => 'testing some shite') },
+});
+

@@ -1,0 +1,4 @@
+               Rate fancy_moose plain_moose   sigs_only
+fancy_moose  6521/s          --        -36%        -81%
+plain_moose 10208/s         57%          --        -71%
+sigs_only   34686/s        432%        240%          --
