@@ -1,8 +1,8 @@
 The three talks in this directory are stored as both PDFs and with the original files used to generate them.  The three presentations are (in the order in which they were given):
 
-* [Method::Signatures](https://github.com/schwern/method-signatures/blob/master/talks/Method-Signatures%20-%20PPW%202008.pdf) - given by schwern at PPW in 2008
-* [Method::Signatures (or: How I Learned to Stop Worrying and Love MooseX::Declare)](https://github.com/schwern/method-signatures/blob/master/talks/MSinsideMXD.pdf) - given by barefootcoder at LA.pm on 5/25/2011
-* [Method::Signatures (a how-to)](https://github.com/schwern/method-signatures/blob/master/talks/MShowto.pdf) - given by barefootcoder at LA.pm on 3/20/2013, and again at YAPC on 6/4/2013
+* [Method::Signatures](https://github.com/schwern/method-signatures/blob/master/talks/Method-Signatures%20-%20PPW%202008.pdf?raw=true) - given by schwern at PPW in 2008
+* [Method::Signatures (or: How I Learned to Stop Worrying and Love MooseX::Declare)](https://github.com/schwern/method-signatures/blob/master/talks/MSinsideMXD.pdf?raw=true) - given by barefootcoder at LA.pm on 5/25/2011
+* [Method::Signatures (a how-to)](https://github.com/schwern/method-signatures/blob/master/talks/MShowto.pdf?raw=true) - given by barefootcoder at LA.pm on 3/20/2013, and again at YAPC on 6/4/2013
 
 Notes on the presentations:
 
