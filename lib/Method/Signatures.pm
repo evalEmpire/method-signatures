@@ -599,6 +599,18 @@ Method::Signatures takes some options at `use` time of the form
 
     use Method::Signatures { option => "value", ... };
 
+=head3 invocant
+
+In some cases it is desirable for the invocant to be named something other
+than C<$self>, and specifying it in the signature of every method is tedious
+and prone to human-error. When this option is set, methods that do not specify
+the invocant variable in their signatures will use the given variable name.
+
+    use Method::Signatures { invocant => '$app' };
+
+This option only affects the packages in which it is used. All others will
+continue to use C<$self> as the default invocant variable.
+
 =head3 compile_at_BEGIN
 
 By default, named methods and funcs are evaluated at compile time, as
@@ -668,16 +680,19 @@ sub import {
     my $caller = caller;
     # default values
 
+    my $inv_var = '$self';
+
     my $hints = my_hints;
     $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = 1;  # default to on
 
     my $arg = shift;
     if (defined $arg) {
         if (ref $arg) {
-            $DEBUG  = $arg->{debug}  if exists $arg->{debug};
-            $caller = $arg->{into}   if exists $arg->{into};
+            $DEBUG  = $arg->{debug}     if exists $arg->{debug};
+            $caller = $arg->{into}      if exists $arg->{into};
             $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN}
-                                     if exists $arg->{compile_at_BEGIN};
+                                        if exists $arg->{compile_at_BEGIN};
+            $inv_var = $arg->{invocant} if exists $arg->{invocant};
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
@@ -691,7 +706,7 @@ sub import {
     $class->install_methodhandler(
         into            => $caller,
         name            => 'method',
-        invocant        => '$self'
+        invocant        => $inv_var,
     );
 
     $class->install_methodhandler(
