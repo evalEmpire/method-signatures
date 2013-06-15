@@ -7,7 +7,12 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 
-use Method::Signatures;
+SKIP:
+{
+eval { require Type::Tiny; } or skip "Type::Tiny required for testing Moose types", 1;
+
+require Method::Signatures;
+Method::Signatures->import(qw(type_tiny));
 
 
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
@@ -85,7 +90,6 @@ our $tester;
         {
             my $tag = @vals ? ' (alternative ' . $count++ . ')' : '';
             lives_ok {
-                $DB::single = 1;
                 $tester->$method($_)
             } "call with good value for $name passes" . $tag;
         }
@@ -148,5 +152,6 @@ our $tester;
 
 }
 
+}
 
 done_testing;

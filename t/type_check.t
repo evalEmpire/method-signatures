@@ -7,9 +7,6 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 
-use Method::Signatures;
-
-
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
 { package Foo::Baz; sub new { bless {}, __PACKAGE__; } }
 
