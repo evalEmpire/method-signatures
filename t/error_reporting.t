@@ -111,7 +111,7 @@ my %run_time_errors =
                                 error_args  =>  [
                                                     'InnerUnknownType',
                                                     'Foo::Bmoogle',
-                                                    'perhaps you forgot to load it?',
+                                                    "looks like it doesn't parse correctly",
                                                     'foo',
                                                 ],
                                 test_name   =>  'unrecognized type reports correctly',

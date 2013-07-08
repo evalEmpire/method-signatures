@@ -71,7 +71,7 @@ shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
 
-Also does type checking, understanding all the types that Moose (or Mouse) would understand.
+Also does type checking, understanding all the types that Type::Tiny would understand.
 
 And it does all this with B<no source filters>.
 
@@ -307,13 +307,12 @@ Any variable that has a default is considered optional.
 
 Parameters can also be given type constraints.  If they are, the value
 passed in will be validated against the type constraint provided.
-Types are provided by L<Any::Moose> which will load L<Mouse> if
-L<Moose> is not already loaded.
+Types are provided by L<Type::Tiny>.
 
 Type constraints can be a type, a role or a class.  Each will be
 checked in turn until one of them passes.
 
-    * First, is the $value of that type declared in Moose (or Mouse)?
+    * First, is the $value of that type declared in Type::Tiny?
 
     * Then, does the $value have that role?
         $value->DOES($type);
@@ -322,15 +321,15 @@ checked in turn until one of them passes.
         $value->isa($type);
 
 The set of default types that are understood can be found in
-L<Mouse::Util::TypeConstraints> (or L<Moose::Util::TypeConstraints>;
-they are generally the same, but there may be small differences).
+L<Types::Standard>.
+
 
     # avoid "argument isn't numeric" warnings
     method add(Int $this = 23, Int $that = 42) {
         return $this + $that;
     }
 
-L<Mouse> and L<Moose> also understand some parameterized types; see
+L<Type::Tiny> also understand some parameterized types; see
 their documentation for more details.
 
     method add(Int $this = 23, Maybe[Int] $that) {
@@ -1200,9 +1199,8 @@ sub required_arg {
 # STUFF FOR TYPE CHECKING
 
 # This variable will hold all the bits we need.  MUTC could stand for Moose::Util::TypeConstraint,
-# or it could stand for Mouse::Util::TypeConstraint ... depends on which one you've got loaded (or
-# Mouse if you have neither loaded).  Because we use Any::Moose to allow the user to choose
-# whichever they like, we'll need to figure out the exact method names to call.  We'll also need a
+# or it could stand for Mouse::Util::TypeConstraint ... But we use Type::Tiny now...
+# We'll also need a
 # type constraint cache, where we stick our constraints once we find or create them.  This insures
 # that we only have to run down any given constraint once, the first time it's seen, and then after
 # that it's simple enough to pluck back out.  This is very similar to how MooseX::Params::Validate
@@ -1212,20 +1210,20 @@ our %mutc;
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
-    require Any::Moose;
-    Any::Moose->import('::Util::TypeConstraints');
-
-    no strict 'refs';
-    my $class = any_moose('::Util::TypeConstraints');
+    require Type::Registry;
+    Type::Registry->import();
+    my $class = 'Type::Registry';
     $mutc{class} = $class;
-
-    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-    $mutc{make_class} = \&{ $class . '::class_type'                    };
-    $mutc{make_role}  = \&{ $class . '::role_type'                     };
-
-    $mutc{isa_class}  = $mutc{pull}->("ClassName");
-    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    my $registry = $class->for_me;
+    $registry->add_types(-Standard);
+    $mutc{findit} = sub { $registry->lookup(@_) };
+#    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
+#    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
+#    $mutc{make_class} = \&{ $class . '::class_type'                    };
+#    $mutc{make_role}  = \&{ $class . '::role_type'                     };
+#
+#    $mutc{isa_class}  = $mutc{pull}->("ClassName");
+#    $mutc{isa_role}   = $mutc{pull}->("RoleName");
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
