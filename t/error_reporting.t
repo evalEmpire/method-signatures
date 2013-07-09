@@ -89,7 +89,7 @@ my %run_time_errors =
                                 method      =>  'bar',
                                 error_gen   =>  'required_error',
                                 error_args  =>  [
-                                                    'InnerMissingRequired',
+                                                    'MissingRequired',
                                                     '$bar',
                                                     'foo',
                                                 ],
@@ -99,7 +99,7 @@ my %run_time_errors =
                                 method      =>  'bar',
                                 error_gen   =>  'named_param_error',
                                 error_args  =>  [
-                                                    'InnerNoSuchNamed',
+                                                    'NoSuchNamed',
                                                     'bmoogle',
                                                     'foo',
                                                 ],
@@ -109,7 +109,7 @@ my %run_time_errors =
                                 method      =>  'bar',
                                 error_gen   =>  'badtype_error',
                                 error_args  =>  [
-                                                    'InnerUnknownType',
+                                                    'UnknownType',
                                                     'Foo::Bmoogle',
                                                     "looks like it doesn't parse correctly",
                                                     'foo',
@@ -151,7 +151,7 @@ while (my ($testclass, $test) = each %run_time_errors)
 
     lives_ok  { require $testmod } "$testclass loads correctly";
     throws_ok { &{ $testclass . '::' . $test->{method} }->() }
-            $test->{error_gen}->(@{$test->{error_args}}, FILE => "t/lib/$testmod", LINE => 1133),
+            $test->{error_gen}->(@{$test->{error_args}}, FILE => "t/lib/" . $test->{error_args}[0] . ".pm", LINE => 1133),
             $test->{test_name};
 }
 

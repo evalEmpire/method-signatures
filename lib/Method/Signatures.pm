@@ -1153,7 +1153,12 @@ sub inject_for_type_check
     # This is an optimization to unroll typecheck which makes Mouse types about 40% faster.
     # It only happens when type_check() has not been overridden.
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
-        my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
+
+        # we can't check if the type has an inline code here, we need to defer
+        # that to _make_constraint_with_check, because some Roles/Classes may
+        # have not been loaded yet.
+
+        my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->(%s)],
           __PACKAGE__, $sig->type, $class, $sig->type, $sig->passed_in;
         my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
           $class, $sig->type, $sig->passed_in, $sig->variable_name;
@@ -1217,13 +1222,11 @@ sub _init_mutc
     my $registry = $class->for_me;
     $registry->add_types(-Standard);
     $mutc{findit} = sub { $registry->lookup(@_) };
-#    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-#    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-#    $mutc{make_class} = \&{ $class . '::class_type'                    };
-#    $mutc{make_role}  = \&{ $class . '::role_type'                     };
-#
-#    $mutc{isa_class}  = $mutc{pull}->("ClassName");
-#    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    $mutc{pull}       = sub { $registry->simple_lookup(@_) };
+    $mutc{make_class} = sub { eval_type('InstanceOf[' . $_[0] . ']') };
+    $mutc{make_role}  = sub { eval_type('ConsumerOf[' . $_[0] . ']') };
+    $mutc{isa_class}  = $mutc{pull}->('ClassName');
+    $mutc{isa_role}   = $mutc{pull}->('RoleName');
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
@@ -1237,10 +1240,8 @@ sub _make_constraint
     # Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
     # parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
     my $constr = eval { $mutc{findit}->($type) };
-    if ($@)
-    {
-        $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
-    }
+    # Stores the error, but don't die now, check role/classe types first
+    my $error = $@;
     return $constr if $constr;
 
     # Check for roles.  Note that you *must* check for roles before you check for classes, because a
@@ -1250,8 +1251,12 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
+    $error
+      and $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+
     $class->signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
+
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
 # called directly by them.

@@ -26,7 +26,7 @@ sub _regexify
         $class = ref $obj || $obj || 'main';
     }
 
-    my $error = $compile_time ? "$msg in declaration at " : "In call to ${class}::$method(), $msg at ";
+    my $error = $compile_time ? "$msg in declaration at " : "$msg at ";
     if ($extra{LINE})
     {
         $extra{FILE} ||= $0;
@@ -38,7 +38,8 @@ sub _regexify
     }
 
     $error = quotemeta $error;
-    return $extra{LINE} && !$compile_time ? qr/\A$error\Z/ : qr/\A$error/;
+    print STDERR " ------ [" . $error . "]---\n";
+    return $extra{LINE} && !$compile_time ? qr/$error/ : qr/\A$error/;
 }
 
 
@@ -137,7 +138,7 @@ sub badval_error
     my ($obj, $varname, $type, $val, $method, %extra) = @_;
 
     $val = defined $val ? qq{"$val"} : 'undef';
-    return _regexify($obj, $method, "the '$varname' parameter ($val) is not of type $type", %extra);
+    return _regexify($obj, $method, "Value $val did not pass type constraint \"$type\"", %extra);
 }
 
 sub badtype_error
