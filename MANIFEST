@@ -23,6 +23,7 @@ t/caller.t
 t/comments.t
 t/debugger.t
 t/defaults.t
+t/default_invocant.t
 t/defined_or_defaults.t
 t/error_interruption.t
 t/error_reporting.t

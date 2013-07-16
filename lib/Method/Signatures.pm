@@ -59,19 +59,22 @@ Method::Signatures - method and function declarations with signatures and no sou
 
 =head1 DESCRIPTION
 
-Provides two new keywords, C<func> and C<method>, so that you can write subroutines with signatures instead of having to spell out C<my $self = shift; my($thing) = @_>
+Provides two new keywords, C<func> and C<method>, so that you can write
+subroutines with signatures instead of having to spell out
+C<my $self = shift; my($thing) = @_>
 
 C<func> is like C<sub> but takes a signature where the prototype would
 normally go.  This takes the place of C<my($foo, $bar) = @_> and does
 a whole lot more.
 
 C<method> is like C<func> but specifically for making methods.  It will
-automatically provide the invocant as C<$self>.  No more C<my $self =
-shift>.
+automatically provide the invocant as C<$self> (L<by default|/invocant>).
+No more C<my $self = shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
 
-Also does type checking, understanding all the types that Moose (or Mouse) would understand.
+Also does type checking, understanding all the types that Moose (or Mouse)
+would understand.
 
 And it does all this with B<no source filters>.
 
@@ -194,7 +197,7 @@ reference.
 =head3 Invocant parameter
 
 The method invocant (i.e. C<$self>) can be changed as the first
-parameter.  Put a colon after it instead of a comma.
+parameter on a per-method basis. Put a colon after it instead of a comma:
 
     method foo($class:) {
         $class->bar;
@@ -204,8 +207,12 @@ parameter.  Put a colon after it instead of a comma.
         $class->things($arg, $another);
     }
 
-C<method> has an implied default invocant of C<$self:>.  C<func> has
-no invocant.
+C<method> has an implied default invocant of C<$self:>, though that is
+configurable by setting the L<invocant parameter|/invocant> on the
+C<use Method::Signatures> line.
+
+C<func> has no invocant, as it is intended for creating subs that will not
+be invoked on an object.
 
 
 =head3 Defaults
@@ -608,6 +615,12 @@ the invocant variable in their signatures will use the given variable name.
 
     use Method::Signatures { invocant => '$app' };
 
+    method main { $app->config; $app->run; $app->cleanup; }
+
+Note that the leading sigil I<must> be provided, and the value must be a single
+token that would be valid as a perl variable. Currently only scalar invocant
+variables are supported (eg, the sigil must be a C<$>).
+
 This option only affects the packages in which it is used. All others will
 continue to use C<$self> as the default invocant variable.
 
@@ -680,6 +693,7 @@ sub import {
     my $caller = caller;
     # default values
 
+    # default invocant var - end-user can change with 'invocant' option.
     my $inv_var = '$self';
 
     my $hints = my_hints;
@@ -692,7 +706,15 @@ sub import {
             $caller = $arg->{into}      if exists $arg->{into};
             $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN}
                                         if exists $arg->{compile_at_BEGIN};
-            $inv_var = $arg->{invocant} if exists $arg->{invocant};
+            if (exists $arg->{invocant}) {
+                $inv_var = $arg->{invocant};
+                # ensure (for now) the specified value is a valid variable
+                # name (with '$' sigil) and nothing more.
+                if ($inv_var !~ m{ \A \$ [^\W\d]\w* \z }x) {
+                    require Carp;
+                    Carp::croak("Invalid invocant name: '$inv_var'");
+                }
+            }
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
