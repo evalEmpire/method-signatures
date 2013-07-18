@@ -737,6 +737,7 @@ sub import {
     );
 
     DEBUG("import for $caller done\n");
+    DEBUG("method invocant is '$inv_var'\n");
 }
 
 
