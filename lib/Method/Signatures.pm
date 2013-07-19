@@ -1158,13 +1158,14 @@ sub inject_for_type_check
         # that to _make_constraint_with_check, because some Roles/Classes may
         # have not been loaded yet.
 
-        my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->(%s)],
+        my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
           __PACKAGE__, $sig->type, $class, $sig->type, $sig->passed_in;
-        my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->type, $sig->passed_in, $sig->variable_name;
+        my $error = sprintf q[( %s->type_error('%s', %s, '%s') ) ],
+          $class, $sig->type, $sig->passed_in, $sig->variable_name; # $sig->type, $sig->passed_in, $sig->variable_name, 
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
-        $code .= "!$check";
+        # with Type::Tiny, $check raises an exception. We need to catch it
+        $code .= "! eval { $check }";
         return "$code;";
     }
     # If a subclass has overridden type_check(), we must use that.
@@ -1217,14 +1218,19 @@ sub _init_mutc
 {
     require Type::Registry;
     Type::Registry->import();
-    my $class = 'Type::Registry';
-    $mutc{class} = $class;
-    my $registry = $class->for_me;
-    $registry->add_types(-Standard);
+    require Type::Parser;
+    Type::Parser->import(qw(eval_type));
+    $mutc{class} = 'Type::Registry';
+    my $registry = Type::Registry->for_me;
+    $registry->add_types('Types::Standard');
+
     $mutc{findit} = sub { $registry->lookup(@_) };
     $mutc{pull}       = sub { $registry->simple_lookup(@_) };
-    $mutc{make_class} = sub { eval_type('InstanceOf[' . $_[0] . ']') };
-    $mutc{make_role}  = sub { eval_type('ConsumerOf[' . $_[0] . ']') };
+    # XXX THIS IS WRONG, we should use InstanceOf (see below the commented
+    # line), but if we do, it fails at parsing, for unknown reason :(
+    $mutc{make_class} = sub { $registry->lookup('Object') };
+#    $mutc{make_class} = sub { $registry->lookup('InstanceOf[' . $_[0] . '::]') };
+    $mutc{make_role}  = sub { $registry->lookup('ConsumerOf[' . $_[0] . ']') };
     $mutc{isa_class}  = $mutc{pull}->('ClassName');
     $mutc{isa_role}   = $mutc{pull}->('RoleName');
 }

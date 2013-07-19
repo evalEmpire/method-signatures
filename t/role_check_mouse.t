@@ -8,6 +8,7 @@ use GenErrorRegex qw< badval_error >;
 use Test::More;
 use Test::Exception;
 
+plan skip_all => "We dont't use Mouse anymore";
 
 { package Foo::Bar; sub new { bless {}, __PACKAGE__; } }
 

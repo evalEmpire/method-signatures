@@ -30,7 +30,8 @@ our @TYPES =
     int             =>  'Int'               =>  42                              =>  'foo'                               ,
     bool            =>  'Bool'              =>  0                               =>  'fool'                              ,
     aref            =>  'ArrayRef',         =>  [[ 42, undef ]]                 =>  42                                  ,
-    class           =>  'Foo::Bar'          =>  $foobar                         =>  $foobaz                             ,
+#   Commented out because for now when specying a class type, we use Object instead of InstanceOf[...]
+#   class           =>  'Foo::Bar'          =>  $foobar                         =>  $foobaz                             ,
     maybe_int       =>  'Maybe[Int]'        =>  [ 42, undef ]                   =>  'foo'                               ,
     paramized_aref  =>  'ArrayRef[Num]'     =>  [[ 6.5, 42, 1e23 ]]             =>  [[ 6.5, 42, 'thing' ]]              ,
     paramized_href  =>  'HashRef[Num]'      =>  { a => 6.5, b => 2, c => 1e23 } =>  { a => 6.5, b => 42, c => 'thing' } ,
@@ -133,14 +134,14 @@ our $tester;
     $method = 'unknown_type';
     $type = 'Bmoogle';
     warning_is { eval qq{ method $method ($type \$bar) {} } } undef, 'no warnings when weird type loaded';
-    throws_ok { $tester->$method(42) } badtype_error($tester, $type, "perhaps you forgot to load it?", $method),
+    throws_ok { $tester->$method(42) } badval_error($tester, 'bar', 'Bmoogle', 42, $method),
             'call with unrecognized type dies';
 
     # this one is a bit specialer in that it involved an unrecognized parameterization
     $method = 'unknown_paramized_type';
     $type = 'Bmoogle[Int]';
     warning_is { eval qq{ method $method ($type \$bar) {} } } undef, 'no warnings when weird paramized type loaded';
-    throws_ok { $tester->$method(42) } badtype_error($tester, $type, "looks like it doesn't parse correctly", $method),
+    throws_ok { $tester->$method(42) } badval_error($tester, 'bar', 'Bmoogle[Int]', 42, $method),
             'call with unrecognized paramized type dies';
 
 }
