@@ -1216,23 +1216,22 @@ our %mutc;
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
-    require Type::Registry;
-    Type::Registry->import();
-    require Type::Parser;
-    Type::Parser->import(qw(eval_type));
-    $mutc{class} = 'Type::Registry';
-    my $registry = Type::Registry->for_me;
-    $registry->add_types('Types::Standard');
-
-    $mutc{findit} = sub { $registry->lookup(@_) };
-    $mutc{pull}       = sub { $registry->simple_lookup(@_) };
-    # XXX THIS IS WRONG, we should use InstanceOf (see below the commented
-    # line), but if we do, it fails at parsing, for unknown reason :(
-    $mutc{make_class} = sub { $registry->lookup('Object') };
-#    $mutc{make_class} = sub { $registry->lookup('InstanceOf[' . $_[0] . '::]') };
-    $mutc{make_role}  = sub { $registry->lookup('ConsumerOf[' . $_[0] . ']') };
-    $mutc{isa_class}  = $mutc{pull}->('ClassName');
-    $mutc{isa_role}   = $mutc{pull}->('RoleName');
+    require Types::Standard;
+    require Type::Tiny::Class;
+    require Type::Tiny::Role;
+    require Type::Utils;
+    # This is supposed to really throw an exception, but
+    # _init_mutc is only ever called within an eval {...}
+    # block!!!
+    'Type::Utils'->VERSION('0.016');
+    
+    $mutc{class}      = 'Type::Tiny';
+    $mutc{findit}     = sub { Type::Utils::dwim_type($_[0]) };
+    $mutc{pull}       = sub { Type::Utils::dwim_type($_[0]) };
+    $mutc{make_class} = sub { 'Type::Tiny::Class'->new(class => $_[0]) };
+    $mutc{make_role}  = sub { 'Type::Tiny::Role'->new(role => $_[0]) };
+    $mutc{isa_class}  = Types::Standard::ClassName();
+    $mutc{isa_role}   = Types::Standard::RoleName();
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
