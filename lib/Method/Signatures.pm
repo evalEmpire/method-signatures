@@ -1164,8 +1164,7 @@ sub inject_for_type_check
           $class, $sig->type, $sig->passed_in, $sig->variable_name; # $sig->type, $sig->passed_in, $sig->variable_name, 
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
-        # with Type::Tiny, $check raises an exception. We need to catch it
-        $code .= "! eval { $check }";
+        $code .= "!$check";
         return "$code;";
     }
     # If a subclass has overridden type_check(), we must use that.

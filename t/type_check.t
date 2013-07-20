@@ -141,7 +141,7 @@ our $tester;
     $method = 'unknown_paramized_type';
     $type = 'Bmoogle[Int]';
     warning_is { eval qq{ method $method ($type \$bar) {} } } undef, 'no warnings when weird paramized type loaded';
-    throws_ok { $tester->$method(42) } badval_error($tester, 'bar', 'Bmoogle[Int]', 42, $method),
+    throws_ok { $tester->$method(42) } badtype_error($tester, 'Bmoogle[Int]', "looks like it doesn't parse correctly", $method),
             'call with unrecognized paramized type dies';
 
 }
