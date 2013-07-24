@@ -30,8 +30,7 @@ our @TYPES =
     int             =>  'Int'               =>  42                              =>  'foo'                               ,
     bool            =>  'Bool'              =>  0                               =>  'fool'                              ,
     aref            =>  'ArrayRef',         =>  [[ 42, undef ]]                 =>  42                                  ,
-#   Commented out because for now when specying a class type, we use Object instead of InstanceOf[...]
-#   class           =>  'Foo::Bar'          =>  $foobar                         =>  $foobaz                             ,
+    class           =>  'Foo::Bar'          =>  $foobar                         =>  $foobaz                             ,
     maybe_int       =>  'Maybe[Int]'        =>  [ 42, undef ]                   =>  'foo'                               ,
     paramized_aref  =>  'ArrayRef[Num]'     =>  [[ 6.5, 42, 1e23 ]]             =>  [[ 6.5, 42, 'thing' ]]              ,
     paramized_href  =>  'HashRef[Num]'      =>  { a => 6.5, b => 2, c => 1e23 } =>  { a => 6.5, b => 42, c => 'thing' } ,
