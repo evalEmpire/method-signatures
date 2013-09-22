@@ -19,18 +19,25 @@ my $build = Module::Build->new(
         'Test::More'        => '0.82',
         'Test::Builder'     => '0.82',
         'Test::Warn'        => '0.10',
+        'Test::Exception'   => '0.29',
     },
 
     requires        => {
         'perl'              => '5.8.1',
 
-        'Devel::Declare::MethodInstaller::Simple' => '0.003003',
-        'Devel::BeginLift'  => '0.001001',
+        'Devel::Pragma'     => '0.40',
+        'Devel::Declare'    => '0.006002',
+        'Devel::Declare::MethodInstaller::Simple' => '0.006002',
         'Const::Fast'       => '0.006',
         PPI                 => '1.203',
         'Data::Alias'       => '1.08',
         'Any::Moose'        => '0.11',
         Mouse               => '0.64',
+        'Sub::Name'         => '0.03',
+    },
+
+    recommends      => {
+        'Moose'             => '0.96',
     },
 
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
@@ -40,7 +47,7 @@ my $build = Module::Build->new(
             license     => 'http://dev.perl.org/licenses/',
             bugtracker  =>
                 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures',
-            repository  => 'https://github.com/schwern/method-signatures/tree',
+            repository  => 'https://github.com/schwern/method-signatures',
         },
     },
 );
