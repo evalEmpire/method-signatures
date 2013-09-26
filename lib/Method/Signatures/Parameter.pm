@@ -227,7 +227,7 @@ sub _parse_with_ppi {
     # Re-remove parameter var
     shift @$tokens;
 
-    # Extract any 'where' contraints...
+    # Extract any 'where' constraints...
     while ($self->_extract_leading(qr{^ where $}x, $tokens)) {
         sig_parsing_error("'where' constraint only available under Perl 5.10 or later. Error")
           if $] < 5.010;

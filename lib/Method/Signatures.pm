@@ -545,7 +545,7 @@ Parameters declared using C<$arg!> are explicitly I<required>.
 Parameters declared using C<$arg?> are explicitly I<optional>.  These
 declarations override all other considerations.
 
-A parameter is implictly I<optional> if it is a named parameter, has a
+A parameter is implicitly I<optional> if it is a named parameter, has a
 default, or is slurpy.  All other parameters are implicitly
 I<required>.
 
@@ -919,7 +919,7 @@ sub _calculate_max_args {
     # How big can @_ be?
     $overall->{max_argv_size} = ($overall->{num_named} * 2) + $overall->{num_positional};
 
-    # The maxmimum logical arguments (name => value counts as one argument)
+    # The maximum logical arguments (name => value counts as one argument)
     $overall->{max_args} = $overall->{num_named} + $overall->{num_positional};
 
     return;
