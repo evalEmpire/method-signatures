@@ -1441,10 +1441,11 @@ If you want to write "use Method::Signatures" in a one-liner, do a
 C<-MMethod::Signatures> first.  This is due to a bug/limitation in
 Devel::Declare.
 
-=head2 Close parends in comments
+=head2 Close parends in quotes or comments
 
-Because of the way L<Devel::Declare> parses things, a close parend
-inside a comment could throw off the signature parsing.  For instance:
+Because of the way L<Devel::Declare> parses things, an unbalanced
+close parend inside a quote or comment could throw off the signature
+parsing.  For instance:
 
     func foo (
         $foo,       # $foo might contain )
@@ -1461,6 +1462,23 @@ this:
     )
 
 is fine, because the parends in the comments are balanced.
+
+If you absolutely can't avoid an unbalanced close parend, such as in
+the following signature:
+
+    func foo ( $foo, $bar = ")" )       # this won't parse correctly
+
+you can always use a backslash to tell the parser that that close
+parend doesn't indicate the end of the signature:
+
+    func foo ( $foo, $bar = "\)" )      # this is fine
+
+This even works in single quotes:
+
+    func foo ( $foo, $bar = '\)' )      # default is ')', *not* '\)'!
+
+although we don't recomment that form, as it may be surprising to
+readers of your code.
 
 =head2 No source filter
 
