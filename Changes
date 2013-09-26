@@ -2,6 +2,12 @@ next
     Docs
     * Updated close parend problem to include quotes and a workaround
       [rt.cpan.org 85925]
+    * Fixed some typos (thanks dsteinbrunner)
+      [github #88]
+
+    Distribution Fixes
+    * Fixed repo link in metadata (thanks dsteinbrunner)
+      [github #87]
 
 20130505    May  5 21:17:45 PDT 2013
     Promoted to full release
