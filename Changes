@@ -1,6 +1,8 @@
 next
     Bug Fixes
     * Removed experimental smartmatch warnings
+    * Don't require Data::Alias for named params unless you have to
+      [github #71]
 
     Docs
     * Updated close parend problem to include quotes and a workaround

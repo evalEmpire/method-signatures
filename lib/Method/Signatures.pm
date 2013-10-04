@@ -996,8 +996,15 @@ sub inject_from_signature {
 
     if( @{$signature->{named}} ) {
         my $first_named_idx = @{$signature->{positional}};
-        require Data::Alias;
-        push @code, "Data::Alias::alias( my (\%args) = \@_[$first_named_idx..\$#_] );";
+        if (grep { $_->is_ref_alias or $_->traits->{alias} } @{$signature->{named}})
+        {
+            require Data::Alias;
+            push @code, "Data::Alias::alias( my (\%args) = \@_[$first_named_idx..\$#_] );";
+        }
+        else
+        {
+            push @code, "my (\%args) = \@_[$first_named_idx..\$#_];";
+        }
 
         for my $sig (@{$signature->{named}}) {
             push @code, $self->inject_for_sig($sig);
