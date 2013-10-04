@@ -14,7 +14,9 @@ BEGIN {
 
 use Method::Signatures;
 
-plan tests => 4;
+
+my $where_func = q{ func silly_test ($x where { $_ == 3 }) {} };
+warning_is { eval $where_func } undef, 'no warnings for using smartmatch';
 
 
 subtest 'where { block() }' => sub {
@@ -106,6 +108,7 @@ subtest 'where { cat => 1, dog => 2}' => sub {
 
 
 subtest 'where where where' => sub {
+    use experimental 'smartmatch';
     plan tests => 14;
 
     func is_prime ($x) {
@@ -138,3 +141,6 @@ subtest 'where where where' => sub {
     my $result = eval{ neg_and_odd_and_prime(undef); };
     like $@, qr{\$x value \(undef\) does not satisfy constraint:}, "neg_and_odd_and_prime(undef) as expected";
 };
+
+
+done_testing;

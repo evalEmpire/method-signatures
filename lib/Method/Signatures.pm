@@ -1134,7 +1134,7 @@ sub inject_for_sig {
                     ? "sub $constraint"
                     : $constraint;
             my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
-            push @code, "$error unless grep { \$_ ~~ $constraint_impl } $var; ";
+            push @code, "$error unless do { use experimental 'smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
         }
     }
 

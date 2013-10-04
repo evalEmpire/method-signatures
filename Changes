@@ -1,4 +1,7 @@
 next
+    Bug Fixes
+    * Removed experimental smartmatch warnings
+
     Docs
     * Updated close parend problem to include quotes and a workaround
       [rt.cpan.org 85925]
