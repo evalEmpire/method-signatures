@@ -31,7 +31,6 @@ my $build = Module::Build->new(
         'Devel::Declare::MethodInstaller::Simple' => '0.006002',
         'Const::Fast'       => '0.006',
         PPI                 => '1.203',
-        'Data::Alias'       => '1.08',
         'Any::Moose'        => '0.11',
         Mouse               => '0.64',
         'Sub::Name'         => '0.03',
@@ -39,6 +38,7 @@ my $build = Module::Build->new(
 
     recommends      => {
         'Moose'             => '0.96',
+        'Data::Alias'       => '1.08',
     },
 
     dist_author     => 'Michael G Schwern <schwern@pobox.com>',
