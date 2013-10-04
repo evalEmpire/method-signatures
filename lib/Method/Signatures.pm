@@ -8,7 +8,7 @@ use Method::Signatures::Parser;
 use Method::Signatures::Parameter;
 use Devel::Pragma qw(my_hints);
 
-our $VERSION = '20130505';
+our $VERSION = '20131004.0159_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 

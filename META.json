@@ -4,7 +4,7 @@
       "Michael G Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560",
    "license" : [
       "perl_5"
    ],
@@ -30,18 +30,19 @@
       },
       "runtime" : {
          "recommends" : {
+            "Data::Alias" : "1.08",
             "Moose" : "0.96"
          },
          "requires" : {
             "Any::Moose" : "0.11",
             "Const::Fast" : "0.006",
-            "Data::Alias" : "1.08",
             "Devel::Declare" : "0.006002",
             "Devel::Declare::MethodInstaller::Simple" : "0.006002",
             "Devel::Pragma" : "0.40",
             "Mouse" : "0.64",
             "PPI" : "1.203",
             "Sub::Name" : "0.03",
+            "experimental" : "0.005",
             "perl" : "v5.8.1"
          }
       }
@@ -49,22 +50,20 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20130505"
+         "version" : "20131004.0159_001"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20130505"
+         "version" : "20131004.0159_001"
       },
       "Method::Signatures::Parameter" : {
-         "file" : "lib/Method/Signatures/Parameter.pm",
-         "version" : 0
+         "file" : "lib/Method/Signatures/Parameter.pm"
       },
       "Method::Signatures::Parser" : {
-         "file" : "lib/Method/Signatures/Parser.pm",
-         "version" : 0
+         "file" : "lib/Method/Signatures/Parser.pm"
       }
    },
-   "release_status" : "stable",
+   "release_status" : "testing",
    "resources" : {
       "bugtracker" : {
          "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
@@ -73,8 +72,8 @@
          "http://dev.perl.org/licenses/"
       ],
       "repository" : {
-         "url" : "https://github.com/schwern/method-signatures/tree"
+         "url" : "https://github.com/schwern/method-signatures"
       }
    },
-   "version" : "20130505"
+   "version" : "20131004.0159_001"
 }
