@@ -9,7 +9,7 @@ use Test::Exception;
 
 # Skip the test before Method::Signatures can try to compile it and blow up.
 BEGIN {
-    plan skip_all => "Perl 5.10 or higher required to test where constraints" if $] < 5.010;
+    plan skip_all => "Perl 5.10.1 or higher required to test where constraints" if $] < 5.01001;
 }
 
 use Method::Signatures;

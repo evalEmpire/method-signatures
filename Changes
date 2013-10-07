@@ -1,3 +1,8 @@
+next
+    Distribution Fixes
+    * Fixed failing test in 5.10.0
+      (uncovered by CPAN Testers)
+
 20131004.0159_001   Fri Oct  4 01:59:55 PDT 2013
     Bug Fixes
     * Removed experimental smartmatch warnings
