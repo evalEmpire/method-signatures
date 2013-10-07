@@ -1,4 +1,4 @@
-next
+20131007.0002_002   Mon Oct  7 00:02:30 PDT 2013
     Distribution Fixes
     * Fixed failing test in 5.10.0
       (uncovered by CPAN Testers)

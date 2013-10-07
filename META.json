@@ -4,7 +4,7 @@
       "Michael G Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560",
+   "generated_by" : "Module::Build version 0.4007, CPAN::Meta::Converter version 2.132661",
    "license" : [
       "perl_5"
    ],
@@ -50,11 +50,11 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20131004.0159_001"
+         "version" : "20131007.0002_002"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20131004.0159_001"
+         "version" : "20131007.0002_002"
       },
       "Method::Signatures::Parameter" : {
          "file" : "lib/Method/Signatures/Parameter.pm"
@@ -75,5 +75,5 @@
          "url" : "https://github.com/schwern/method-signatures"
       }
    },
-   "version" : "20131004.0159_001"
+   "version" : "20131007.0002_002"
 }
