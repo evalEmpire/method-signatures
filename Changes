@@ -1,3 +1,8 @@
+NEXT
+    Docs
+    * Document which features require Data::Alias and Const::Fast
+      [github #90]
+
 20131010    Thu Oct 10 00:57:41 PDT 2013
     Promoted to full release
 
