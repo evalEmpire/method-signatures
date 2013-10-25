@@ -1,4 +1,9 @@
 NEXT
+    Distribution Fixes
+    * Demand latest version of Devel::Pragma so as to avoid
+      load order dependencies
+      [github #41]
+
     Docs
     * Document which features require Data::Alias and Const::Fast
       [github #90]
