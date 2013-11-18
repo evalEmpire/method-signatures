@@ -6,7 +6,6 @@ use warnings;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Method::Signatures::Parameter;
-use Devel::Pragma qw(my_hints);
 
 our $VERSION = '20131010';
 
@@ -21,6 +20,12 @@ sub DEBUG {
 
     require Data::Dumper;
     print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
+}
+
+# copied from Devel::Pragma
+sub my_hints() {
+    $^H |= 0x20000;
+    return \%^H;
 }
 
 
