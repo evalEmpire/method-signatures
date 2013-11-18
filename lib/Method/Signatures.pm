@@ -3,6 +3,7 @@ package Method::Signatures;
 use strict;
 use warnings;
 
+use Lexical::SealRequireHints;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Method::Signatures::Parameter;
