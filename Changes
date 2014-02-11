@@ -1,4 +1,9 @@
 NEXT
+
+    Test Fixes
+    * Mark thread-bug.t as an author-only test.
+      [github #80, #92]
+
     Distribution Fixes
     * Demand latest version of Devel::Pragma so as to avoid
       load order dependencies

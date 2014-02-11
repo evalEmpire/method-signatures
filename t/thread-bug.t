@@ -19,6 +19,20 @@ use Test::More;
 
 plan skip_all => 'This test only relevant under threaded Perls' if !$has_threads;
 
+
+BEGIN {
+
+    # Alas, even when this test runs successfully, it still segfaults
+    # on script exit. See GH #92, #80, and elsewhere.
+    #
+    # As such, it's been marked as an author-only test for now.
+
+    plan skip_all => 'Author only test. Set $ENV{AUTHOR_TESTING} to run.'
+        unless $ENV{AUTHOR_TESTING};
+
+}
+
+
 use Method::Signatures;
 
 sub worker {
