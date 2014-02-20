@@ -1,8 +1,7 @@
-NEXT
+20140220.0106_001   Thu Feb 20 01:14:54 PST 2014
     Distribution Fixes
-    * Demand latest version of Devel::Pragma so as to avoid
-      load order dependencies
-      [github #41]
+    * Remove dependency on Devel::Pragma
+      [github #91], and fixes [github #41]
 
     Docs
     * Document which features require Data::Alias and Const::Fast

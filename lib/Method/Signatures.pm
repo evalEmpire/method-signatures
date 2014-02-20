@@ -8,7 +8,7 @@ use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Method::Signatures::Parameter;
 
-our $VERSION = '20131010';
+our $VERSION = '20140220.0106_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
