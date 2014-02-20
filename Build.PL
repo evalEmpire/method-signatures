@@ -26,7 +26,6 @@ my $build = Module::Build->new(
         'perl'              => '5.8.1',
 
         'experimental'      => '0.005',
-        'Devel::Pragma'     => '0.60',
         'Devel::Declare'    => '0.006002',
         'Devel::Declare::MethodInstaller::Simple' => '0.006002',
         'Const::Fast'       => '0.006',
@@ -34,6 +33,7 @@ my $build = Module::Build->new(
         'Any::Moose'        => '0.11',
         Mouse               => '0.64',
         'Sub::Name'         => '0.03',
+        'Lexical::SealRequireHints' => '0.007',
     },
 
     recommends      => {
