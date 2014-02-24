@@ -1,3 +1,6 @@
+20140224    Mon Feb 24 14:25:43 PST 2014
+    Promoted to full release
+
 20140220.0106_001   Thu Feb 20 01:14:54 PST 2014
     Distribution Fixes
     * Remove dependency on Devel::Pragma

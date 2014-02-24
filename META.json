@@ -50,11 +50,11 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20140220.0106_001"
+         "version" : "20140224"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20140220.0106_001"
+         "version" : "20140224"
       },
       "Method::Signatures::Parameter" : {
          "file" : "lib/Method/Signatures/Parameter.pm"
@@ -63,7 +63,7 @@
          "file" : "lib/Method/Signatures/Parser.pm"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
@@ -75,5 +75,5 @@
          "url" : "https://github.com/schwern/method-signatures"
       }
    },
-   "version" : "20140220.0106_001"
+   "version" : "20140224"
 }
