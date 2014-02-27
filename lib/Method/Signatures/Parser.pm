@@ -73,7 +73,7 @@ sub carp_location_for {
     local @CARP_NOT;
     push @CARP_NOT, 'Method::Signatures';
     push @CARP_NOT, $class unless $class =~ /^${\__PACKAGE__}(::|$)/;
-    push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare >;
+    push @CARP_NOT, qw< Class::MOP Moose Mouse Devel::Declare Types::Standard Type::Registry Type::Parser Type::Tiny>;
 
     # Skip any package in the @CARP_NOT list or their sub packages.
     my $carp_not_list_re = join '|', @CARP_NOT;

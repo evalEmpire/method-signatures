@@ -77,7 +77,7 @@ shift>.
 
 Also allows signatures, very similar to Perl 6 signatures.
 
-Also does type checking, understanding all the types that Moose (or Mouse) would understand.
+Also does type checking, understanding all the types that Type::Tiny would understand.
 
 And it does all this with B<no source filters>.
 
@@ -315,13 +315,12 @@ Any variable that has a default is considered optional.
 
 Parameters can also be given type constraints.  If they are, the value
 passed in will be validated against the type constraint provided.
-Types are provided by L<Any::Moose> which will load L<Mouse> if
-L<Moose> is not already loaded.
+Types are provided by L<Type::Tiny>.
 
 Type constraints can be a type, a role or a class.  Each will be
 checked in turn until one of them passes.
 
-    * First, is the $value of that type declared in Moose (or Mouse)?
+    * First, is the $value of that type declared in Type::Tiny?
 
     * Then, does the $value have that role?
         $value->DOES($type);
@@ -330,15 +329,15 @@ checked in turn until one of them passes.
         $value->isa($type);
 
 The set of default types that are understood can be found in
-L<Mouse::Util::TypeConstraints> (or L<Moose::Util::TypeConstraints>;
-they are generally the same, but there may be small differences).
+L<Types::Standard>.
+
 
     # avoid "argument isn't numeric" warnings
     method add(Int $this = 23, Int $that = 42) {
         return $this + $that;
     }
 
-L<Mouse> and L<Moose> also understand some parameterized types; see
+L<Type::Tiny> also understand some parameterized types; see
 their documentation for more details.
 
     method add(Int $this = 23, Maybe[Int] $that) {
@@ -1171,10 +1170,15 @@ sub inject_for_type_check
     # This is an optimization to unroll typecheck which makes Mouse types about 40% faster.
     # It only happens when type_check() has not been overridden.
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
+
+        # we can't check if the type has an inline code here, we need to defer
+        # that to _make_constraint_with_check, because some Roles/Classes may
+        # have not been loaded yet.
+
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
           __PACKAGE__, $sig->type, $class, $sig->type, $sig->passed_in;
-        my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->type, $sig->passed_in, $sig->variable_name;
+        my $error = sprintf q[( %s->type_error('%s', %s, '%s') ) ],
+          $class, $sig->type, $sig->passed_in, $sig->variable_name; # $sig->type, $sig->passed_in, $sig->variable_name, 
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
         $code .= "!$check";
@@ -1217,9 +1221,8 @@ sub required_arg {
 # STUFF FOR TYPE CHECKING
 
 # This variable will hold all the bits we need.  MUTC could stand for Moose::Util::TypeConstraint,
-# or it could stand for Mouse::Util::TypeConstraint ... depends on which one you've got loaded (or
-# Mouse if you have neither loaded).  Because we use Any::Moose to allow the user to choose
-# whichever they like, we'll need to figure out the exact method names to call.  We'll also need a
+# or it could stand for Mouse::Util::TypeConstraint ... But we use Type::Tiny now...
+# We'll also need a
 # type constraint cache, where we stick our constraints once we find or create them.  This insures
 # that we only have to run down any given constraint once, the first time it's seen, and then after
 # that it's simple enough to pluck back out.  This is very similar to how MooseX::Params::Validate
@@ -1229,20 +1232,22 @@ our %mutc;
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
-    require Any::Moose;
-    Any::Moose->import('::Util::TypeConstraints');
-
-    no strict 'refs';
-    my $class = any_moose('::Util::TypeConstraints');
-    $mutc{class} = $class;
-
-    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-    $mutc{make_class} = \&{ $class . '::class_type'                    };
-    $mutc{make_role}  = \&{ $class . '::role_type'                     };
-
-    $mutc{isa_class}  = $mutc{pull}->("ClassName");
-    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    require Types::Standard;
+    require Type::Tiny::Class;
+    require Type::Tiny::Role;
+    require Type::Utils;
+    # This is supposed to really throw an exception, but
+    # _init_mutc is only ever called within an eval {...}
+    # block!!!
+    'Type::Utils'->VERSION('0.016');
+    
+    $mutc{class}      = 'Type::Tiny';
+    $mutc{findit}     = sub { Type::Utils::dwim_type($_[0]) };
+    $mutc{pull}       = sub { Type::Utils::dwim_type($_[0]) };
+    $mutc{make_class} = sub { 'Type::Tiny::Class'->new(class => $_[0]) };
+    $mutc{make_role}  = sub { 'Type::Tiny::Role'->new(role => $_[0]) };
+    $mutc{isa_class}  = Types::Standard::ClassName();
+    $mutc{isa_role}   = Types::Standard::RoleName();
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
@@ -1256,10 +1261,8 @@ sub _make_constraint
     # Look for basic types (Int, Str, Bool, etc).  This will also create a new constraint for any
     # parameterized types (e.g. ArrayRef[Int]) or any disjunctions (e.g. Int|ScalarRef[Int]).
     my $constr = eval { $mutc{findit}->($type) };
-    if ($@)
-    {
-        $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
-    }
+    # Stores the error, but don't die now, check role/classe types first
+    my $error = $@;
     return $constr if $constr;
 
     # Check for roles.  Note that you *must* check for roles before you check for classes, because a
@@ -1269,8 +1272,12 @@ sub _make_constraint
     # Now check for classes.
     return $mutc{make_class}->($type) if $mutc{isa_class}->check($type);
 
+    $error
+      and $class->signature_error("the type $type is unrecognized (looks like it doesn't parse correctly)");
+
     $class->signature_error("the type $type is unrecognized (perhaps you forgot to load it?)");
 }
+
 
 # This method does the actual type checking.  It's what we inject into our user's method, to be
 # called directly by them.

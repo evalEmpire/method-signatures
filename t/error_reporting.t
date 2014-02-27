@@ -105,13 +105,15 @@ my %run_time_errors =
                                                 ],
                                 test_name   =>  'no such named param reports correctly',
                             },
+
     UnknownType         =>  {
                                 method      =>  'bar',
-                                error_gen   =>  'badtype_error',
+                                error_gen   =>  'badval_error',
                                 error_args  =>  [
                                                     'InnerUnknownType',
+                                                    'bar',
                                                     'Foo::Bmoogle',
-                                                    'perhaps you forgot to load it?',
+                                                    42,
                                                     'foo',
                                                 ],
                                 test_name   =>  'unrecognized type reports correctly',
