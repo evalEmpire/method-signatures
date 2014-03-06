@@ -803,7 +803,7 @@ sub parse_proto {
     die $@ if _parser_is_fucked;
 
     return $self->parse_signature(
-        proto           => $proto,
+        proto           => defined $proto ? $proto : "",
         invocant        => $self->{invocant},
         pre_invocant    => $self->{pre_invocant}
     );
