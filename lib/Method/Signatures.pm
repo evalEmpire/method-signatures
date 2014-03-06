@@ -789,23 +789,10 @@ sub parse_proto {
     # Before we try to compile signatures, make sure there isn't a hidden compilation error.
     die $@ if _parser_is_fucked;
 
-    return $self->parse_signature(
-        proto           => $proto,
-        invocant        => $self->{invocant},
-        pre_invocant    => $self->{pre_invocant}
-    );
-}
-
-
-# Parse a signature
-sub parse_signature {
-    my $self = shift;
-    my %args = @_;
-
     $self->{signature} = Method::Signatures::Signature->new(
-        signature_string        => defined $args{proto} ? $args{proto} : "",
-        pre_invocant            => $args{pre_invocant},
-        invocant                => $args{invocant},
+        signature_string        => defined $proto ? $proto : "",
+        invocant                => $self->{invocant},
+        pre_invocant            => $self->{pre_invocant}
     );
 
     # Then turn it into Perl code
