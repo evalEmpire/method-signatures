@@ -1117,16 +1117,14 @@ sub inject_for_sig {
     push @code, "delete( $deletion_target );" if $deletion_target;
 
     # Handle 'where' constraints (after defaults are resolved)
-    if ( $sig->where ) {
-        for my $constraint ( @{$sig->where} ) {
-            # Handle 'where { block using $_ }'
-            my $constraint_impl =
-                $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
-                    ? "sub $constraint"
-                    : $constraint;
-            my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
-            push @code, "$error unless do { use experimental 'smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
-        }
+    for my $constraint ( @{$sig->where} ) {
+        # Handle 'where { block using $_ }'
+        my $constraint_impl =
+          $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
+                ? "sub $constraint"
+                : $constraint;
+        my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
+        push @code, "$error unless do { use experimental 'smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
     }
 
     return @code;
