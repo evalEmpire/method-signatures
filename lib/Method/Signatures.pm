@@ -13,8 +13,6 @@ our $VERSION = '20140224';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 
-our @CARP_NOT;
-
 our $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
 # copied from Devel::Pragma
