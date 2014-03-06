@@ -89,17 +89,10 @@ has pre_invocant =>
   isa           => 'Maybe[Str]',
   default       => '';
 
-has is_method =>
-  is            => 'rw',
-  isa           => 'Bool',
-  default       => 0;
-
 has invocant =>
   is            => 'rw',
   isa           => 'Str',
-  default       => sub {
-      return $_[0]->is_method ? '$self' : '';
-  };
+  default       => '';
 
 sub has_invocant {
     return $_[0]->invocant ? 1 : 0;
