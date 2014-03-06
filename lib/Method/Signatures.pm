@@ -1024,8 +1024,6 @@ sub inject_from_signature {
             if $signature->{overall}{num_named} && !$signature->{overall}{yadayada};
     }
 
-    push @code, $class . '->named_param_error(\%args) if keys %args;' if $signature->{overall}{has_named};
-
     my $max_argv = $signature->{overall}{max_argv_size};
     my $max_args = $signature->{overall}{max_args};
     push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
