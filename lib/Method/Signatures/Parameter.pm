@@ -2,7 +2,7 @@ package Method::Signatures::Parameter;
 
 use Mouse;
 use Carp;
-use Method::Signatures::Parser;
+use Method::Signatures::Utils;
 
 my $IDENTIFIER     = qr{ [^\W\d] \w*                         }x;
 my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                 }x;

@@ -3,7 +3,7 @@ package Method::Signatures::Signature;
 use Mouse;
 use Method::Signatures::Types;
 use Method::Signatures::Parameter;
-use Method::Signatures::Parser qw(new_ppi_doc sig_parsing_error DEBUG);
+use Method::Signatures::Utils qw(new_ppi_doc sig_parsing_error DEBUG);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 

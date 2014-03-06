@@ -5,7 +5,7 @@ use warnings;
 
 use Lexical::SealRequireHints;
 use base 'Devel::Declare::MethodInstaller::Simple';
-use Method::Signatures::Parser;
+use Method::Signatures::Utils;
 use Method::Signatures::Parameter;
 use Method::Signatures::Signature;
 

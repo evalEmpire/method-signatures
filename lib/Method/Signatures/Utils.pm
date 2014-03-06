@@ -1,4 +1,4 @@
-package Method::Signatures::Parser;
+package Method::Signatures::Utils;
 
 use strict;
 use warnings;
