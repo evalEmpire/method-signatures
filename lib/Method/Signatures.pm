@@ -1118,7 +1118,7 @@ sub inject_for_sig {
 
     # Handle 'where' constraints (after defaults are resolved)
     if ( $sig->where ) {
-        for my $constraint ( keys %{$sig->where} ) {
+        for my $constraint ( @{$sig->where} ) {
             # Handle 'where { block using $_ }'
             my $constraint_impl =
                 $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs

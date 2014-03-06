@@ -90,13 +90,13 @@ has variable_name =>
 
 has where =>
   is            => 'rw',
-  isa           => 'HashRef[Int]',
-  default       => sub { {} };
+  isa           => 'ArrayRef',
+  default       => sub { [] };
 
 sub has_where {
     my $self = shift;
 
-    return keys %{$self->where} ? 1 : 0;
+    return @{$self->where} ? 1 : 0;
 }
 
 has traits =>
@@ -231,7 +231,7 @@ sub _parse_with_ppi {
     while ($self->_extract_leading(qr{^ where $}x, $tokens)) {
         sig_parsing_error("'where' constraint only available under Perl 5.10 or later. Error")
           if $] < 5.010;
-        $self->where->{ $self->_extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens) }++;
+        push @{$self->where}, $self->_extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens);
     }
 
     # Extract parameter traits...
