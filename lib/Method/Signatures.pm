@@ -814,16 +814,8 @@ sub _split_proto {
     my $self = shift;
     my $proto = shift;
 
-    my @protos;
-    if( ref $proto ) {
-        @protos = @$proto;
-    }
-    else {
-        _strip_ws($proto);
-        @protos = split_proto($proto);
-    }
-
-    return @protos;
+    _strip_ws($proto);
+    return split_proto($proto);
 }
 
 
@@ -843,7 +835,7 @@ sub parse_signature {
     # Special case for methods, they will pass in an invocant to use as the default
     $signature->invocant($args{invocant}) if $args{invocant};
 
-    my @protos = $self->_split_proto($signature->parameter_string || []);
+    my @protos = $self->_split_proto($signature->parameter_string);
 
     my $idx = 0;
     for my $proto (@protos) {
