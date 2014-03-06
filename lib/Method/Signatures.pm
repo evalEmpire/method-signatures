@@ -17,13 +17,6 @@ our @CARP_NOT;
 
 our $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
-sub DEBUG {
-    return unless $DEBUG;
-
-    require Data::Dumper;
-    print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
-}
-
 # copied from Devel::Pragma
 sub my_hints() {
     $^H |= 0x20000;

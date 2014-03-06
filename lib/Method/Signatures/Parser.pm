@@ -5,8 +5,14 @@ use warnings;
 use Carp;
 
 use base qw(Exporter);
-our @EXPORT = qw(split_proto split_parameter extract_invocant sig_parsing_error carp_location_for);
+our @EXPORT = qw(split_proto split_parameter extract_invocant sig_parsing_error carp_location_for DEBUG);
 
+sub DEBUG {
+    return unless $Method::Signatures::DEBUG;
+
+    require Data::Dumper;
+    print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
+}
 
 sub split_proto {
     my $proto = shift;
