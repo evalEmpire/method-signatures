@@ -25,7 +25,8 @@ note "types"; {
 
         my $which = shift @$want;
         for my $idx (0..$#{$want}) {
-            is $ms->{signature}{$which}[$idx]->type, $want->[$idx] || '';
+            my $method = $which.'_parameters';
+            is $ms->{signature}->$method->[$idx]->type, $want->[$idx] || '';
         }
     }
 }

@@ -7,6 +7,7 @@ use Lexical::SealRequireHints;
 use base 'Devel::Declare::MethodInstaller::Simple';
 use Method::Signatures::Parser;
 use Method::Signatures::Parameter;
+use Method::Signatures::Signature;
 
 our $VERSION = '20140224';
 
@@ -814,16 +815,17 @@ sub parse_signature {
     my $self = shift;
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
-    my $signature = $args{signature} || {};
+    my $signature = $args{signature} || Method::Signatures::Signature->new();
 
     # JIC there's anything we need to pull out before the invocant
     # (primary example would be the $orig for around modifiers in Moose/Mouse
-    $signature->{pre_invocant} = $args{pre_invocant};
+    $signature->pre_invocant($args{pre_invocant});
 
     # Special case for methods, they will pass in an invocant to use as the default
-    if( $signature->{invocant} = $args{invocant} ) {
+    if( $args{invocant} ) {
+        $signature->invocant($args{invocant});
         if( @protos ) {
-            $signature->{invocant} = $_ for extract_invocant(\$protos[0]);
+            $signature->invocant($_) for extract_invocant(\$protos[0]);
             shift @protos unless $protos[0] =~ /\S/;
         }
     }
@@ -854,18 +856,7 @@ sub parse_func {
     my $self = shift;
     my %args = @_;
     my @protos = $self->_split_proto($args{proto} || []);
-    my $signature = $args{signature} || {};
-
-    $signature->{named}      = [];
-    $signature->{positional} = [];
-    $signature->{overall}    = {
-        num_optional            => 0,
-        num_optional_positional => 0,
-        num_named               => 0,
-        num_positional          => 0,
-        has_invocant            => $signature->{invocant} ? 1 : 0,
-        num_slurpy              => 0
-    };
+    my $signature = $args{signature} || Method::Signatures::Signature->new;
 
     my $idx = 0;
     for my $proto (@protos) {
@@ -877,28 +868,23 @@ sub parse_func {
         );
         $idx++ if $sig->is_positional;
 
+        push @{$signature->parameters}, $sig;
+
         # Handle "don't care" specifier
         if ($sig->is_yadayada) {
-            $signature->{overall}{num_slurpy}++;
-            $signature->{overall}{yadayada}++;
+            push @{$signature->slurpy_parameters}, $sig;
+            push @{$signature->yadayada_parameters}, $sig;
             next;
         }
 
         $self->_check_sig($sig, $signature);
 
-        if( $sig->is_named ) {
-            push @{$signature->{named}}, $sig;
-        }
-        else {
-            push @{$signature->{positional}}, $sig;
-        }
-
-        my $overall = $signature->{overall};
-        $overall->{num_optional}++              if $sig->is_optional;
-        $overall->{num_named}++                 if $sig->is_named;
-        $overall->{num_positional}++            if $sig->is_positional;
-        $overall->{num_optional_positional}++   if $sig->is_optional and $sig->is_positional;
-        $overall->{num_slurpy}++                if $sig->is_slurpy;
+        push @{$signature->named_parameters}, $sig      if $sig->is_named;
+        push @{$signature->positional_parameters}, $sig if $sig->is_positional;
+        push @{$signature->optional_parameters}, $sig   if $sig->is_optional;
+        push @{$signature->optional_positional_parameters}, $sig
+          if $sig->is_optional and $sig->is_positional;
+        push @{$signature->slurpy_parameters}, $sig     if $sig->is_slurpy;
 
         DEBUG( "sig: ", $sig );
     }
@@ -916,21 +902,19 @@ sub parse_func {
 
 sub _calculate_max_args {
     my $self = shift;
-    my $overall = $self->{signature}{overall};
+
+    my $signature = $self->{signature};
 
     # If there's a slurpy argument, the max is infinity.
-    if( $overall->{num_slurpy} ) {
-        $overall->{max_argv_size} = $INF;
-        $overall->{max_args}      = $INF;
+    if( $signature->num_slurpy ) {
+        $signature->max_argv_size($INF);
+        $signature->max_args($INF);
 
         return;
     }
 
-    # How big can @_ be?
-    $overall->{max_argv_size} = ($overall->{num_named} * 2) + $overall->{num_positional};
-
-    # The maximum logical arguments (name => value counts as one argument)
-    $overall->{max_args} = $overall->{num_named} + $overall->{num_positional};
+    $signature->max_argv_size( ($signature->num_named * 2) + $signature->num_positional );
+    $signature->max_args( $signature->num_named + $signature->num_positional );
 
     return;
 }
@@ -942,21 +926,21 @@ sub _check_sig {
 
     if( $sig->is_slurpy ) {
         sig_parsing_error("Signature can only have one slurpy parameter")
-                if $signature->{overall}{num_slurpy} >= 1;
+                if $signature->num_slurpy >= 1;
         sig_parsing_error("Slurpy parameter '@{[$sig->variable]}' cannot be named; use a reference instead")
                 if $sig->is_named;
     }
 
     if( $sig->is_named ) {
-        if( $signature->{overall}{num_optional_positional} ) {
-            my $pos_var = $signature->{positional}[-1]->variable;
+        if( $signature->num_optional_positional ) {
+            my $pos_var = $signature->positional_parameters->[-1]->variable;
             my $var = $sig->variable;
             sig_parsing_error("Named parameter '$var' mixed with optional positional '$pos_var'");
         }
     }
     else {
-        if( $signature->{overall}{num_named} ) {
-            my $named_var = $signature->{named}[-1]->variable;
+        if( $signature->num_named ) {
+            my $named_var = $signature->named_parameters->[-1]->variable;
             my $var = $sig->variable;
             sig_parsing_error("Positional parameter '$var' after named param '$named_var'");
         }
@@ -967,26 +951,18 @@ sub _check_sig {
 # Check the integrity of the signature as a whole
 sub _check_signature {
     my $self = shift;
+
     my $signature = $self->{signature};
-    my $overall   = $signature->{overall};
 
     # Check that slurpy arguments come at the end
     if(
-        $overall->{num_slurpy}                  &&
-        !($overall->{yadayada} || $signature->{positional}[-1]->is_slurpy)
+        $signature->num_slurpy                  &&
+        !($signature->num_yadayada || $signature->positional_parameters->[-1]->is_slurpy)
     )
     {
-        my($slurpy_param) = $self->_find_slurpy_params;
+        my $slurpy_param = $signature->slurpy_parameters->[0];
         sig_parsing_error("Slurpy parameter '@{[$slurpy_param->variable]}' must come at the end");
     }
-}
-
-
-sub _find_slurpy_params {
-    my $self = shift;
-    my $signature = $self->{signature};
-
-    return grep { $_->is_slurpy } @{ $signature->{named} }, @{ $signature->{positional} };
 }
 
 
@@ -997,16 +973,16 @@ sub inject_from_signature {
     my $signature = shift;
 
     my @code;
-    push @code, "my $signature->{pre_invocant} = shift;" if $signature->{pre_invocant};
-    push @code, "my $signature->{invocant} = shift;" if $signature->{invocant};
+    push @code, "my @{[$signature->pre_invocant]} = shift;" if $signature->pre_invocant;
+    push @code, "my @{[$signature->invocant]} = shift;"     if $signature->invocant;
 
-    for my $sig (@{$signature->{positional}}) {
+    for my $sig (@{$signature->positional_parameters}) {
         push @code, $self->inject_for_sig($sig);
     }
 
-    if( @{$signature->{named}} ) {
-        my $first_named_idx = @{$signature->{positional}};
-        if (grep { $_->is_ref_alias or $_->traits->{alias} } @{$signature->{named}})
+    if( @{$signature->named_parameters} ) {
+        my $first_named_idx = @{$signature->positional_parameters};
+        if (grep { $_->is_ref_alias or $_->traits->{alias} } @{$signature->named_parameters})
         {
             require Data::Alias;
             push @code, "Data::Alias::alias( my (\%args) = \@_[$first_named_idx..\$#_] );";
@@ -1016,16 +992,16 @@ sub inject_from_signature {
             push @code, "my (\%args) = \@_[$first_named_idx..\$#_];";
         }
 
-        for my $sig (@{$signature->{named}}) {
+        for my $sig (@{$signature->named_parameters}) {
             push @code, $self->inject_for_sig($sig);
         }
 
         push @code, $class . '->named_param_error(\%args) if keys %args;'
-            if $signature->{overall}{num_named} && !$signature->{overall}{yadayada};
+            if $signature->num_named && !$signature->num_yadayada;
     }
 
-    my $max_argv = $signature->{overall}{max_argv_size};
-    my $max_args = $signature->{overall}{max_args};
+    my $max_argv = $signature->max_argv_size;
+    my $max_args = $signature->max_args;
     push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
         unless $max_argv == $INF;
 
