@@ -108,7 +108,7 @@ subtest 'where { cat => 1, dog => 2}' => sub {
 
 
 subtest 'where where where' => sub {
-    use experimental 'smartmatch';
+    no if $] >= 5.017011, warnings => 'experimental::smartmatch';
     plan tests => 14;
 
     func is_prime ($x) {
