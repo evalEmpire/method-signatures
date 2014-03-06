@@ -814,23 +814,19 @@ sub parse_proto {
 sub parse_signature {
     my $self = shift;
     my %args = @_;
-    my @protos = $self->_split_proto($args{proto} || []);
-    my $signature = $args{signature} || Method::Signatures::Signature->new();
+
+    my $signature = $args{signature} || Method::Signatures::Signature->new(
+        signature_string => $args{proto}
+    );
 
     # JIC there's anything we need to pull out before the invocant
     # (primary example would be the $orig for around modifiers in Moose/Mouse
     $signature->pre_invocant($args{pre_invocant});
 
     # Special case for methods, they will pass in an invocant to use as the default
-    if( $args{invocant} ) {
-        $signature->invocant($args{invocant});
-        if( @protos ) {
-            $signature->invocant($_) for extract_invocant(\$protos[0]);
-            shift @protos unless $protos[0] =~ /\S/;
-        }
-    }
+    $signature->invocant($args{invocant}) if $args{invocant};
 
-    return $self->parse_func( proto => \@protos, signature => $signature );
+    return $self->parse_func( signature => $signature );
 }
 
 
@@ -855,8 +851,11 @@ sub _split_proto {
 sub parse_func {
     my $self = shift;
     my %args = @_;
-    my @protos = $self->_split_proto($args{proto} || []);
-    my $signature = $args{signature} || Method::Signatures::Signature->new;
+    my $signature = $args{signature} || Method::Signatures::Signature->new(
+        signature_string => $args{proto}
+    );
+
+    my @protos = $self->_split_proto($signature->parameter_string || []);
 
     my $idx = 0;
     for my $proto (@protos) {

@@ -44,18 +44,6 @@ sub split_proto {
 }
 
 
-# Extract an invocant, if one is present...
-my $IDENTIFIER     = qr{ [^\W\d] \w* }x;
-sub extract_invocant {
-    my ($param_ref) = @_;
-
-    if ($$param_ref =~ s{ ^ (\$ $IDENTIFIER) \s* : \s* }{}x) {
-        return $1;
-    }
-    return;
-}
-
-
 sub strip_ws {
     $_[0] =~ s{^\s+}{};
     $_[0] =~ s{\s+$}{};

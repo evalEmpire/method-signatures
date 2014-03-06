@@ -8,12 +8,15 @@ my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 # The unmodified, uncleaned up original signature for reference
 has signature_string =>
   is            => 'ro',
-  isa           => 'Str';
+  isa           => 'Str',
+  required      => 1;
 
 # Just the parameter part of the signature, no invocant
 has parameter_string =>
   is            => 'ro',
-  isa           => 'Str';
+  isa           => 'Str',
+  lazy          => 1,
+  builder       => '_build_parameter_string';
 
 # A list of strings for each parameter tokenized from parameter_string
 has parameter_strings =>
@@ -107,5 +110,23 @@ has max_argv_size =>
 has max_args    =>
   is            => 'rw',
   isa           => 'Int|Inf';
+
+
+my $IDENTIFIER     = qr{ [^\W\d] \w* }x;
+sub _build_parameter_string {
+    my $self = shift;
+
+    my $sig_string = $self->signature_string;
+    my $invocant;
+
+    # Extract an invocant, if one is present.
+    if ($sig_string =~ s{ ^ (\$ $IDENTIFIER) \s* : \s* }{}x) {
+        $self->invocant($1);
+    }
+
+    # The siganture, minus the invocant, is just the list of parameters
+    return $sig_string;
+}
+
 
 1;
