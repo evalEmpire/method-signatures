@@ -5,7 +5,7 @@ use warnings;
 use Carp;
 
 use base qw(Exporter);
-our @EXPORT = qw(split_proto split_parameter extract_invocant sig_parsing_error carp_location_for DEBUG);
+our @EXPORT = qw(new_ppi_doc sig_parsing_error carp_location_for DEBUG);
 
 sub DEBUG {
     return unless $Method::Signatures::DEBUG;
@@ -14,46 +14,19 @@ sub DEBUG {
     print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
 }
 
-sub split_proto {
-    my $proto = shift;
-    return unless $proto =~ /\S/;
 
-    local $@ = undef;
+sub new_ppi_doc {
+    my $code = shift;
 
-    my $ppi = __PACKAGE__->new_ppi_doc(\$proto);
-    $ppi->prune('PPI::Token::Comment');
+    require PPI;
+    my $ppi = PPI::Document->new($code) or
+      sig_parsing_error(
+          "source '$$code' cannot be parsed by PPI: " . PPI::Document->errstr
+      );
 
-    my $statement = $ppi->find_first("PPI::Statement");
-    sig_parsing_error("Could not understand parameter list specification: $proto")
-        unless $statement;
-    my $token = $statement->first_token;
+    return $ppi;
+};
 
-    my @proto = ('');
-    do {
-        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
-            push @proto, '';
-        }
-        else {
-            $proto[-1] .= $token->content;
-        }
-
-        $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
-    } while( $token );
-
-
-    strip_ws($_) for @proto;
-
-    # Remove blank entries due to trailing comma.
-    @proto = grep { /\S/ } @proto;
-
-    return @proto;
-}
-
-
-sub strip_ws {
-    $_[0] =~ s{^\s+}{};
-    $_[0] =~ s{\s+$}{};
-}
 
 # Generate cleaner error messages...
 sub carp_location_for {
@@ -80,16 +53,6 @@ sub carp_location_for {
     } while $method !~ $target and $method =~ /$skip/ or $pack =~ /$skip/;
 
     return ($file, $line, $method);
-}
-
-sub new_ppi_doc {
-    my $class = shift;
-    my $source = shift;
-
-    require PPI;
-    my $ppi = PPI::Document->new($source) or
-      sig_parsing_error("source '$$source' cannot be parsed by PPI: " . PPI::Document->errstr);
-    return $ppi;
 }
 
 sub sig_parsing_error {

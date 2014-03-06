@@ -2,7 +2,8 @@ package Method::Signatures::Signature;
 
 use Mouse;
 use Method::Signatures::Types;
-use Method::Signatures::Parser qw(split_proto sig_parsing_error DEBUG);
+use Method::Signatures::Parameter;
+use Method::Signatures::Parser qw(new_ppi_doc sig_parsing_error DEBUG);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
@@ -22,8 +23,9 @@ has parameter_string =>
 # A list of strings for each parameter tokenized from parameter_string
 has parameter_strings =>
   is            => 'ro',
-  isa           => 'ArrayRef',
-  default       => sub { [] };
+  isa           => 'ArrayRef[Str]',
+  lazy          => 1,
+  builder       => '_build_parameter_strings';
 
 # The parsed Method::Signature::Parameter objects
 has parameters =>
@@ -112,14 +114,28 @@ has max_args    =>
   is            => 'rw',
   isa           => 'Int|Inf';
 
+# A PPI::Document representing the list of parameters
+has ppi_doc     =>
+  is            => 'ro',
+  isa           => 'PPI::Document',
+  lazy          => 1,
+  default       => sub {
+      my $code = $_[0]->parameter_string;
+      return new_ppi_doc(\$code);
+  };
+
+# If set, no checks will be done on the signature or parameters
+has no_checks   =>
+  is            => 'rw',
+  isa           => 'Bool',
+  default       => 0;
+
 
 sub BUILD {
     my $self = shift;
 
-    my @protos = $self->_split_proto($self->parameter_string);
-
     my $idx = 0;
-    for my $proto (@protos) {
+    for my $proto (@{$self->parameter_strings}) {
         DEBUG( "proto: $proto\n" );
 
         my $sig = Method::Signatures::Parameter->new(
@@ -137,7 +153,7 @@ sub BUILD {
             next;
         }
 
-        $sig->check($self);
+        $sig->check($self) unless $self->no_checks;
 
         push @{$self->named_parameters}, $sig      if $sig->is_named;
         push @{$self->positional_parameters}, $sig if $sig->is_positional;
@@ -150,7 +166,7 @@ sub BUILD {
     }
 
     $self->_calculate_max_args;
-    $self->check;
+    $self->check unless $self->no_checks;
 
     return;
 }
@@ -198,15 +214,6 @@ sub _strip_ws {
 }
 
 
-sub _split_proto {
-    my $self = shift;
-    my $proto = shift;
-
-    $self->_strip_ws($proto);
-    return split_proto($proto);
-}
-
-
 my $IDENTIFIER     = qr{ [^\W\d] \w* }x;
 sub _build_parameter_string {
     my $self = shift;
@@ -221,6 +228,44 @@ sub _build_parameter_string {
 
     # The siganture, minus the invocant, is just the list of parameters
     return $sig_string;
+}
+
+
+sub _build_parameter_strings {
+    my $self = shift;
+
+    my $param_string = $self->parameter_string;
+    return [] unless $param_string =~ /\S/;
+
+    local $@ = undef;
+
+    my $ppi = $self->ppi_doc;
+    $ppi->prune('PPI::Token::Comment');
+
+    my $statement = $ppi->find_first("PPI::Statement");
+    sig_parsing_error("Could not understand parameter list specification: $param_string")
+        unless $statement;
+    my $token = $statement->first_token;
+
+    my @params = ('');
+    do {
+        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
+            push @params, '';
+        }
+        else {
+            $params[-1] .= $token->content;
+        }
+
+        $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
+    } while( $token );
+
+
+    $self->_strip_ws($_) for @params;
+
+    # Remove blank entries due to trailing comma.
+    @params = grep { /\S/ } @params;
+
+    return \@params;
 }
 
 

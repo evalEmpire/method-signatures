@@ -162,6 +162,17 @@ has is_required =>
   isa           => 'Bool',
 ;
 
+# A PPI::Document representing the parameter
+has ppi_doc     =>
+  is            => 'ro',
+  isa           => 'PPI::Document',
+  lazy          => 1,
+  default       => sub {
+      my $code = $_[0]->ppi_clean_code;
+      return new_ppi_doc(\$code);
+  };
+
+
 sub is_optional {
     my $self = shift;
 
@@ -219,7 +230,7 @@ sub _parse_with_ppi {
     $self->ppi_clean_code($self->variable. " " .$self->ppi_clean_code);
 
     # Tokenize...
-    my $components = Method::Signatures::Parser->new_ppi_doc(\($self->ppi_clean_code));
+    my $components = $self->ppi_doc;
     my $statement = $components->find_first("PPI::Statement")
       or sig_parsing_error("Could not understand parameter specification: @{[$self->ppi_clean_code]}");
     my $tokens = [ $statement->children ];
