@@ -336,4 +336,34 @@ sub _init_split_variable {
     return;
 }
 
+
+# Check the integrity of one piece of the signature
+sub check {
+    my($self, $signature) = @_;
+
+    if( $self->is_slurpy ) {
+        sig_parsing_error("Signature can only have one slurpy parameter")
+                if $signature->num_slurpy >= 1;
+        sig_parsing_error("Slurpy parameter '@{[$self->variable]}' cannot be named; use a reference instead")
+                if $self->is_named;
+    }
+
+    if( $self->is_named ) {
+        if( $signature->num_optional_positional ) {
+            my $pos_var = $signature->positional_parameters->[-1]->variable;
+            my $var = $self->variable;
+            sig_parsing_error("Named parameter '$var' mixed with optional positional '$pos_var'");
+        }
+    }
+    else {
+        if( $signature->num_named ) {
+            my $named_var = $signature->named_parameters->[-1]->variable;
+            my $var = $self->variable;
+            sig_parsing_error("Positional parameter '$var' after named param '$named_var'");
+        }
+    }
+
+    return 1;
+}
+
 1;

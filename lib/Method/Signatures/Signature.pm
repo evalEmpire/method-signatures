@@ -2,6 +2,7 @@ package Method::Signatures::Signature;
 
 use Mouse;
 use Method::Signatures::Types;
+use Method::Signatures::Parser qw(split_proto sig_parsing_error DEBUG);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
@@ -94,7 +95,7 @@ has pre_invocant =>
 
 has invocant =>
   is            => 'rw',
-  isa           => 'Str',
+  isa           => 'Maybe[Str]',
   default       => '';
 
 sub has_invocant {
@@ -110,6 +111,100 @@ has max_argv_size =>
 has max_args    =>
   is            => 'rw',
   isa           => 'Int|Inf';
+
+
+sub BUILD {
+    my $self = shift;
+
+    my @protos = $self->_split_proto($self->parameter_string);
+
+    my $idx = 0;
+    for my $proto (@protos) {
+        DEBUG( "proto: $proto\n" );
+
+        my $sig = Method::Signatures::Parameter->new(
+            original_code => $proto,
+            position      => $idx,
+        );
+        $idx++ if $sig->is_positional;
+
+        push @{$self->parameters}, $sig;
+
+        # Handle "don't care" specifier
+        if ($sig->is_yadayada) {
+            push @{$self->slurpy_parameters}, $sig;
+            push @{$self->yadayada_parameters}, $sig;
+            next;
+        }
+
+        $sig->check($self);
+
+        push @{$self->named_parameters}, $sig      if $sig->is_named;
+        push @{$self->positional_parameters}, $sig if $sig->is_positional;
+        push @{$self->optional_parameters}, $sig   if $sig->is_optional;
+        push @{$self->optional_positional_parameters}, $sig
+          if $sig->is_optional and $sig->is_positional;
+        push @{$self->slurpy_parameters}, $sig     if $sig->is_slurpy;
+
+        DEBUG( "sig: ", $sig );
+    }
+
+    $self->_calculate_max_args;
+    $self->check;
+
+    return;
+}
+
+
+sub _calculate_max_args {
+    my $self = shift;
+
+    # If there's a slurpy argument, the max is infinity.
+    if( $self->num_slurpy ) {
+        $self->max_argv_size($INF);
+        $self->max_args($INF);
+
+        return;
+    }
+
+    $self->max_argv_size( ($self->num_named * 2) + $self->num_positional );
+    $self->max_args( $self->num_named + $self->num_positional );
+
+    return;
+}
+
+
+# Check the integrity of the signature as a whole
+sub check {
+    my $self = shift;
+
+    # Check that slurpy arguments come at the end
+    if(
+        $self->num_slurpy                  &&
+        !($self->num_yadayada || $self->positional_parameters->[-1]->is_slurpy)
+    )
+    {
+        my $slurpy_param = $self->slurpy_parameters->[0];
+        sig_parsing_error("Slurpy parameter '@{[$slurpy_param->variable]}' must come at the end");
+    }
+
+    return 1;
+}
+
+
+sub _strip_ws {
+    $_[1] =~ s/^\s+//;
+    $_[1] =~ s/\s+$//;
+}
+
+
+sub _split_proto {
+    my $self = shift;
+    my $proto = shift;
+
+    $self->_strip_ws($proto);
+    return split_proto($proto);
+}
 
 
 my $IDENTIFIER     = qr{ [^\W\d] \w* }x;

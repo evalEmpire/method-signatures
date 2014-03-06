@@ -748,12 +748,6 @@ sub _do_compile_at_BEGIN {
 }
 
 
-sub _strip_ws {
-    $_[0] =~ s/^\s+//;
-    $_[0] =~ s/\s+$//;
-}
-
-
 # Sometimes a compilation error will happen but not throw an error causing the
 # code to continue compiling and producing an unrelated error down the road.
 #
@@ -796,19 +790,10 @@ sub parse_proto {
     die $@ if _parser_is_fucked;
 
     return $self->parse_signature(
-        proto           => defined $proto ? $proto : "",
+        proto           => $proto,
         invocant        => $self->{invocant},
         pre_invocant    => $self->{pre_invocant}
     );
-}
-
-
-sub _split_proto {
-    my $self = shift;
-    my $proto = shift;
-
-    _strip_ws($proto);
-    return split_proto($proto);
 }
 
 
@@ -817,124 +802,16 @@ sub parse_signature {
     my $self = shift;
     my %args = @_;
 
-    my $signature = $args{signature} || Method::Signatures::Signature->new(
-        signature_string => $args{proto}
+    $self->{signature} = Method::Signatures::Signature->new(
+        signature_string        => defined $args{proto} ? $args{proto} : "",
+        pre_invocant            => $args{pre_invocant},
+        invocant                => $args{invocant},
     );
 
-    # JIC there's anything we need to pull out before the invocant
-    # (primary example would be the $orig for around modifiers in Moose/Mouse
-    $signature->pre_invocant($args{pre_invocant});
-
-    # Special case for methods, they will pass in an invocant to use as the default
-    $signature->invocant($args{invocant}) if $args{invocant};
-
-    my @protos = $self->_split_proto($signature->parameter_string);
-
-    my $idx = 0;
-    for my $proto (@protos) {
-        DEBUG( "proto: $proto\n" );
-
-        my $sig = Method::Signatures::Parameter->new(
-            original_code => $proto,
-            position      => $idx,
-        );
-        $idx++ if $sig->is_positional;
-
-        push @{$signature->parameters}, $sig;
-
-        # Handle "don't care" specifier
-        if ($sig->is_yadayada) {
-            push @{$signature->slurpy_parameters}, $sig;
-            push @{$signature->yadayada_parameters}, $sig;
-            next;
-        }
-
-        $self->_check_sig($sig, $signature);
-
-        push @{$signature->named_parameters}, $sig      if $sig->is_named;
-        push @{$signature->positional_parameters}, $sig if $sig->is_positional;
-        push @{$signature->optional_parameters}, $sig   if $sig->is_optional;
-        push @{$signature->optional_positional_parameters}, $sig
-          if $sig->is_optional and $sig->is_positional;
-        push @{$signature->slurpy_parameters}, $sig     if $sig->is_slurpy;
-
-        DEBUG( "sig: ", $sig );
-    }
-
-    $self->{signature} = $signature;
-
-    $self->_calculate_max_args;
-    $self->_check_signature;
-
     # Then turn it into Perl code
-    my $inject = $self->inject_from_signature($signature);
+    my $inject = $self->inject_from_signature($self->{signature});
+
     return $inject;
-}
-
-
-sub _calculate_max_args {
-    my $self = shift;
-
-    my $signature = $self->{signature};
-
-    # If there's a slurpy argument, the max is infinity.
-    if( $signature->num_slurpy ) {
-        $signature->max_argv_size($INF);
-        $signature->max_args($INF);
-
-        return;
-    }
-
-    $signature->max_argv_size( ($signature->num_named * 2) + $signature->num_positional );
-    $signature->max_args( $signature->num_named + $signature->num_positional );
-
-    return;
-}
-
-
-# Check the integrity of one piece of the signature
-sub _check_sig {
-    my($self, $sig, $signature) = @_;
-
-    if( $sig->is_slurpy ) {
-        sig_parsing_error("Signature can only have one slurpy parameter")
-                if $signature->num_slurpy >= 1;
-        sig_parsing_error("Slurpy parameter '@{[$sig->variable]}' cannot be named; use a reference instead")
-                if $sig->is_named;
-    }
-
-    if( $sig->is_named ) {
-        if( $signature->num_optional_positional ) {
-            my $pos_var = $signature->positional_parameters->[-1]->variable;
-            my $var = $sig->variable;
-            sig_parsing_error("Named parameter '$var' mixed with optional positional '$pos_var'");
-        }
-    }
-    else {
-        if( $signature->num_named ) {
-            my $named_var = $signature->named_parameters->[-1]->variable;
-            my $var = $sig->variable;
-            sig_parsing_error("Positional parameter '$var' after named param '$named_var'");
-        }
-    }
-}
-
-
-# Check the integrity of the signature as a whole
-sub _check_signature {
-    my $self = shift;
-
-    my $signature = $self->{signature};
-
-    # Check that slurpy arguments come at the end
-    if(
-        $signature->num_slurpy                  &&
-        !($signature->num_yadayada || $signature->positional_parameters->[-1]->is_slurpy)
-    )
-    {
-        my $slurpy_param = $signature->slurpy_parameters->[0];
-        sig_parsing_error("Slurpy parameter '@{[$slurpy_param->variable]}' must come at the end");
-    }
 }
 
 
