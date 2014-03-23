@@ -25,7 +25,6 @@ my $build = Module::Build->new(
     requires        => {
         'perl'              => '5.8.1',
 
-        'experimental'      => '0.005',
         'Devel::Declare'    => '0.006002',
         'Devel::Declare::MethodInstaller::Simple' => '0.006002',
         'Const::Fast'       => '0.006',
