@@ -4,7 +4,7 @@
       "Michael G Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560",
+   "generated_by" : "Module::Build version 0.4203",
    "license" : [
       "perl_5"
    ],
@@ -42,7 +42,6 @@
             "Mouse" : "0.64",
             "PPI" : "1.203",
             "Sub::Name" : "0.03",
-            "experimental" : "0.005",
             "perl" : "v5.8.1"
          }
       }
@@ -68,9 +67,7 @@
       "bugtracker" : {
          "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
       },
-      "license" : [
-         "http://dev.perl.org/licenses/"
-      ],
+      "license" : "http://dev.perl.org/licenses/",
       "repository" : {
          "url" : "https://github.com/schwern/method-signatures"
       }

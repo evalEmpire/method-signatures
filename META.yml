@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   Module::Build: 0.26
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560'
+generated_by: 'Module::Build version 0.4203, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,8 +26,10 @@ provides:
     version: 20140224
   Method::Signatures::Parameter:
     file: lib/Method/Signatures/Parameter.pm
+    version: 0
   Method::Signatures::Parser:
     file: lib/Method/Signatures/Parser.pm
+    version: 0
 recommends:
   Data::Alias: 1.08
   Moose: 0.96
@@ -40,7 +42,6 @@ requires:
   Mouse: 0.64
   PPI: 1.203
   Sub::Name: 0.03
-  experimental: 0.005
   perl: v5.8.1
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
