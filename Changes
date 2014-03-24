@@ -1,3 +1,17 @@
+NEXT
+    Bug Fixes
+    * Correct parse error when invocant is preceded by a space
+    * Fix bug where undef which should trigger default fails typecheck
+      [github #102]
+
+    Distribution Fixes
+    * Remove dependency on experimental (breaks 5.8 compat)
+      [github #97]
+
+    Misc
+    * Refactor signature parsing into its own class
+      [github #96]
+
 20140224    Mon Feb 24 14:25:43 PST 2014
     Promoted to full release
 
