@@ -21,11 +21,12 @@ note "types"; {
         my $want = $tests{$proto};
         my $ms = Method::Signatures->new;
 
-        $ms->parse_func(proto => $proto);
+        $ms->parse_proto($proto);
 
         my $which = shift @$want;
         for my $idx (0..$#{$want}) {
-            is $ms->{signature}{$which}[$idx]->type, $want->[$idx] || '';
+            my $method = $which.'_parameters';
+            is $ms->{signature}->$method->[$idx]->type, $want->[$idx] || '';
         }
     }
 }
@@ -45,7 +46,7 @@ note "inject_for_type_check"; {
     }
     
     my $ms = My::MS->new;
-    my $code = $ms->parse_func( proto => 'Foo $this, :$bar, Foo::Bar :$foobar' );
+    my $code = $ms->parse_proto( 'Foo $this, :$bar, Foo::Bar :$foobar' );
     like $code, qr{type_check\('\$this'\)};
     like $code, qr{type_check\('\$foobar'\)};
 }

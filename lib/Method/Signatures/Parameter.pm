@@ -2,7 +2,7 @@ package Method::Signatures::Parameter;
 
 use Mouse;
 use Carp;
-use Method::Signatures::Parser;
+use Method::Signatures::Utils;
 
 my $IDENTIFIER     = qr{ [^\W\d] \w*                         }x;
 my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                 }x;
@@ -90,13 +90,13 @@ has variable_name =>
 
 has where =>
   is            => 'rw',
-  isa           => 'HashRef[Int]',
-  default       => sub { {} };
+  isa           => 'ArrayRef',
+  default       => sub { [] };
 
 sub has_where {
     my $self = shift;
 
-    return keys %{$self->where} ? 1 : 0;
+    return @{$self->where} ? 1 : 0;
 }
 
 has traits =>
@@ -162,6 +162,17 @@ has is_required =>
   isa           => 'Bool',
 ;
 
+# A PPI::Document representing the parameter
+has ppi_doc     =>
+  is            => 'ro',
+  isa           => 'PPI::Document',
+  lazy          => 1,
+  default       => sub {
+      my $code = $_[0]->ppi_clean_code;
+      return new_ppi_doc(\$code);
+  };
+
+
 sub is_optional {
     my $self = shift;
 
@@ -219,7 +230,7 @@ sub _parse_with_ppi {
     $self->ppi_clean_code($self->variable. " " .$self->ppi_clean_code);
 
     # Tokenize...
-    my $components = Method::Signatures::Parser->new_ppi_doc(\($self->ppi_clean_code));
+    my $components = $self->ppi_doc;
     my $statement = $components->find_first("PPI::Statement")
       or sig_parsing_error("Could not understand parameter specification: @{[$self->ppi_clean_code]}");
     my $tokens = [ $statement->children ];
@@ -231,7 +242,7 @@ sub _parse_with_ppi {
     while ($self->_extract_leading(qr{^ where $}x, $tokens)) {
         sig_parsing_error("'where' constraint only available under Perl 5.10 or later. Error")
           if $] < 5.010;
-        $self->where->{ $self->_extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens) }++;
+        push @{$self->where}, $self->_extract_until(qr{^ (?: where | is | = | //= ) $}x, $tokens);
     }
 
     # Extract parameter traits...
@@ -334,6 +345,36 @@ sub _init_split_variable {
     $self->variable_name($2);
 
     return;
+}
+
+
+# Check the integrity of one piece of the signature
+sub check {
+    my($self, $signature) = @_;
+
+    if( $self->is_slurpy ) {
+        sig_parsing_error("Signature can only have one slurpy parameter")
+                if $signature->num_slurpy >= 1;
+        sig_parsing_error("Slurpy parameter '@{[$self->variable]}' cannot be named; use a reference instead")
+                if $self->is_named;
+    }
+
+    if( $self->is_named ) {
+        if( $signature->num_optional_positional ) {
+            my $pos_var = $signature->positional_parameters->[-1]->variable;
+            my $var = $self->variable;
+            sig_parsing_error("Named parameter '$var' mixed with optional positional '$pos_var'");
+        }
+    }
+    else {
+        if( $signature->num_named ) {
+            my $named_var = $signature->named_parameters->[-1]->variable;
+            my $var = $self->variable;
+            sig_parsing_error("Positional parameter '$var' after named param '$named_var'");
+        }
+    }
+
+    return 1;
 }
 
 1;

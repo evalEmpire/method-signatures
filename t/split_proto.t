@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use Method::Signatures::Parser;
+use Method::Signatures::Signature;
 
 my %tests = (
     '$foo'              => ['$foo'],
@@ -37,5 +37,10 @@ my %tests = (
 );
 
 while(my($args, $expect) = each %tests) {
-    is_deeply [split_proto($args)], $expect, "split_proto($args)";
+    my $sig = Method::Signatures::Signature->new(
+        signature_string        => $args,
+        # we just want to test the tokenizing
+        no_checks               => 1,
+    );
+    is_deeply $sig->parameter_strings, $expect, "split_proto($args)";
 }
