@@ -920,7 +920,6 @@ sub inject_for_sig {
             $rhs = "!$check_exists ? ($default) : do{ no warnings; my \$arg = $rhs; \$arg ~~ ($when) ? ($default) : \$arg }";
         }
     }
-
     # Handle simple defaults
     elsif( defined $default ) {
         $rhs = "$check_exists ? ($rhs) : ($default)";
@@ -928,10 +927,6 @@ sub inject_for_sig {
 
     if( $sig->is_required ) {
         push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
-    }
-
-    if( $sig->type ) {
-        push @code, $self->inject_for_type_check($sig);
     }
 
     # Handle \@foo
@@ -945,6 +940,10 @@ sub inject_for_sig {
         push @code, "Const::Fast::const( $lhs => $rhs );";
     } else {
         push @code, "$lhs = $rhs;";
+    }
+
+    if( $sig->type ) {
+        push @code, $self->inject_for_type_check($sig);
     }
 
     # Named arg has been handled, so don't pass to error handler
@@ -972,15 +971,16 @@ sub inject_for_type_check
     my $class = ref $self || $self;
     my ($sig) = @_;
 
-    my $check_exists = $sig->is_optional ? $sig->check_exists : '';
+    my $check_exists = $sig->is_optional && !defined $sig->default
+      ? $sig->check_exists : '';
 
     # This is an optimization to unroll typecheck which makes Mouse types about 40% faster.
     # It only happens when type_check() has not been overridden.
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
-          __PACKAGE__, $sig->type, $class, $sig->type, $sig->passed_in;
+          __PACKAGE__, $sig->type, $class, $sig->type, $sig->variable;
         my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->type, $sig->passed_in, $sig->variable_name;
+          $class, $sig->type, $sig->variable, $sig->variable_name;
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
         $code .= "!$check";

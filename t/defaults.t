@@ -82,3 +82,35 @@ use Test::More 'no_plan';
 
     is( Bar->code(42), 44 );
 }
+
+
+note "Defaults are applied before type check"; {
+    package Baz;
+    use Test::More;
+    use Method::Signatures;
+
+    func hi(
+        Str $place //= "World"
+    ) {
+        return "Hi, $place!\n";
+    }
+
+    is hi(),      "Hi, World!\n";
+    is hi(undef), "Hi, World!\n";
+}
+
+
+note "Defaults are type checked"; {
+    package Biff;
+    use Test::More;
+    use Method::Signatures;
+
+    func hi(
+        Object $place //= "World"
+    ) {
+        return "Hi, $place!\n";
+    }
+
+    ok !eval { hi() };
+    like $@, qr/the 'place' parameter \("World"\) is not of type Object/;
+}
