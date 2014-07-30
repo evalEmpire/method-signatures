@@ -90,7 +90,7 @@ note "Defaults are applied before type check"; {
     use Method::Signatures;
 
     func hi(
-        Str $place //= "World"
+        Str $place = "World" when undef
     ) {
         return "Hi, $place!\n";
     }
@@ -106,7 +106,7 @@ note "Defaults are type checked"; {
     use Method::Signatures;
 
     func hi(
-        Object $place //= "World"
+        Object $place = "World" when undef
     ) {
         return "Hi, $place!\n";
     }
