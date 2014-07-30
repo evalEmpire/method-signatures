@@ -222,7 +222,7 @@ sub _build_parameter_string {
     my $invocant;
 
     # Extract an invocant, if one is present.
-    if ($sig_string =~ s{ ^ (\$ $IDENTIFIER) \s* : \s* }{}x) {
+    if ($sig_string =~ s{ ^ \s* (\$ $IDENTIFIER) \s* : \s* }{}x) {
         $self->invocant($1);
     }
 

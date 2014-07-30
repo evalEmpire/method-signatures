@@ -33,6 +33,10 @@ our $skip_no_invocants;
         $class->bar($arg);
     }
 
+    method with_space_before_invocant( $class: $arg) {
+        $class->bar($arg);
+    }
+
     eval q{
 
         method no_invocant_class_type(Foo::Bar $arg) {
@@ -58,9 +62,10 @@ our $skip_no_invocants;
 }
 
 
-is( Stuff->invocant,                0 );
-is( Stuff->with_arg(42),            42 );
-is( Stuff->without_space(42),       42 );
+is( Stuff->invocant,                            0 );
+is( Stuff->with_arg(42),                        42 );
+is( Stuff->without_space(42),                   42 );
+is( Stuff->with_space_before_invocant(42),      42 );
 
 my $stuff = Stuff->new;
 is( $stuff->no_invocant_class_type(Foo::Bar->new),     'Foo::Bar' );
