@@ -33,4 +33,20 @@ subtest "when []" => sub {
     is_deeply empty_array([4,5,6]),             [4,5,6];
 };
 
+
+subtest "Defaults are applied before type check" => sub {
+    package Baz;
+    use Test::More;
+    use Method::Signatures;
+
+    func hi(
+        Str $place //= "World"
+    ) {
+        return "Hi, $place!\n";
+    }
+
+    is hi(),      "Hi, World!\n";
+    is hi(undef), "Hi, World!\n";
+};
+
 done_testing;
