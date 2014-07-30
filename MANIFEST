@@ -6,7 +6,9 @@ examples/strip_ws.t
 lib/Method/Signatures.pm
 lib/Method/Signatures/Modifiers.pm
 lib/Method/Signatures/Parameter.pm
-lib/Method/Signatures/Parser.pm
+lib/Method/Signatures/Signature.pm
+lib/Method/Signatures/Types.pm
+lib/Method/Signatures/Utils.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
 META.json
