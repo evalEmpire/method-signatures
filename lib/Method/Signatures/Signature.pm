@@ -231,7 +231,7 @@ sub _build_parameters {
     my $token = $statement->first_token;
 
     # Split the signature into a list of parameters.
-    my $prev_token = $token;
+    my $first_token = $token;
     my @params;
     my $raw_param = '';
     my $idx = 0;
@@ -245,11 +245,12 @@ sub _build_parameters {
                 push @params, Method::Signatures::Parameter->new(
                     original_code => $raw_param,
                     position      => $idx,
-                    line_number   => $prev_token->line_number,
+                    line_number   => $first_token->line_number,
                 );
                 $idx++ if $params[-1]->is_positional;
             }
 
+            $first_token = undef;
             $raw_param = '';
         }
         else {
@@ -258,11 +259,10 @@ sub _build_parameters {
 
         last if !$token;
 
-        $prev_token = $token;
-
         # "Type: $arg" is interpreted by PPI as a label, which is lucky for us.
         $token = $token->class eq 'PPI::Token::Label'
                    ? $token->next_token : $token->next_sibling;
+        $first_token = $token if !$first_token || !$first_token->significant;
     }
 
     return \@params;
