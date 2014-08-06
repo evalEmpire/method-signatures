@@ -247,6 +247,7 @@ sub _build_parameter_strings {
         unless $statement;
     my $token = $statement->first_token;
 
+    # Split the signature into a list of parameters.
     my @params = ('');
     do {
         if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
@@ -256,7 +257,9 @@ sub _build_parameter_strings {
             $params[-1] .= $token->content;
         }
 
-        $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
+        # "Type: $arg" is interpreted by PPI as a label, which is lucky for us.
+        $token = $token->class eq 'PPI::Token::Label'
+                   ? $token->next_token : $token->next_sibling;
     } while( $token );
 
 
