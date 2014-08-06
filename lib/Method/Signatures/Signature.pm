@@ -20,18 +20,12 @@ has parameter_string =>
   lazy          => 1,
   builder       => '_build_parameter_string';
 
-# A list of strings for each parameter tokenized from parameter_string
-has parameter_strings =>
-  is            => 'ro',
-  isa           => 'ArrayRef[Str]',
-  lazy          => 1,
-  builder       => '_build_parameter_strings';
-
 # The parsed Method::Signature::Parameter objects
 has parameters =>
   is            => 'ro',
   isa           => 'ArrayRef[Method::Signatures::Parameter]',
-  default       => sub { [] };
+  lazy          => 1,
+  builder       => '_build_parameters';
 
 has named_parameters =>
   is            => 'ro',
@@ -134,18 +128,7 @@ has no_checks   =>
 sub BUILD {
     my $self = shift;
 
-    my $idx = 0;
-    for my $proto (@{$self->parameter_strings}) {
-        DEBUG( "proto: $proto\n" );
-
-        my $sig = Method::Signatures::Parameter->new(
-            original_code => $proto,
-            position      => $idx,
-        );
-        $idx++ if $sig->is_positional;
-
-        push @{$self->parameters}, $sig;
-
+    for my $sig (@{$self->parameters}) {
         # Handle "don't care" specifier
         if ($sig->is_yadayada) {
             push @{$self->slurpy_parameters}, $sig;
@@ -231,7 +214,7 @@ sub _build_parameter_string {
 }
 
 
-sub _build_parameter_strings {
+sub _build_parameters {
     my $self = shift;
 
     my $param_string = $self->parameter_string;
@@ -248,25 +231,39 @@ sub _build_parameter_strings {
     my $token = $statement->first_token;
 
     # Split the signature into a list of parameters.
-    my @params = ('');
-    do {
-        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
-            push @params, '';
+    my $prev_token = $token;
+    my @params;
+    my $raw_param = '';
+    my $idx = 0;
+    while(1) {
+        if( !$token || 
+            ($token->class eq "PPI::Token::Operator" and $token->content eq ',') )
+        {
+            if( $raw_param =~ /\S/ ) {
+                DEBUG( "raw_parameter: $raw_param\n" );
+                $self->_strip_ws($_) for ($raw_param);
+                push @params, Method::Signatures::Parameter->new(
+                    original_code => $raw_param,
+                    position      => $idx,
+                    line_number   => $prev_token->line_number,
+                );
+                $idx++ if $params[-1]->is_positional;
+            }
+
+            $raw_param = '';
         }
         else {
-            $params[-1] .= $token->content;
+            $raw_param .= $token->content;
         }
+
+        last if !$token;
+
+        $prev_token = $token;
 
         # "Type: $arg" is interpreted by PPI as a label, which is lucky for us.
         $token = $token->class eq 'PPI::Token::Label'
                    ? $token->next_token : $token->next_sibling;
-    } while( $token );
-
-
-    $self->_strip_ws($_) for @params;
-
-    # Remove blank entries due to trailing comma.
-    @params = grep { /\S/ } @params;
+    }
 
     return \@params;
 }

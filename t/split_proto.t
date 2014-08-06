@@ -42,5 +42,5 @@ while(my($args, $expect) = each %tests) {
         # we just want to test the tokenizing
         no_checks               => 1,
     );
-    is_deeply $sig->parameter_strings, $expect, "split_proto($args)";
+    is_deeply [map { $_->original_code } @{$sig->parameters}], $expect, "parameters - $args";
 }
