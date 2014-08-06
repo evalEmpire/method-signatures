@@ -1,5 +1,6 @@
 package Method::Signatures::Signature;
 
+use Carp;
 use Mouse;
 use Method::Signatures::Types;
 use Method::Signatures::Parameter;
@@ -230,43 +231,58 @@ sub _build_parameters {
         unless $statement;
     my $token = $statement->first_token;
 
-    # Split the signature into a list of parameters.
-    my $first_token = $token;
-    my @params;
-    my $raw_param = '';
-    my $idx = 0;
-    while(1) {
-        if( !$token || 
-            ($token->class eq "PPI::Token::Operator" and $token->content eq ',') )
+    # Split the signature into parameters as tokens.
+    my @tokens_by_param = ([]);
+    do {
+        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' )
         {
-            if( $raw_param =~ /\S/ ) {
-                DEBUG( "raw_parameter: $raw_param\n" );
-                $self->_strip_ws($_) for ($raw_param);
-                push @params, Method::Signatures::Parameter->new(
-                    original_code => $raw_param,
-                    position      => $idx,
-                    line_number   => $first_token->line_number,
-                );
-                $idx++ if $params[-1]->is_positional;
-            }
-
-            $first_token = undef;
-            $raw_param = '';
+            push @tokens_by_param, [];
         }
         else {
-            $raw_param .= $token->content;
+            push @{$tokens_by_param[-1]}, $token;
         }
-
-        last if !$token;
 
         # "Type: $arg" is interpreted by PPI as a label, which is lucky for us.
         $token = $token->class eq 'PPI::Token::Label'
                    ? $token->next_token : $token->next_sibling;
-        $first_token = $token if !$first_token || !$first_token->significant;
+    } while( $token );
+
+    # Turn those token sets into Parameter objects.
+    my $idx = 0;
+    my @params;
+    for my $tokens (@tokens_by_param) {
+        my $code = join '', map { $_->content } @$tokens;
+        next unless $code =~ /\S/;
+
+        DEBUG( "raw_parameter: $code\n" );
+
+        $self->_strip_ws($_) for ($code);
+
+        my $first_significant_token = _first_significant_token($tokens);
+
+        my $param = Method::Signatures::Parameter->new(
+            original_code => $code,
+            position      => $idx,
+            line_number   => $first_significant_token->line_number,
+        );
+
+        $idx++ if $param->is_positional;
+
+        push @params, $param;
     }
 
     return \@params;
 }
 
+
+sub _first_significant_token {
+    my $tokens = shift;
+
+    for my $token (@$tokens) {
+        return $token if $token->significant;
+    }
+
+    croak "No significant token found";
+}
 
 1;
