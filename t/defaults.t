@@ -115,6 +115,15 @@ note "Multi-line defaults"; {
     }
 
     is( stuff(), 23 );
+
+    func things(
+        $arg = "Hello
+There"
+    ) {
+        return $arg;
+    }
+
+    is( things(), "Hello\nThere" );
 }
 
 done_testing;
