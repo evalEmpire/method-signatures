@@ -305,7 +305,14 @@ sub _extract_until {
 
     while (@$tokens) {
         last if $tokens->[0] =~ $delimiter_pat;
-        $extracted .= shift @$tokens;
+
+        my $token = shift @$tokens;
+
+        # Flatten multi-line data structures into a single line which
+        # Devel::Declare can inject.
+        $token->prune(sub { !$_[1]->significant }) if $token->isa("PPI::Node");
+
+        $extracted .= $token;
     }
 
     return $extracted;
