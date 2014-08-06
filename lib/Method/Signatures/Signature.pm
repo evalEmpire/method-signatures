@@ -261,9 +261,9 @@ sub _build_parameters {
         my $first_significant_token = _first_significant_token($tokens);
 
         my $param = Method::Signatures::Parameter->new(
-            original_code => $code,
-            position      => $idx,
-            line_number   => $first_significant_token->line_number,
+            original_code       => $code,
+            position            => $idx,
+            first_line_number   => $first_significant_token->line_number,
         );
 
         $idx++ if $param->is_positional;

@@ -60,7 +60,7 @@ note "line numbers"; {
 
     my $parameters = $sig->parameters;
 
-    is $parameters->[0]->line_number, 2;
-    is $parameters->[1]->line_number, 3;
-    is $parameters->[2]->line_number, 5;
+    is $parameters->[0]->first_line_number, 2;
+    is $parameters->[1]->first_line_number, 3;
+    is $parameters->[2]->first_line_number, 5;
 }

@@ -62,7 +62,7 @@ has variable    =>
   isa           => 'Str',
   default       => '';
 
-has line_number =>
+has first_line_number =>
   is            => 'rw',
   isa           => 'Int';
 
