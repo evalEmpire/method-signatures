@@ -794,7 +794,7 @@ sub parse_proto {
     );
 
     # Then turn it into Perl code
-    my $inject = $self->inject_from_signature($self->{signature});
+    my $inject = $self->inject_from_signature();
 
     return $inject;
 }
@@ -804,7 +804,7 @@ sub parse_proto {
 sub inject_from_signature {
     my $self      = shift;
     my $class     = ref $self || $self;
-    my $signature = shift;
+    my $signature = $self->{signature};
 
     my @code;
     push @code, "my @{[$signature->pre_invocant]} = shift;" if $signature->pre_invocant;
