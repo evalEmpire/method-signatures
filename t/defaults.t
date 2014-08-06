@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 {
     package Stuff;
@@ -82,3 +82,20 @@ use Test::More 'no_plan';
 
     is( Bar->code(42), 44 );
 }
+
+note "Defaults are type checked"; {
+    package Biff;
+    use Test::More;
+    use Method::Signatures;
+
+    func hi(
+        Object $place = "World"
+    ) {
+        return "Hi, $place!\n";
+    }
+
+    ok !eval { hi() };
+    like $@, qr/the 'place' parameter \("World"\) is not of type Object/;
+}
+
+done_testing;
