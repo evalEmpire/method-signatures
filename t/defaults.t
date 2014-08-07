@@ -98,4 +98,32 @@ note "Defaults are type checked"; {
     like $@, qr/the 'place' parameter \("World"\) is not of type Object/;
 }
 
+
+note "Multi-line defaults"; {
+    package Whatever;
+
+    use Method::Signatures;
+    use Test::More;
+
+    func stuff(
+        $arg = {
+            foo => 23,
+            bar => 42
+        }
+    ) {
+        return $arg->{foo};
+    }
+
+    is( stuff(), 23 );
+
+    func things(
+        $arg = "Hello
+There"
+    ) {
+        return $arg;
+    }
+
+    is( things(), "Hello\nThere" );
+}
+
 done_testing;
