@@ -12,6 +12,8 @@ use Method::Signatures::Signature;
 our $VERSION = '20140806.0226_001';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
+our $TYPES_FLAVOUR = $ENV{METHOD_SIGNATURES_TYPES_FLAVOUR} || 'any_moose';
+our @ADDITIONAL_TYPES;
 
 our $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
@@ -31,6 +33,7 @@ Method::Signatures - method and function declarations with signatures and no sou
     package Foo;
 
     use Method::Signatures;
+    use Method::Signatures qw(type_tiny); # will use Type::Tiny for types
 
     method new (%args) {
         return bless {%args}, $self;
@@ -72,6 +75,31 @@ Also allows signatures, very similar to Perl 6 signatures.
 Also does type checking, understanding all the types that Moose (or Mouse) would understand.
 
 And it does all this with B<no source filters>.
+
+
+=head2 Module loading and types libraries
+
+By default, C<Method::Signature> will use C<Any::Moose> and C<Moose> or
+C<Mouse> types library to perform type checking. However you can choose to use
+C<Type::Tiny> for type checking. By deafult C<Type::Tiny> will be loaded with
+the C<Types::Standard> library, but you can add more types, by using the
+<load_types> option. Check out this example:
+ 
+  # default, uses Moose/Mouse
+  use Method::Signatures;
+
+  # same as above
+  use Method::Signatures { types_flavour => 'any_moose' }
+
+  # uses Type::Tiny with Types::Standard types
+  use Method::Signatures qw(type_tiny);
+
+  # same as above
+  use Method::Signatures { types_flavour => 'type_tiny' };
+
+  # uses Type::Tiny with Types::Standard and Types::XSD
+  use Method::Signatures { types_flavour => 'type_tiny',
+                           load_types => 'Types::XSD' };
 
 
 =head2 Signature syntax
@@ -680,9 +708,18 @@ sub import {
             $caller = $arg->{into}   if exists $arg->{into};
             $hints->{METHOD_SIGNATURES_compile_at_BEGIN} = $arg->{compile_at_BEGIN}
                                      if exists $arg->{compile_at_BEGIN};
+            $TYPES_FLAVOUR = $arg->{types_flavour} if exists $arg->{types_flavour};
+            if (my $load_types = $arg->{load_types}) {
+                ref $load_types eq 'ARRAY'
+                  or $load_types = [ $load_types ];
+                @ADDITIONAL_TYPES = @$load_types;
+            }
         }
         elsif ($arg eq ':DEBUG') {
             $DEBUG = 1;
+        }
+        elsif ($arg eq 'type_tiny') {
+            $TYPES_FLAVOUR = 'type_tiny';
         }
         else {
             require Carp;
@@ -1032,23 +1069,40 @@ sub required_arg {
 # does it.
 our %mutc;
 
+my %_types_flavour_to_mutc = (
+    any_moose => sub {
+        require Any::Moose;
+        Any::Moose->import('::Util::TypeConstraints');
+        no strict 'refs';
+        my $class = any_moose('::Util::TypeConstraints');
+        $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
+        $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
+        $mutc{make_class} = \&{ $class . '::class_type'                    };
+        $mutc{make_role}  = \&{ $class . '::role_type'                     };
+        $mutc{isa_class}  = $mutc{pull}->("ClassName");
+        $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    },
+    type_tiny => sub {
+        require Type::Registry;
+        Type::Registry->import();
+        #    no strict 'refs';
+        my $class = 'Type::Registry';
+        $mutc{class} = $class;
+        my $registry = $class->for_me;
+        $registry->add_types(-Standard);
+        foreach my $type_to_load (@ADDITIONAL_TYPES) {
+            $registry->add_types($type_to_load);
+        }
+        $mutc{findit} = sub { $registry->lookup(@_) };
+    }
+);
+
+
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
-    require Any::Moose;
-    Any::Moose->import('::Util::TypeConstraints');
-
-    no strict 'refs';
-    my $class = any_moose('::Util::TypeConstraints');
-    $mutc{class} = $class;
-
-    $mutc{findit}     = \&{ $class . '::find_or_parse_type_constraint' };
-    $mutc{pull}       = \&{ $class . '::find_type_constraint'          };
-    $mutc{make_class} = \&{ $class . '::class_type'                    };
-    $mutc{make_role}  = \&{ $class . '::role_type'                     };
-
-    $mutc{isa_class}  = $mutc{pull}->("ClassName");
-    $mutc{isa_role}   = $mutc{pull}->("RoleName");
+    ($_types_flavour_to_mutc{$TYPES_FLAVOUR} || $_types_flavour_to_mutc{any_moose})
+      ->();
 }
 
 # This is a helper function to find (or create) the constraint we need for a given type.  It would
