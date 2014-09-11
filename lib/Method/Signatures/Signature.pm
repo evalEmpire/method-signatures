@@ -8,6 +8,16 @@ use Method::Signatures::Utils qw(new_ppi_doc sig_parsing_error DEBUG);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
+has num_lines =>
+  is            => 'rw',
+  isa           => 'Int',
+  lazy          => 1,
+  default       => sub {
+      my $self = shift;
+      my $num =()= $self->signature_string =~ /\n/g;
+      return $num + 1;
+  };
+
 # The unmodified, uncleaned up original signature for reference
 has signature_string =>
   is            => 'ro',
