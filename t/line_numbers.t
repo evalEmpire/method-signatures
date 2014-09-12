@@ -8,7 +8,7 @@ use Test::More;
 
 use Method::Signatures;
 
-my $DEFAULT_LINES_NOT_WORKING = $^V < 5.12.0;
+my $DEFAULT_LINES_NOT_WORKING = $] < 5.012;
 my $DEFAULT_LINES_NOT_WORKING_REASON = 'Earlier versions of Perl get the line numbers wrong';
 
 note "Basic multi-line signature"; {
