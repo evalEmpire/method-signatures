@@ -11,6 +11,7 @@ sub DEBUG {
     return unless $Method::Signatures::DEBUG;
 
     require Data::Dumper;
+    local $Data::Dumper::Sortkeys = 1;
     print STDERR "DEBUG: ", map { ref $_ ? Data::Dumper::Dumper($_) : $_ } @_;
 }
 
