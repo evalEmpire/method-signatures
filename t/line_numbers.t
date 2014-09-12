@@ -60,7 +60,10 @@ note "multi-line default"; {
         return [$a->{line}, $b->{line}, __LINE__];
     }
 
-    is_deeply multi_line_defaults, [53, 55, 58];
+    my $have = multi_line_defaults;
+    is $have->[0], 53, 'default $a';
+    is $have->[1], 55, 'default $b';
+    is $have->[2], 58, 'body';
 }
 
 
