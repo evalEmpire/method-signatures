@@ -8,6 +8,9 @@ use Test::More;
 
 use Method::Signatures;
 
+my $DEFAULT_LINES_NOT_WORKING = $^V < 5.12.0;
+my $DEFAULT_LINES_NOT_WORKING_REASON = 'Earlier versions of Perl get the line numbers wrong';
+
 note "Basic multi-line signature"; {
 #line 13
     func basic_multi_line (
@@ -36,7 +39,10 @@ note "Computed default"; {
 
     my $have = computed_default();
     is $have->[0], 34, "body line number";
-    is $have->[1], 32, "computed default line number";
+    SKIP: {
+        skip $DEFAULT_LINES_NOT_WORKING_REASON, 1 if $DEFAULT_LINES_NOT_WORKING;
+        is $have->[1], 32, "computed default line number";
+    };
 }
 
 
@@ -61,8 +67,11 @@ note "multi-line default"; {
     }
 
     my $have = multi_line_defaults;
-    is $have->[0], 53, 'default $a';
-    is $have->[1], 55, 'default $b';
+    SKIP: {
+        skip $DEFAULT_LINES_NOT_WORKING_REASON, 1 if $DEFAULT_LINES_NOT_WORKING;
+        is $have->[0], 53, 'default $a';
+        is $have->[1], 55, 'default $b';
+    }
     is $have->[2], 58, 'body';
 }
 
