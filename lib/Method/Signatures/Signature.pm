@@ -231,8 +231,6 @@ sub _build_parameters {
     my $param_string = $self->parameter_string;
     return [] unless $param_string =~ /\S/;
 
-    local $@ = undef;
-
     my $ppi = $self->ppi_doc;
     $ppi->prune('PPI::Token::Comment');
 
