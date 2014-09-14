@@ -6,7 +6,7 @@ use warnings;
 use base qw< Exporter >;
 our @EXPORT_OK =
 (
-    qw< bad_param_error unexpected_after_error named_after_optpos_error pos_after_named_error >,    # compile-time
+    qw< bad_param_error unexpected_after_error named_after_optpos_error pos_after_named_error required_after_optional_error >,    # compile-time
     qw< mispositioned_slurpy_error multiple_slurpy_error named_slurpy_error >,                      # compile-time
     qw< required_error named_param_error badval_error badtype_error >,                              # run-time
 );
@@ -70,6 +70,14 @@ sub named_after_optpos_error
     my ($named, $optpos, %extra) = @_;
 
     return _regexify(COMPILE_TIME => "Named parameter '$named' mixed with optional positional '$optpos'", %extra);
+}
+
+
+sub required_after_optional_error
+{
+    my ($required, $optional, %extra) = @_;
+
+    return _regexify(COMPILE_TIME => "Required positional parameter '$required' cannot follow an optional positional parameter '$optional'", %extra);
 }
 
 
