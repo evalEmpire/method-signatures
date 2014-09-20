@@ -1,11 +1,13 @@
 NEXT
     New Features
     * Can now specify an alternate name for invocant (besides `$self`)
-      [github #82]
+      [github #82] (thanks Hercynium)
 
     Bug Fixes
     * Correct parse error on multi-line default values
       [github #106]
+    * Using a required param after an optional one now a compile error
+      [github #108]
 
 20140806.0226_001	Wed Aug  6 02:26:36 PDT 2014
     Bug Fixes
