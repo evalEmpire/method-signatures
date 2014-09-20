@@ -1,3 +1,8 @@
+NEXT
+    Bug Fixes
+    * Correct parse error on multi-line default values
+      [github #106]
+
 20140806.0226_001	Wed Aug  6 02:26:36 PDT 2014
     Bug Fixes
     * Correct parse error when invocant is preceded by a space
