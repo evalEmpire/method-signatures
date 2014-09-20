@@ -79,18 +79,6 @@ sub do_common_subtests {
 {
     package Bad;
     use Test::More;
-    use Test::Exception;
-
-    # naming this use_module so we can easily drop in Module::Runtime
-    # or whatever as a test requirement if this proves too icky to bear.
-    # At least nothing from outside this code is going into the string
-    # eval so it is "relatively safe" (still icky though)
-    sub use_module {
-        # yes could be one-line but this better expresses intent
-        my ($mod, @opts) = @_;
-        eval q{use $mod @opts;};
-        die $@ if $@;
-    }
 
     # this seems exhaustive enough for now...
     my @bad_invocants = (
@@ -109,12 +97,14 @@ sub do_common_subtests {
     my $desc = 'invalid invocant options incur exceptions';
     subtest $desc => sub {
 
+        my $use_statement = q{ use Method::Signatures { invocant => q{%HERE} }; };
+
         # make sure MS always throws an exception when use'd with invocant
         # set to any of the bad values above.
         for my $inv ( @bad_invocants ) {
-            dies_ok {
-                use_module 'Method::Signatures' => { invocant => $inv };
-            } "die when invocant option set to '$inv'";
+            (my $use = $use_statement) =~ s/%HERE/$inv/;
+            eval $use;
+            like $@, qr/Invalid invocant name/, "die when invocant option set to '$inv'";
         }
 
     };

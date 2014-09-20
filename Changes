@@ -1,4 +1,8 @@
 NEXT
+    New Features
+    * Can now specify an alternate name for invocant (besides `$self`)
+      [github #82]
+
     Bug Fixes
     * Correct parse error on multi-line default values
       [github #106]
