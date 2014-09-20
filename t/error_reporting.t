@@ -81,6 +81,14 @@ my %compile_time_errors =
                                                 ],
                                 test_name   =>  'named slurpy param reports correctly',
                             },
+    RequiredAfterOpt =>     {
+                                error_gen   =>  'required_after_optional_error',
+                                error_args  => [
+                                                    '$baz',
+                                                    '$bar',
+                                               ],
+                                test_name   => 'required param after an optional param',
+                            },
 );
 
 my %run_time_errors =
