@@ -238,7 +238,7 @@ Almost any expression can be used as a default.
     }
 
 Normally, defaults will only be used if the argument is not passed in at all.
-Passing in C<undef> will override the default.  That means...
+Passing in C<undef> will override the default.  That means ...
 
     Class->add();            # $this = 23, $that = 42
     Class->add(99);          # $this = 99, $that = 42
@@ -524,7 +524,7 @@ that are passed to it:
 
     # Traverse tree with node-printing callback
     # (Callback only interested in nodes, ignores any other args passed to it)
-    $tree->traverse( func($node,...) { $node->print } );
+    $tree->traverse( func($node, ...) { $node->print } );
 
 The C<...> may appear as a separate "pseudo-parameter" anywhere in the
 signature, but is normally placed at the very end. It has no other
