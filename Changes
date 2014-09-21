@@ -1,4 +1,4 @@
-NEXT
+20140920.1910_001   Sat Sep 20 19:10:06 PDT 2014
     New Features
     * Can now specify an alternate name for invocant (besides `$self`)
       [github #82] (thanks Hercynium)
@@ -9,7 +9,7 @@ NEXT
     * Using a required param after an optional one now a compile error
       [github #108]
 
-20140806.0226_001	Wed Aug  6 02:26:36 PDT 2014
+20140806.0226_001   Wed Aug  6 02:26:36 PDT 2014
     Bug Fixes
     * Correct parse error when invocant is preceded by a space
     * Fix bug where undef which should trigger default fails typecheck
