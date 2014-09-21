@@ -83,6 +83,7 @@ t/override_errors.t
 t/override_modifier_errors.t
 t/override_nothing.t
 t/override_typecheck.t
+t/parameters.t
 t/paren_on_own_line.t
 t/paren_plus_open_block.t
 t/refs.t
@@ -94,7 +95,6 @@ t/role_check_mouse.t
 t/signature_error_handler.t
 t/simple.plx
 t/slurpy.t
-t/split_proto.t
 t/string_defaults.t
 t/syntax_errors.t
 t/thread-bug.t

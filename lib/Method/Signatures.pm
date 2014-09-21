@@ -832,7 +832,7 @@ sub parse_proto {
     );
 
     # Then turn it into Perl code
-    my $inject = $self->inject_from_signature($self->{signature});
+    my $inject = $self->inject_from_signature();
 
     return $inject;
 }
@@ -842,7 +842,9 @@ sub parse_proto {
 sub inject_from_signature {
     my $self      = shift;
     my $class     = ref $self || $self;
-    my $signature = shift;
+    my $signature = $self->{signature};
+
+    $self->{line_number} = 1;
 
     my @code;
     push @code, "my @{[$signature->pre_invocant]} = shift;" if $signature->pre_invocant;
@@ -876,6 +878,9 @@ sub inject_from_signature {
     my $max_args = $signature->max_args;
     push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
         unless $max_argv == $INF;
+
+    # Add any additional trailing newlines so the body is on the right line.
+    push @code, $self->inject_newlines( $signature->num_lines - $self->{line_number} );
 
     # All on one line.
     return join ' ', @code;
@@ -918,6 +923,9 @@ sub inject_for_sig {
     return if $sig->is_at_underscore;
 
     my @code;
+
+    # Add any necessary leading newlines so line numbers are preserved.
+    push @code, $self->inject_newlines($sig->first_line_number - $self->{line_number});
 
     my $sigil = $sig->sigil;
     my $name  = $sig->variable_name;
@@ -998,8 +1006,27 @@ sub inject_for_sig {
 		push @code, "$error unless do { no if \$] >= 5.017011, warnings => 'experimental::smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
     }
 
+    # Record the current line number for the next injection.
+    $self->{line_number} = $sig->first_line_number;
+
     return @code;
 }
+
+sub __magic_newline() { die "newline() should never be called"; }
+
+# Devel::Declare cannot normally inject multiple lines.
+# This is a way to trick it, the parser will continue through
+# a function call with a newline in the argument list.
+sub inject_newlines {
+    my $self = shift;
+    my $num_newlines = shift;
+
+    return if $num_newlines == 0;
+
+    return sprintf q[ Method::Signatures::__magic_newline(%s) if 0; ],
+                   "\n" x $num_newlines;
+}
+
 
 # A hook for extension authors
 # (see also type_check below)

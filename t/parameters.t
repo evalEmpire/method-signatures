@@ -42,5 +42,25 @@ while(my($args, $expect) = each %tests) {
         # we just want to test the tokenizing
         no_checks               => 1,
     );
-    is_deeply $sig->parameter_strings, $expect, "split_proto($args)";
+    is_deeply [map { $_->original_code } @{$sig->parameters}], $expect, "parameters - $args";
+}
+
+
+note "line numbers"; {
+    my $code = q[
+        $num    = 42,
+        $hash   = { this => 42,
+                    that => 23 },
+        $code   = sub { $num + 4 },
+    ];
+    my $sig = Method::Signatures::Signature->new(
+        signature_string        => $code,
+        no_checks               => 1,
+    );
+
+    my $parameters = $sig->parameters;
+
+    is $parameters->[0]->first_line_number, 2;
+    is $parameters->[1]->first_line_number, 3;
+    is $parameters->[2]->first_line_number, 5;
 }

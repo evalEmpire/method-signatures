@@ -1,11 +1,22 @@
 package Method::Signatures::Signature;
 
+use Carp;
 use Mouse;
 use Method::Signatures::Types;
 use Method::Signatures::Parameter;
 use Method::Signatures::Utils qw(new_ppi_doc sig_parsing_error DEBUG);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
+
+has num_lines =>
+  is            => 'rw',
+  isa           => 'Int',
+  lazy          => 1,
+  default       => sub {
+      my $self = shift;
+      my $num =()= $self->signature_string =~ /\n/g;
+      return $num + 1;
+  };
 
 # The unmodified, uncleaned up original signature for reference
 has signature_string =>
@@ -20,18 +31,12 @@ has parameter_string =>
   lazy          => 1,
   builder       => '_build_parameter_string';
 
-# A list of strings for each parameter tokenized from parameter_string
-has parameter_strings =>
-  is            => 'ro',
-  isa           => 'ArrayRef[Str]',
-  lazy          => 1,
-  builder       => '_build_parameter_strings';
-
 # The parsed Method::Signature::Parameter objects
 has parameters =>
   is            => 'ro',
   isa           => 'ArrayRef[Method::Signatures::Parameter]',
-  default       => sub { [] };
+  lazy          => 1,
+  builder       => '_build_parameters';
 
 has named_parameters =>
   is            => 'ro',
@@ -134,18 +139,7 @@ has no_checks   =>
 sub BUILD {
     my $self = shift;
 
-    my $idx = 0;
-    for my $proto (@{$self->parameter_strings}) {
-        DEBUG( "proto: $proto\n" );
-
-        my $sig = Method::Signatures::Parameter->new(
-            original_code => $proto,
-            position      => $idx,
-        );
-        $idx++ if $sig->is_positional;
-
-        push @{$self->parameters}, $sig;
-
+    for my $sig (@{$self->parameters}) {
         # Handle "don't care" specifier
         if ($sig->is_yadayada) {
             push @{$self->slurpy_parameters}, $sig;
@@ -231,13 +225,11 @@ sub _build_parameter_string {
 }
 
 
-sub _build_parameter_strings {
+sub _build_parameters {
     my $self = shift;
 
     my $param_string = $self->parameter_string;
     return [] unless $param_string =~ /\S/;
-
-    local $@ = undef;
 
     my $ppi = $self->ppi_doc;
     $ppi->prune('PPI::Token::Comment');
@@ -247,26 +239,58 @@ sub _build_parameter_strings {
         unless $statement;
     my $token = $statement->first_token;
 
-    my @params = ('');
+    # Split the signature into parameters as tokens.
+    my @tokens_by_param = ([]);
     do {
-        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' ) {
-            push @params, '';
+        if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' )
+        {
+            push @tokens_by_param, [];
         }
         else {
-            $params[-1] .= $token->content;
+            push @{$tokens_by_param[-1]}, $token;
         }
 
-        $token = $token->class eq 'PPI::Token::Label' ? $token->next_token : $token->next_sibling;
+        # "Type: $arg" is interpreted by PPI as a label, which is lucky for us.
+        $token = $token->class eq 'PPI::Token::Label'
+                   ? $token->next_token : $token->next_sibling;
     } while( $token );
 
+    # Turn those token sets into Parameter objects.
+    my $idx = 0;
+    my @params;
+    for my $tokens (@tokens_by_param) {
+        my $code = join '', map { $_->content } @$tokens;
+        next unless $code =~ /\S/;
 
-    $self->_strip_ws($_) for @params;
+        DEBUG( "raw_parameter: $code\n" );
 
-    # Remove blank entries due to trailing comma.
-    @params = grep { /\S/ } @params;
+        $self->_strip_ws($_) for ($code);
+
+        my $first_significant_token = _first_significant_token($tokens);
+
+        my $param = Method::Signatures::Parameter->new(
+            original_code       => $code,
+            position            => $idx,
+            first_line_number   => $first_significant_token->line_number,
+        );
+
+        $idx++ if $param->is_positional;
+
+        push @params, $param;
+    }
 
     return \@params;
 }
 
+
+sub _first_significant_token {
+    my $tokens = shift;
+
+    for my $token (@$tokens) {
+        return $token if $token->significant;
+    }
+
+    croak "No significant token found";
+}
 
 1;

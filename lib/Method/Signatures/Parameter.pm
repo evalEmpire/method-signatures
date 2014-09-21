@@ -62,6 +62,10 @@ has variable    =>
   isa           => 'Str',
   default       => '';
 
+has first_line_number =>
+  is            => 'rw',
+  isa           => 'Int';
+
 has position    =>
   is            => 'rw',
   isa           => 'Maybe[Int]',  # XXX 0 or positive int
