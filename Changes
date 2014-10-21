@@ -1,3 +1,6 @@
+20141021    Tue Oct 21 02:11:29 PDT 2014
+    Promoted to full release
+
 20140920.1910_001   Sat Sep 20 19:10:06 PDT 2014
     New Features
     * Can now specify an alternate name for invocant (besides `$self`)
