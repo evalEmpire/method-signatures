@@ -20,6 +20,8 @@ note "Basic multi-line signature"; {
     }
 
     is basic_multi_line(), 16;
+
+    is __LINE__, 21, "line numbers ok after function";
 }
 
 
@@ -43,6 +45,8 @@ note "Computed default"; {
         skip $DEFAULT_LINES_NOT_WORKING_REASON, 1 if $DEFAULT_LINES_NOT_WORKING;
         is $have->[1], 32, "computed default line number";
     };
+
+    is __LINE__, 44, "line numbers ok after function";
 }
 
 
@@ -50,6 +54,7 @@ note "single line signature"; {
 #line 45
     func single_line($a?, $b?, $c?) { return __LINE__ }
     is single_line, 45;
+    is __LINE__, 47, "line numbers ok after function";
 }
 
 
@@ -73,6 +78,8 @@ note "multi-line default"; {
         is $have->[1], 55, 'default $b';
     }
     is $have->[2], 58, 'body';
+
+    is __LINE__, 69, "line numbers ok after function";
 }
 
 
