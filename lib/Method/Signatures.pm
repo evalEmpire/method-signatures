@@ -876,7 +876,7 @@ sub inject_from_signature {
 
     my $max_argv = $signature->max_argv_size;
     my $max_args = $signature->max_args;
-    push @code, qq[$class->too_many_args_error($max_args) if \@_ > $max_argv; ]
+    push @code, qq[$class->too_many_args_error($max_args) if scalar(\@_) > $max_argv; ]
         unless $max_argv == $INF;
 
     # Add any additional trailing newlines so the body is on the right line.
@@ -948,7 +948,7 @@ sub inject_for_sig {
         $sig->passed_in($rhs);
     }
 
-    my $check_exists = $sig->is_named ? "exists \$args{$name}" : "(\@_ > $idx)";
+    my $check_exists = $sig->is_named ? "exists \$args{$name}" : "( scalar(\@_) > $idx)";
     $sig->check_exists($check_exists);
 
     my $default = $sig->default;
