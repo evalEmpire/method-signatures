@@ -122,6 +122,7 @@ has default =>
 has default_when =>
   is            => 'rw',
   isa           => 'Str',
+;
 
 has passed_in =>
   is            => 'rw',
