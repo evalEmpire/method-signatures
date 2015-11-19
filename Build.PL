@@ -32,7 +32,7 @@ my $build = Module::Build->new(
         'Any::Moose'        => '0.11',
         Mouse               => '0.64',
         'Sub::Name'         => '0.03',
-        'Lexical::SealRequireHints' => '0.007',
+        'Lexical::SealRequireHints' => '0.008', #0.008 is for perl 5.10.x, RT#93759
     },
 
     recommends      => {
@@ -47,7 +47,7 @@ my $build = Module::Build->new(
             license     => 'http://dev.perl.org/licenses/',
             bugtracker  =>
                 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures',
-            repository  => 'https://github.com/schwern/method-signatures',
+            repository  => 'https://github.com/evalEmpire/method-signatures',
         },
     },
 );
