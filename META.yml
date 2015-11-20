@@ -3,27 +3,27 @@ abstract: 'method and function declarations with signatures and no source filter
 author:
   - 'Michael G Schwern <schwern@pobox.com>'
 build_requires:
-  Module::Build: 0.26
-  Test::Builder: 0.82
-  Test::Exception: 0.29
-  Test::More: 0.82
-  Test::Warn: 0.10
+  Module::Build: '0.26'
+  Test::Builder: '0.82'
+  Test::Exception: '0.29'
+  Test::More: '0.82'
+  Test::Warn: '0.10'
 configure_requires:
-  Module::Build: 0.26
+  Module::Build: '0.26'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560'
+generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.150001'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  version: '1.4'
 name: Method-Signatures
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 20141021
+    version: 20151120.1519_001
   Method::Signatures::Modifiers:
     file: lib/Method/Signatures/Modifiers.pm
-    version: 20141021
+    version: 20151120.1519_001
   Method::Signatures::Parameter:
     file: lib/Method/Signatures/Parameter.pm
   Method::Signatures::Signature:
@@ -33,20 +33,20 @@ provides:
   Method::Signatures::Utils:
     file: lib/Method/Signatures/Utils.pm
 recommends:
-  Data::Alias: 1.08
-  Moose: 0.96
+  Data::Alias: '1.08'
+  Moose: '0.96'
 requires:
-  Any::Moose: 0.11
-  Const::Fast: 0.006
-  Devel::Declare: 0.006002
-  Devel::Declare::MethodInstaller::Simple: 0.006002
-  Lexical::SealRequireHints: 0.007
-  Mouse: 0.64
-  PPI: 1.203
-  Sub::Name: 0.03
+  Any::Moose: '0.11'
+  Const::Fast: '0.006'
+  Devel::Declare: '0.006002'
+  Devel::Declare::MethodInstaller::Simple: '0.006002'
+  Lexical::SealRequireHints: '0.007'
+  Mouse: '0.64'
+  PPI: '1.203'
+  Sub::Name: '0.03'
   perl: v5.8.1
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
   license: http://dev.perl.org/licenses/
   repository: https://github.com/schwern/method-signatures
-version: 20141021
+version: 20151120.1519_001
