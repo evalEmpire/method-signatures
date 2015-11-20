@@ -1,3 +1,12 @@
+20151120.1519_001   Fri Nov 20 15:19:44 PST 2015
+    Bug Fixes
+    * Fix missing semi-colon
+      [github #118] (thanks joenio)
+
+    Distribution Fixes
+    * Bump required version of Lexical::SealRequireHints to fix RT #93759
+      [github #119] (thanks chorny)
+
 20141021    Tue Oct 21 02:11:29 PDT 2014
     Promoted to full release
 
