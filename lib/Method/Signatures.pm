@@ -1430,7 +1430,7 @@ strict error, perl might not notice until it tries to compile
 something else via an C<eval> or C<require> at which point perl will
 appear to fail where there is no reason to fail.
 
-We recommend you use the L<compile_at_BEGIN> flag to turn off
+We recommend you use the L<"compile_at_BEGIN"> flag to turn off
 compile-time parsing.
 
 You can't use any feature that requires a smartmatch expression (i.e.
