@@ -114,3 +114,6 @@ t/when.t
 t/where.t
 t/yadayada.t
 t/zero_defaults.t
+README.pod
+README
+LICENSE
