@@ -26,6 +26,8 @@ sub my_hints() {
 
 Method::Signatures - method and function declarations with signatures and no source filter
 
+=for readme plugin version
+
 =head1 SYNOPSIS
 
     package Foo;
@@ -36,6 +38,8 @@ Method::Signatures - method and function declarations with signatures and no sou
         return bless {%args}, $self;
     }
 
+=for readme stop 
+
     method get ($key) {
         return $self->{$key};
     }
@@ -44,16 +48,21 @@ Method::Signatures - method and function declarations with signatures and no sou
         return $self->{$key} = $val;
     }
 
+=for readme start
+
     # Can also get type checking if you like:
 
     method set (Str $key, Int $val) {
         return $self->{$key} = $val;        # now you know $val is always an integer
     }
 
+=for readme stop
+
     func hello($greeting, $place) {
         print "$greeting, $place!\n";
     }
 
+=for readme start
 
 =head1 DESCRIPTION
 
@@ -68,6 +77,41 @@ a whole lot more.
 C<method> is like C<func> but specifically for making methods.  It will
 automatically provide the invocant as C<$self> (L<by default|/invocant>).
 No more C<my $self = shift>.
+
+=begin :readme
+
+=head1 INSTALLATION 
+
+This module sources are hosted on github 
+https://github.com/evalEmpire/method-signatures.git 
+and uses C<Module::Build> to generate the distribution. It can be 
+istalled:
+
+=over 
+
+=item directly
+
+ cpanm git://github.com/evalEmpire/method-signatures.git
+
+=item from CPAN
+
+ cpan Method::Signatures
+ cpanm Method::Signatures
+
+=item maualy cloninig the repository:
+
+ git clone https://github.com/evalEmpire/method-signatures.git
+ cd method-signatures
+ perl Build.PL
+ ./Build install 
+
+=back
+ 
+=for readme plugin requires
+
+=end :readme
+
+=for readme stop
 
 Also allows signatures, very similar to Perl 6 signatures.
 
