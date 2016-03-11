@@ -9,9 +9,9 @@ build_requires:
   Test::More: '0.82'
   Test::Warn: '0.10'
 configure_requires:
-  Module::Build: '0.26'
+  Module::Build: '0.31'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.150001'
+generated_by: 'Module::Build version 0.4211, CPAN::Meta::Converter version 2.143240'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,10 +20,10 @@ name: Method-Signatures
 provides:
   Method::Signatures:
     file: lib/Method/Signatures.pm
-    version: 20151120.1519_001
+    version: 20160310.2049_001
   Method::Signatures::Modifiers:
     file: lib/Method/Signatures/Modifiers.pm
-    version: 20151120.1519_001
+    version: 20160310.2049_001
   Method::Signatures::Parameter:
     file: lib/Method/Signatures/Parameter.pm
   Method::Signatures::Signature:
@@ -40,7 +40,7 @@ requires:
   Const::Fast: '0.006'
   Devel::Declare: '0.006002'
   Devel::Declare::MethodInstaller::Simple: '0.006002'
-  Lexical::SealRequireHints: '0.007'
+  Lexical::SealRequireHints: '0.008'
   Mouse: '0.64'
   PPI: '1.203'
   Sub::Name: '0.03'
@@ -48,5 +48,5 @@ requires:
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures
   license: http://dev.perl.org/licenses/
-  repository: https://github.com/schwern/method-signatures
-version: 20151120.1519_001
+  repository: https://github.com/evalEmpire/method-signatures
+version: 20160310.2049_001

@@ -1,3 +1,14 @@
+20160310.2049_001   Thu Mar 10 20:49:00 PST 2016
+    Docs
+    * Fix broken link in POD
+      [github #120] (thanks Manwar)
+
+    Distribution Fixes
+    * Generate README from POD
+      [github #122/#123/#124] (thanks jluis)
+    * Silence bogus Kwalitee failure
+      [github #121] (thanks jluis)
+
 20151120.1519_001   Fri Nov 20 15:19:44 PST 2015
     Bug Fixes
     * Fix missing semi-colon

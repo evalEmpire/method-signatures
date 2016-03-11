@@ -4,7 +4,7 @@
       "Michael G Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.150001",
+   "generated_by" : "Module::Build version 0.4211",
    "license" : [
       "perl_5"
    ],
@@ -25,7 +25,7 @@
       },
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.26"
+            "Module::Build" : "0.31"
          }
       },
       "runtime" : {
@@ -38,7 +38,7 @@
             "Const::Fast" : "0.006",
             "Devel::Declare" : "0.006002",
             "Devel::Declare::MethodInstaller::Simple" : "0.006002",
-            "Lexical::SealRequireHints" : "0.007",
+            "Lexical::SealRequireHints" : "0.008",
             "Mouse" : "0.64",
             "PPI" : "1.203",
             "Sub::Name" : "0.03",
@@ -49,11 +49,11 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20151120.1519_001"
+         "version" : "20160310.2049_001"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20151120.1519_001"
+         "version" : "20160310.2049_001"
       },
       "Method::Signatures::Parameter" : {
          "file" : "lib/Method/Signatures/Parameter.pm"
@@ -77,8 +77,8 @@
          "http://dev.perl.org/licenses/"
       ],
       "repository" : {
-         "url" : "https://github.com/schwern/method-signatures"
+         "url" : "https://github.com/evalEmpire/method-signatures"
       }
    },
-   "version" : "20151120.1519_001"
+   "version" : "20160310.2049_001"
 }
