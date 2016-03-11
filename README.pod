@@ -1,0 +1,107 @@
+=head1 NAME
+
+Method::Signatures - method and function declarations with signatures and no source filter
+
+=head1 VERSION
+
+20141021
+
+=head1 SYNOPSIS
+
+    package Foo;
+
+    use Method::Signatures;
+
+    method new (%args) {
+        return bless {%args}, $self;
+    }
+
+    # Can also get type checking if you like:
+
+    method set (Str $key, Int $val) {
+        return $self->{$key} = $val;        # now you know $val is always an integer
+    }
+
+=head1 DESCRIPTION
+
+Provides two new keywords, C<func> and C<method>, so that you can write
+subroutines with signatures instead of having to spell out
+C<my $self = shift; my($thing) = @_>
+
+C<func> is like C<sub> but takes a signature where the prototype would
+normally go.  This takes the place of C<my($foo, $bar) = @_> and does
+a whole lot more.
+
+C<method> is like C<func> but specifically for making methods.  It will
+automatically provide the invocant as C<$self> (L<by default|/invocant>).
+No more C<my $self = shift>.
+
+=head1 INSTALLATION 
+
+This module sources are hosted on github 
+https://github.com/evalEmpire/method-signatures.git 
+and uses C<Module::Build> to generate the distribution. It can be 
+istalled:
+
+=over 
+
+=item directly
+
+ cpanm git://github.com/evalEmpire/method-signatures.git
+
+=item from CPAN
+
+ cpan Method::Signatures
+ cpanm Method::Signatures
+
+=item maualy cloninig the repository:
+
+ git clone https://github.com/evalEmpire/method-signatures.git
+ cd method-signatures
+ perl Build.PL
+ ./Build install 
+
+=back
+ 
+=head1 REQUIREMENTS
+
+This distribution requires Perl v5.8.1.
+
+This distribution requires the following modules:
+
+=over 4
+
+=item * L<Any::Moose> (version 0.11)
+
+=item * L<Const::Fast> (version 0.006)
+
+=item * L<Devel::Declare> (version 0.006002)
+
+=item * L<Devel::Declare::MethodInstaller::Simple> (version 0.006002)
+
+=item * L<Lexical::SealRequireHints> (version 0.008)
+
+=item * L<Module::Build> (version 0.26)
+
+=item * L<Mouse> (version 0.64)
+
+=item * L<PPI> (version 1.203)
+
+=item * L<Sub::Name> (version 0.03)
+
+=item * L<Test::Exception> (version 0.29)
+
+=item * L<Test::Warn> (version 0.10)
+
+=back
+
+This distribution recommends the following modules:
+
+=over 4
+
+=item * L<Data::Alias> (version 1.08)
+
+=item * L<Moose> (version 0.96)
+
+=back
+
