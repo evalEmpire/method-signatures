@@ -5,7 +5,7 @@ use Carp;
 use Method::Signatures::Utils;
 
 my $IDENTIFIER     = qr{ [^\W\d] \w*                         }x;
-my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                 }x;
+my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER?                }x;
 my $TYPENAME       = qr{ $IDENTIFIER (?: \:\: $IDENTIFIER )* }x;
 our $PARAMETERIZED;
     $PARAMETERIZED = do{ use re 'eval';

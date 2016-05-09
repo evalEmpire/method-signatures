@@ -19,6 +19,11 @@ my %tests = (
         '$foo = [1,2,3]', '$bar = { this => 23, that => 42 }'
     ],
     '$code = sub { my $bar = 2+2; }, :$this'    =>  ['$code = sub { my $bar = 2+2; }', ':$this'],
+    '$foo, $, Int $ where { $_ < 10 } = 4, $bar, $'     => [
+        '$foo', '$', 'Int $ where { $_ < 10 } = 4', '$bar', '$'
+    ],
+    '$foo, @'           => ['$foo', '@'],
+    '$foo, %'           => ['$foo', '%'],
 
     q[
         $num    = 42,

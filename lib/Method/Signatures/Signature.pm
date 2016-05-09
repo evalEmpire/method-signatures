@@ -242,6 +242,17 @@ sub _build_parameters {
     # Split the signature into parameters as tokens.
     my @tokens_by_param = ([]);
     do {
+        if( $token->class eq "PPI::Token::Magic" and $token->content eq '$,' )
+        {
+            # a placeholder scalar with no constraints gets parsed by PPI  as if it's the special var "$,"
+            # it needs to be split up into 2 tokens, "$" and ","
+            my $bare_dollar_token = PPI::Token::Cast->new('$');
+            $token->insert_after($bare_dollar_token);
+            $bare_dollar_token->insert_after(PPI::Token::Operator->new(','));
+            $token->remove;
+            $token = $bare_dollar_token;
+        }
+
         if( $token->class eq "PPI::Token::Operator" and $token->content eq ',' )
         {
             push @tokens_by_param, [];
