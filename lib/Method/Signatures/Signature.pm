@@ -5,6 +5,7 @@ use Mouse;
 use Method::Signatures::Types;
 use Method::Signatures::Parameter;
 use Method::Signatures::Utils qw(new_ppi_doc sig_parsing_error DEBUG);
+use List::Util qw(all);
 
 my $INF = ( 0 + "inf" ) == 0 ? 9e9999 : "inf";
 
@@ -242,7 +243,9 @@ sub _build_parameters {
     # Split the signature into parameters as tokens.
     my @tokens_by_param = ([]);
     do {
-        if( $token->class eq "PPI::Token::Magic" and $token->content eq '$,' )
+        if( $token->class eq "PPI::Token::Magic"
+            and $token->content eq '$,'
+            and _all_tokens_in_listref_are_whitespace($tokens_by_param[-1]))
         {
             # a placeholder scalar with no constraints gets parsed by PPI  as if it's the special var "$,"
             # it needs to be split up into 2 tokens, "$" and ","
@@ -291,6 +294,12 @@ sub _build_parameters {
     }
 
     return \@params;
+}
+
+
+sub _all_tokens_in_listref_are_whitespace {
+    my $listref = shift;
+    return all { $_->class eq 'PPI::Token::Whitespace' } @$listref;
 }
 
 
