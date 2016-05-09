@@ -8,7 +8,7 @@ our @EXPORT_OK =
 (
     qw< bad_param_error unexpected_after_error named_after_optpos_error pos_after_named_error required_after_optional_error >,    # compile-time
     qw< mispositioned_slurpy_error multiple_slurpy_error named_slurpy_error >,                      # compile-time
-    qw< required_error named_param_error badval_error badtype_error >,                              # run-time
+    qw< required_error required_placeholder_error named_param_error badval_error badtype_error >,   # run-time
 );
 
 
@@ -129,6 +129,14 @@ sub required_error
     my ($obj, $varname, $method, %extra) = @_;
 
     return _regexify($obj, $method, "missing required argument $varname", %extra);
+}
+
+
+sub required_placeholder_error
+{
+    my($obj, $n, $method, %extra) = @_;
+
+    return _regexify($obj, $method, "missing required placeholder argument at position $n", %extra);
 }
 
 

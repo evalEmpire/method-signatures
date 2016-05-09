@@ -1016,7 +1016,11 @@ sub inject_for_sig {
     }
 
     if( $sig->is_required ) {
-        push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
+        if( $sig->is_placeholder ) {
+            push @code, qq[${class}->required_placeholder_arg('$idx') unless $check_exists; ];
+        } else {
+            push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
+        }
     }
 
     # Handle \@foo
@@ -1048,6 +1052,11 @@ sub inject_for_sig {
                 : $constraint;
         my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
 		push @code, "$error unless do { no if \$] >= 5.017011, warnings => 'experimental::smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
+    }
+
+    if( $sig->is_placeholder ) {
+        unshift @code, 'do {';
+        push @code, '};';
     }
 
     # Record the current line number for the next injection.
@@ -1126,6 +1135,13 @@ sub required_arg {
     my ($class, $var) = @_;
 
     $class->signature_error("missing required argument $var");
+}
+
+
+sub required_placeholder_arg {
+    my ($class, $idx) = @_;
+
+    $class->signature_error("missing required placeholder argument at position $idx");
 }
 
 
