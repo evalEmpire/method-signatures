@@ -462,6 +462,22 @@ default values have been resolved, and in the same order as they were
 specified within the signature.
 
 
+=head3 Placeholder parameters
+
+A positional argument can be ignored by using a bare C<$> sigil as its name.
+
+    method foo( $a, $, $c ) {
+        ...
+    }
+
+The argument's value doesn't get stored in a variable, but the caller must
+still supply it.  Value and type constraints can be applied to placeholders.
+
+    method bar( Int $ where { $_ < 10 } ) {
+        ...
+    }
+
+
 =head3 Parameter traits
 
 Each parameter can be assigned a trait with the C<$arg is TRAIT> syntax.
@@ -590,6 +606,10 @@ you can just write:
 
 This is also marginally more efficient, as it does not have to allocate,
 initialize, or deallocate the unused slurpy parameter C<@etc>.
+
+The bare C<@> sigil is a synonym for C<...>.  A bare C<%> sigil is also a
+synonym for C<...>, but requires that there must be an even number of extra
+arguments, such as would be assigned to a hash.
 
 
 =head3 Required and optional parameters
