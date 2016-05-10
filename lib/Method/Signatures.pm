@@ -1050,7 +1050,12 @@ sub inject_for_sig {
           $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
                 ? "sub $constraint"
                 : $constraint;
-        my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
+
+        my( $error_reporter, $var_name ) =
+            $sig->is_placeholder
+                ? ( 'placeholder_where_error',  $sig->position )
+                : ( 'where_error',              $var );
+        my $error = sprintf q{ %s->%s(%s, '%s', '%s') }, $class, $error_reporter, $var, $var_name, $constraint;
 		push @code, "$error unless do { no if \$] >= 5.017011, warnings => 'experimental::smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
     }
 
@@ -1097,8 +1102,13 @@ sub inject_for_type_check
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
           __PACKAGE__, $sig->type, $class, $sig->type, $sig->variable;
-        my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->type, $sig->variable, $sig->variable_name;
+
+        my( $error_reporter, $variable_name ) =
+            $sig->is_placeholder
+                ? ( 'placeholder_type_error',   $sig->position )
+                : ( 'type_error',               $sig->variable_name );
+        my $error = sprintf q[%s->%s('%s', %s, '%s') ],
+          $class, $error_reporter, $sig->type, $sig->variable, $variable_name;
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
         $code .= "!$check";
@@ -1234,6 +1244,13 @@ sub type_error
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
+sub placeholder_type_error
+{
+    my ($class, $type, $value, $idx) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{the placeholder parameter at position $idx ($value) is not of type $type});
+}
+
 # Errors from `where' constraints are handled here.
 sub where_error
 {
@@ -1242,6 +1259,12 @@ sub where_error
     $class->signature_error(qq{$name value ($value) does not satisfy constraint: $constraint});
 }
 
+sub placeholder_where_error
+{
+    my ($class, $value, $idx, $constraint) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{the placeholder parameter at position $idx value ($value) does not satisfy constraint: $constraint});
+}
 
 =head1 PERFORMANCE
 

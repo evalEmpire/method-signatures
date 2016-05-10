@@ -63,13 +63,9 @@ has variable    =>
   default       => '';
 
 has is_placeholder =>
-  is            => 'ro',
+  is            => 'rw',
   isa           => 'Bool',
-  lazy          => 1,
-  default       => sub {
-      my $self = shift;
-      return scalar($self->original_code =~ m{^ (?: \$ | @ | % ) $}x);
-  };
+  default       => 0;
 
 has first_line_number =>
   is            => 'rw',
@@ -349,7 +345,14 @@ sub _preparse_original_code_for_ppi {
     $self->is_named     ($premod =~ m{ :  }x);
     $self->required_flag($postmod) if $postmod;
 
-    $self->variable($self->is_placeholder ? '$tmp' : $var) if $var;
+    if ($var) {
+        if ($var eq '$') {
+            $self->is_placeholder(1);
+            $self->variable('$tmp');
+        } else {
+            $self->variable($var);
+        }
+    }
 
     $self->ppi_clean_code($original_code);
 
