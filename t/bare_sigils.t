@@ -64,6 +64,16 @@ use Method::Signatures;
 
     is( Placeholder->slurpy(123), 123, 'slurpy, no extras');
     is( Placeholder->slurpy(123, 456, 789), 123, 'slurpy with extras');
+
+    method slurpy_hash($foo, %) {
+        $foo
+    }
+
+    is( Placeholder->slurpy_hash(123), 123, 'slurpy_hash, no extras');
+    is( Placeholder->slurpy_hash(123, a => 1, b => 2), 123, 'slurpy_hash with extras');
+    throws_ok { Placeholder->slurpy_hash(123, 456, a => 1) }
+        qr{was given an odd number of arguments for a placeholder hash},
+        'slurpy_hash with odd number of extras throws exception';
 }
 
 done_testing();

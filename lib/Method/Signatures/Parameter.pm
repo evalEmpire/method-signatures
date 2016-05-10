@@ -35,6 +35,15 @@ has is_yadayada =>
       return $self->original_code =~ m{^ \s* (?:\Q...\E)|(?:@) \s* $}x;
   };
 
+has is_hash_yadayada =>
+  is            => 'ro',
+  isa           => 'Bool',
+  lazy          => 1,
+  default       => sub {
+      my $self = shift;
+      return $self->original_code =~ m{^ \s* % \s* $}x;
+  };
+
 has type =>
   is            => 'rw',
   isa           => 'Str',

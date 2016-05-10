@@ -938,6 +938,13 @@ sub too_many_args_error {
 }
 
 
+sub odd_number_args_error {
+    my($class) = @_;
+
+    $class->signature_error('was given an odd number of arguments for a placeholder hash');
+}
+
+
 sub named_param_error {
     my ($class, $args) = @_;
     my @keys = keys %$args;
@@ -970,6 +977,12 @@ sub inject_for_sig {
 
     # Add any necessary leading newlines so line numbers are preserved.
     push @code, $self->inject_newlines($sig->first_line_number - $self->{line_number});
+
+    if( $sig->is_hash_yadayada ) {
+        my $is_odd = $sig->position % 2;
+        push @code, qq[$class->odd_number_args_error() if scalar(\@_) % 2 != $is_odd;];
+        return @code;
+    }
 
     my $sigil = $sig->sigil;
     my $name  = $sig->variable_name;
