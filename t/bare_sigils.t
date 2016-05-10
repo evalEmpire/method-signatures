@@ -74,6 +74,14 @@ use Method::Signatures;
     throws_ok { Placeholder->slurpy_hash(123, 456, a => 1) }
         qr{was given an odd number of arguments for a placeholder hash},
         'slurpy_hash with odd number of extras throws exception';
+
+    method optional_placeholder($foo, $?, $bar?) {
+        return [ $foo, $bar ];
+    }
+
+    is_deeply( Placeholder->optional_placeholder(1), [ 1, undef ], 'optional_placeholder with 1 arg');
+    is_deeply( Placeholder->optional_placeholder(1, 2), [ 1, undef ], 'optional_placeholder with 2 args');
+    is_deeply( Placeholder->optional_placeholder(1, 2, 3), [ 1, 3 ], 'optional_placeholder with 3 args');
 }
 
 done_testing();
