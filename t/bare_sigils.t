@@ -57,6 +57,13 @@ use Method::Signatures;
             'placeholder value wrong type';
     throws_ok { Placeholder->constrained_placeholder(99) } placeholder_failed_constraint_error('Placeholder', 0, 99 => '{$_<10}', 'constrained_placeholder', LINE => 57),
             'placeholder value wrong type';
+
+    method slurpy($foo, @) {
+        $foo
+    }
+
+    is( Placeholder->slurpy(123), 123, 'slurpy, no extras');
+    is( Placeholder->slurpy(123, 456, 789), 123, 'slurpy with extras');
 }
 
 done_testing();

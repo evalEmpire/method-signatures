@@ -32,7 +32,7 @@ has is_yadayada =>
   default       => sub {
       my $self = shift;
 
-      return $self->original_code =~ m{^ \s* \Q...\E \s* $}x;
+      return $self->original_code =~ m{^ \s* (?:\Q...\E)|(?:@) \s* $}x;
   };
 
 has type =>
