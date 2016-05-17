@@ -19,6 +19,11 @@ my %tests = (
         '$foo = [1,2,3]', '$bar = { this => 23, that => 42 }'
     ],
     '$code = sub { my $bar = 2+2; }, :$this'    =>  ['$code = sub { my $bar = 2+2; }', ':$this'],
+    '$foo,    $, $bar, $ = $,, $'     => [
+        '$foo', '$', '$bar', '$ = $,', '$'
+    ],
+    '$foo, @'           => ['$foo', '@'],
+    '$foo, %'           => ['$foo', '%'],
 
     q[
         $num    = 42,
@@ -37,6 +42,19 @@ my %tests = (
 );
 
 while(my($args, $expect) = each %tests) {
+    test_tokenize_sig( $args, $expect );
+}
+
+SKIP: {
+    skip q(Perl 5.10 or later needed to test 'where' constraints), 1 if $] < 5.010;
+    test_tokenize_sig(
+        'Int $ where { $_ < 10 } = 4',
+            [ 'Int $ where { $_ < 10 } = 4' ]
+    );
+};
+
+sub test_tokenize_sig {
+    my($args, $expect) = @_;
     my $sig = Method::Signatures::Signature->new(
         signature_string        => $args,
         # we just want to test the tokenizing

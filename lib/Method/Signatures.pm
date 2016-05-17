@@ -462,6 +462,22 @@ default values have been resolved, and in the same order as they were
 specified within the signature.
 
 
+=head3 Placeholder parameters
+
+A positional argument can be ignored by using a bare C<$> sigil as its name.
+
+    method foo( $a, $, $c ) {
+        ...
+    }
+
+The argument's value doesn't get stored in a variable, but the caller must
+still supply it.  Value and type constraints can be applied to placeholders.
+
+    method bar( Int $ where { $_ < 10 } ) {
+        ...
+    }
+
+
 =head3 Parameter traits
 
 Each parameter can be assigned a trait with the C<$arg is TRAIT> syntax.
@@ -590,6 +606,10 @@ you can just write:
 
 This is also marginally more efficient, as it does not have to allocate,
 initialize, or deallocate the unused slurpy parameter C<@etc>.
+
+The bare C<@> sigil is a synonym for C<...>.  A bare C<%> sigil is also a
+synonym for C<...>, but requires that there must be an even number of extra
+arguments, such as would be assigned to a hash.
 
 
 =head3 Required and optional parameters
@@ -938,6 +958,13 @@ sub too_many_args_error {
 }
 
 
+sub odd_number_args_error {
+    my($class) = @_;
+
+    $class->signature_error('was given an odd number of arguments for a placeholder hash');
+}
+
+
 sub named_param_error {
     my ($class, $args) = @_;
     my @keys = keys %$args;
@@ -970,6 +997,12 @@ sub inject_for_sig {
 
     # Add any necessary leading newlines so line numbers are preserved.
     push @code, $self->inject_newlines($sig->first_line_number - $self->{line_number});
+
+    if( $sig->is_hash_yadayada ) {
+        my $is_odd = $sig->position % 2;
+        push @code, qq[$class->odd_number_args_error() if scalar(\@_) % 2 != $is_odd;];
+        return @code;
+    }
 
     my $sigil = $sig->sigil;
     my $name  = $sig->variable_name;
@@ -1016,7 +1049,11 @@ sub inject_for_sig {
     }
 
     if( $sig->is_required ) {
-        push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
+        if( $sig->is_placeholder ) {
+            push @code, qq[${class}->required_placeholder_arg('$idx') unless $check_exists; ];
+        } else {
+            push @code, qq[${class}->required_arg('$var') unless $check_exists; ];
+        }
     }
 
     # Handle \@foo
@@ -1046,8 +1083,18 @@ sub inject_for_sig {
           $constraint =~ m{^ \s* \{ (?: .* ; .* | (?:(?! => ). )* ) \} \s* $}xs
                 ? "sub $constraint"
                 : $constraint;
-        my $error = sprintf q{ %s->where_error(%s, '%s', '%s') }, $class, $var, $var, $constraint;
+
+        my( $error_reporter, $var_name ) =
+            $sig->is_placeholder
+                ? ( 'placeholder_where_error',  $sig->position )
+                : ( 'where_error',              $var );
+        my $error = sprintf q{ %s->%s(%s, '%s', '%s') }, $class, $error_reporter, $var, $var_name, $constraint;
 		push @code, "$error unless do { no if \$] >= 5.017011, warnings => 'experimental::smartmatch'; grep { \$_ ~~ $constraint_impl } $var }; ";
+    }
+
+    if( $sig->is_placeholder ) {
+        unshift @code, 'do {';
+        push @code, '};';
     }
 
     # Record the current line number for the next injection.
@@ -1088,8 +1135,13 @@ sub inject_for_type_check
     if( $class->can("type_check") eq __PACKAGE__->can("type_check") ) {
         my $check = sprintf q[($%s::mutc{cache}{'%s'} ||= %s->_make_constraint('%s'))->check(%s)],
           __PACKAGE__, $sig->type, $class, $sig->type, $sig->variable;
-        my $error = sprintf q[%s->type_error('%s', %s, '%s') ],
-          $class, $sig->type, $sig->variable, $sig->variable_name;
+
+        my( $error_reporter, $variable_name ) =
+            $sig->is_placeholder
+                ? ( 'placeholder_type_error',   $sig->position )
+                : ( 'type_error',               $sig->variable_name );
+        my $error = sprintf q[%s->%s('%s', %s, '%s') ],
+          $class, $error_reporter, $sig->type, $sig->variable, $variable_name;
         my $code = "$error if ";
         $code .= "$check_exists && " if $check_exists;
         $code .= "!$check";
@@ -1126,6 +1178,13 @@ sub required_arg {
     my ($class, $var) = @_;
 
     $class->signature_error("missing required argument $var");
+}
+
+
+sub required_placeholder_arg {
+    my ($class, $idx) = @_;
+
+    $class->signature_error("missing required placeholder argument at position $idx");
 }
 
 
@@ -1218,6 +1277,13 @@ sub type_error
     $class->signature_error(qq{the '$name' parameter ($value) is not of type $type});
 }
 
+sub placeholder_type_error
+{
+    my ($class, $type, $value, $idx) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{the placeholder parameter at position $idx ($value) is not of type $type});
+}
+
 # Errors from `where' constraints are handled here.
 sub where_error
 {
@@ -1226,6 +1292,12 @@ sub where_error
     $class->signature_error(qq{$name value ($value) does not satisfy constraint: $constraint});
 }
 
+sub placeholder_where_error
+{
+    my ($class, $value, $idx, $constraint) = @_;
+    $value = defined $value ? qq{"$value"} : 'undef';
+    $class->signature_error(qq{the placeholder parameter at position $idx value ($value) does not satisfy constraint: $constraint});
+}
 
 =head1 PERFORMANCE
 

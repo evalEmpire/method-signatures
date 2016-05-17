@@ -6,6 +6,8 @@ use warnings;
 use Test::More;
 use Test::Warn;
 use Test::Exception;
+use lib 't/lib';
+use GenErrorRegex qw< required_placeholder_error placeholder_badval_error placeholder_failed_constraint_error >;
 
 # Skip the test before Method::Signatures can try to compile it and blow up.
 BEGIN {
@@ -142,5 +144,24 @@ subtest 'where where where' => sub {
     like $@, qr{\$x value \(undef\) does not satisfy constraint:}, "neg_and_odd_and_prime(undef) as expected";
 };
 
+subtest 'where with placeholders' => sub {
+    func constrained_placeholder(Int $ where { $_ < 10 }) {
+        pass 'placeholder passes constraints';
+    }
+
+    ok eval { constrained_placeholder(2) }, 'constrained_placeholder() called as expected'
+        or note $@;
+
+    # line 155
+    throws_ok { constrained_placeholder() }
+        required_placeholder_error('main', 0, 'constrained_placeholder', LINE => 156),
+        'missing requierd constrained placeholder';
+    throws_ok { constrained_placeholder('foo') }
+        placeholder_badval_error('main', 0, 'Int' => 'foo', 'constrained_placeholder', LINE => 159),
+        'placeholder value wrong type';
+    throws_ok { constrained_placeholder(99) }
+        placeholder_failed_constraint_error('main', 0, 99 => '{$_<10}', 'constrained_placeholder', LINE => 162),
+        'placeholder value wrong type';
+};
 
 done_testing;

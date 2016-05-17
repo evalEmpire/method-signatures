@@ -5,7 +5,7 @@ use Carp;
 use Method::Signatures::Utils;
 
 my $IDENTIFIER     = qr{ [^\W\d] \w*                         }x;
-my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER                 }x;
+my $VARIABLE       = qr{ [\$\@%] $IDENTIFIER?                }x;
 my $TYPENAME       = qr{ $IDENTIFIER (?: \:\: $IDENTIFIER )* }x;
 our $PARAMETERIZED;
     $PARAMETERIZED = do{ use re 'eval';
@@ -32,7 +32,16 @@ has is_yadayada =>
   default       => sub {
       my $self = shift;
 
-      return $self->original_code =~ m{^ \s* \Q...\E \s* $}x;
+      return $self->original_code =~ m{^ \s* (?:\Q...\E)|(?:@) \s* $}x;
+  };
+
+has is_hash_yadayada =>
+  is            => 'ro',
+  isa           => 'Bool',
+  lazy          => 1,
+  default       => sub {
+      my $self = shift;
+      return $self->original_code =~ m{^ \s* % \s* $}x;
   };
 
 has type =>
@@ -61,6 +70,11 @@ has variable    =>
   is            => 'rw',
   isa           => 'Str',
   default       => '';
+
+has is_placeholder =>
+  is            => 'rw',
+  isa           => 'Bool',
+  default       => 0;
 
 has first_line_number =>
   is            => 'rw',
@@ -340,7 +354,14 @@ sub _preparse_original_code_for_ppi {
     $self->is_named     ($premod =~ m{ :  }x);
     $self->required_flag($postmod) if $postmod;
 
-    $self->variable($var)             if $var;
+    if ($var) {
+        if ($var eq '$') {
+            $self->is_placeholder(1);
+            $self->variable('$tmp');
+        } else {
+            $self->variable($var);
+        }
+    }
 
     $self->ppi_clean_code($original_code);
 

@@ -8,7 +8,7 @@ our @EXPORT_OK =
 (
     qw< bad_param_error unexpected_after_error named_after_optpos_error pos_after_named_error required_after_optional_error >,    # compile-time
     qw< mispositioned_slurpy_error multiple_slurpy_error named_slurpy_error >,                      # compile-time
-    qw< required_error named_param_error badval_error badtype_error >,                              # run-time
+    qw< required_error required_placeholder_error named_param_error badval_error placeholder_badval_error badtype_error placeholder_failed_constraint_error >,   # run-time
 );
 
 
@@ -132,6 +132,14 @@ sub required_error
 }
 
 
+sub required_placeholder_error
+{
+    my($obj, $n, $method, %extra) = @_;
+
+    return _regexify($obj, $method, "missing required placeholder argument at position $n", %extra);
+}
+
+
 sub named_param_error
 {
     my ($obj, $varname, $method, %extra) = @_;
@@ -148,11 +156,27 @@ sub badval_error
     return _regexify($obj, $method, "the '$varname' parameter ($val) is not of type $type", %extra);
 }
 
+sub placeholder_badval_error
+{
+    my ($obj, $idx, $type, $val, $method, %extra) = @_;
+
+    $val = defined $val ? qq{"$val"} : 'undef';
+    return _regexify($obj, $method, "the placeholder parameter at position $idx ($val) is not of type $type", %extra);
+}
+
 sub badtype_error
 {
     my ($obj, $type, $submsg, $method, %extra) = @_;
 
     return _regexify($obj, $method, "the type $type is unrecognized ($submsg)", %extra);
+}
+
+sub placeholder_failed_constraint_error
+{
+    my ($obj, $idx, $val, $constraint, $method, %extra) = @_;
+
+    $val = defined $val ? qq{"$val"} : 'undef';
+    return _regexify($obj, $method, "the placeholder parameter at position $idx value ($val) does not satisfy constraint:  $constraint", %extra);
 }
 
 
