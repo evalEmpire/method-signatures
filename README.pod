@@ -4,7 +4,7 @@ Method::Signatures - method and function declarations with signatures and no sou
 
 =head1 VERSION
 
-20160315
+20160516.2032_001
 
 =head1 SYNOPSIS
 
