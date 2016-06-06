@@ -859,6 +859,49 @@ sub _parser_is_fucked {
 }
 
 
+# Largely copied from Devel::Declare::MethodInstaller::Simple::parser()
+# The original expects things in this order:
+# <keyword> name ($$@) :attr1 :attr2 {
+# * name
+# * prototype
+# * attributes
+# * an open brace
+# We want to support the prototype coming after the attributes as well as before,
+# but D::D::strip_attrs() looks for the open brace, and gets into an endless
+# loop if it doesn't find one.  Meanwhile, D::D::strip_proto() doesn't find anything
+# if the attributes are before the prototype.
+sub parser {
+    my $self = shift;
+    $self->init(@_);
+
+    $self->skip_declarator;
+    my $name   = $self->strip_name;
+
+    my $linestr = Devel::Declare::get_linestr;
+
+    my($proto, $attrs);
+    my($char) = $linestr =~ m/(\(|:)/;
+    if (defined($char) and $char eq '(') {
+        $proto = $self->strip_proto;
+        $attrs = $self->strip_attrs;
+    } else {
+        $attrs = $self->strip_attrs;
+        $proto = $self->strip_proto;
+    }
+
+    my @decl   = $self->parse_proto($proto);
+    my $inject = $self->inject_parsed_proto(@decl);
+    if (defined $name) {
+        $inject = $self->scope_injector_call() . $inject;
+    }
+    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
+
+    $self->install( $name );
+
+    return;
+}
+
+
 # Capture the function name
 sub strip_name {
     my $self = shift;
@@ -871,10 +914,54 @@ sub strip_name {
 
 
 # Capture the attributes
+# A copy of the method of the same name from Devel::Declare::Context::Simple::strip_attrs()
+# The only change is that the while() loop now terminates if it finds an open brace _or_
+# open paren.  This is necessary to allow the function signature to come after the attributes.
 sub strip_attrs {
     my $self = shift;
 
-    my $attrs = $self->SUPER::strip_attrs(@_);
+    $self->skipspace;
+
+    my $linestr = Devel::Declare::get_linestr;
+    my $attrs   = '';
+
+    if (substr($linestr, $self->offset, 1) eq ':') {
+        while (substr($linestr, $self->offset, 1) ne '{'
+               and substr($linestr, $self->offset, 1) ne '('
+        ) {
+            if (substr($linestr, $self->offset, 1) eq ':') {
+                substr($linestr, $self->offset, 1) = '';
+                Devel::Declare::set_linestr($linestr);
+
+                $attrs .= ':';
+            }
+
+            $self->skipspace;
+            $linestr = Devel::Declare::get_linestr();
+
+            if (my $len = Devel::Declare::toke_scan_word($self->offset, 0)) {
+                my $name = substr($linestr, $self->offset, $len);
+                substr($linestr, $self->offset, $len) = '';
+                Devel::Declare::set_linestr($linestr);
+
+                $attrs .= " ${name}";
+
+                if (substr($linestr, $self->offset, 1) eq '(') {
+                    my $length = Devel::Declare::toke_scan_str($self->offset);
+                    my $arg    = Devel::Declare::get_lex_stuff();
+                    Devel::Declare::clear_lex_stuff();
+                    $linestr = Devel::Declare::get_linestr();
+                    substr($linestr, $self->offset, $length) = '';
+                    Devel::Declare::set_linestr($linestr);
+
+                    $attrs .= "(${arg})";
+                }
+            }
+        }
+
+        $linestr = Devel::Declare::get_linestr();
+    }
+
     $self->{attributes} = $attrs;
 
     return $attrs;
