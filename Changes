@@ -1,3 +1,9 @@
+20160608.0051_002   Wed Jun  8 00:51:42 PDT 2016
+    New Features
+    * Can now put prototypes in front of signatures
+      (provides compatibility with sigs in 5.20)
+      [RT/93336, github #99/#127] (thanks brummett)
+
 20160516.2032_001   Mon May 16 20:32:59 PDT 2016
     New Features
     * Can now use bare sigils as placeholders

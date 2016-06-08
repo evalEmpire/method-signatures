@@ -9,7 +9,7 @@ use Method::Signatures::Utils;
 use Method::Signatures::Parameter;
 use Method::Signatures::Signature;
 
-our $VERSION = '20160516.2032_001';
+our $VERSION = '20160608.0051_002';
 
 our $DEBUG = $ENV{METHOD_SIGNATURES_DEBUG} || 0;
 

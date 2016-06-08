@@ -21,6 +21,7 @@ t/anon.t
 t/array_param.t
 t/at_underscore.t
 t/attributes.t
+t/attributes_before_signature.t
 t/bare_sigils.t
 t/before_510.t
 t/begin.t
