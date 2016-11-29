@@ -1290,6 +1290,7 @@ our %mutc;
 # This is a helper function to initialize our %mutc variable.
 sub _init_mutc
 {
+    no warnings 'deprecated';
     require Any::Moose;
     Any::Moose->import('::Util::TypeConstraints');
 
