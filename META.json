@@ -49,11 +49,11 @@
    "provides" : {
       "Method::Signatures" : {
          "file" : "lib/Method/Signatures.pm",
-         "version" : "20160608.0051_002"
+         "version" : "20170211"
       },
       "Method::Signatures::Modifiers" : {
          "file" : "lib/Method/Signatures/Modifiers.pm",
-         "version" : "20160608.0051_002"
+         "version" : "20170211"
       },
       "Method::Signatures::Parameter" : {
          "file" : "lib/Method/Signatures/Parameter.pm"
@@ -68,7 +68,7 @@
          "file" : "lib/Method/Signatures/Utils.pm"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Method-Signatures"
@@ -80,5 +80,5 @@
          "url" : "https://github.com/evalEmpire/method-signatures"
       }
    },
-   "version" : "20160608.0051_002"
+   "version" : "20170211"
 }
