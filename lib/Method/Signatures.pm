@@ -221,6 +221,7 @@ leads to ambiguities.
 
 =head3 Aliased references
 
+I<Optional, requires L<Data::Alias> to already be installed.>
 A signature of C<\@arg> will take an array reference but allow it to
 be used as C<@arg> inside the method.  C<@arg> is an alias to the
 original reference.  Any changes to C<@arg> will affect the original
