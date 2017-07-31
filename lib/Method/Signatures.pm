@@ -1568,7 +1568,7 @@ This even works in single quotes:
 
     func foo ( $foo, $bar = '\)' )      # default is ')', *not* '\)'!
 
-although we don't recomment that form, as it may be surprising to
+although we don't recommend that form, as it may be surprising to
 readers of your code.
 
 =head2 No source filter
