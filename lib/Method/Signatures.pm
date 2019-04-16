@@ -128,7 +128,7 @@ The full signature syntax for each parameter is:
 Every component except the parameter name (with sigil) is optional.
 
 C<$SM_EXPR> is any expression that is valid as the RHS of a smartmatch,
-or else a raw block of code. See L<"Value constraints">.
+or else a raw block of code. See L<"Value Constraints">.
 
 C<$AS_EXPR> is any expression that is valid as the RHS of an
 assignment operator. See L<"Defaults">.
@@ -582,7 +582,7 @@ leaves the rest of C<@_> alone.  This way you can get $self but do the
 rest of the argument handling manually.
 
 Note that a signature of C<(@_)> is exactly equivalent to a signature
-of C<(...)>.  See L<"The yada yada marker">.
+of C<(...)>.  See L<"The "yada yada" marker">.
 
 
 =head3 The empty signature
