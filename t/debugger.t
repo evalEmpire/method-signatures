@@ -32,7 +32,7 @@ is eval {
     local $SIG{ALRM} = sub { die "Alarm!\n"; };
 
     local $ENV{PERLDB_OPTS} = 'NonStop';
-    alarm 5;
+    alarm 30;
     my $ret = qx{$^X "-Ilib" -dw t/simple.plx};
     alarm 0;
     $ret;
