@@ -41,7 +41,7 @@ No more C<my $self = shift>.
 This module sources are hosted on github 
 https://github.com/evalEmpire/method-signatures.git 
 and uses C<Module::Build> to generate the distribution. It can be 
-istalled:
+installed:
 
 =over 
 
